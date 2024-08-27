@@ -1,0 +1,23 @@
+from llama_index.llms.openai import OpenAI
+from iris.synthesizers.text_synthesizers.base import BaseTextSynthesizer
+
+
+class GrammaticalErrorSynthesizer(BaseTextSynthesizer):
+    """Synthesizer that generates misspelled text."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.instruction = (
+            "Generate a grammatical error version of the input text.\n"
+        )
+    
+
+if __name__ == "__main__":
+    gen = GrammaticalErrorSynthesizer(
+        llm=OpenAI(
+            model="gpt-3.5-turbo", 
+            api_key="sk-proj-uvbi9yfICRLlEdB9WuVLT3BlbkFJLI51rD9gebE9T5pxxztV",
+        ),
+    )
+    resp = gen.synthesize("The quick brown fox jumps over the lazy dog.")
+    print(resp)
+    print(type(resp))
