@@ -1,11 +1,18 @@
 import json
 from typing import List
-from iris.data_types import Sample
+from iris.data_types import Response
 
 
-def load_model_answers() -> List[Sample]:
-    """Load the model answers from the model_answers.json file."""
-    with open("model_answers.json", "r") as f:
-        model_answers = json.load(f)
+def save_model_answers(responses: List[Response], path: str):
+    with open(path, "w") as f:
+        for response in responses:
+            f.write(json.dumps(response) + "\n")
 
-    return [Sample(**sample) for sample in model_answers]
+
+def load_model_answers(path) -> List[Response]:
+    responses: List[Response] = []
+    with open(path, "r") as f:
+        for line in f:
+            response = json.loads(line)
+            responses.append(Response(**response))
+    return responses
