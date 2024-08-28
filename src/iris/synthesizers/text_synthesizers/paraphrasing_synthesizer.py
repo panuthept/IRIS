@@ -1,7 +1,7 @@
-from iris.synthesizers.text_synthesizers.base import BaseTextSynthesizer
+from iris.synthesizers.text_synthesizers.base import TextSynthesizer
 
 
-class ParaphrasingSynthesizer(BaseTextSynthesizer):
+class ParaphrasingSynthesizer(TextSynthesizer):
     """Synthesizer that generates misspelled text."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

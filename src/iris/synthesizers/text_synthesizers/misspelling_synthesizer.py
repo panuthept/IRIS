@@ -1,7 +1,7 @@
-from iris.synthesizers.text_synthesizers.base import BaseTextSynthesizer
+from iris.synthesizers.text_synthesizers.base import TextSynthesizer
 
 
-class MisspellingSynthesizer(BaseTextSynthesizer):
+class MisspellingSynthesizer(TextSynthesizer):
     """Synthesizer that generates misspelled text."""
     def __init__(self, *args, max_misspelled_nums: int = 1, **kwargs):
         super().__init__(*args, **kwargs)
@@ -21,6 +21,6 @@ if __name__ == "__main__":
         ),
         max_misspelled_nums=2,
     )
-    resp = gen.synthesize("The quick brown fox jumps over the lazy dog.")
+    resp = gen._synthesize("The quick brown fox jumps over the lazy dog.")
     print(resp)
     print(type(resp))

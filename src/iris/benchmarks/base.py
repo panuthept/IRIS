@@ -1,6 +1,6 @@
 from typing import List
 from abc import ABC, abstractmethod
-from iris.data_types import Sample, GenerativeLLMResponse, GenerativeLLMResult
+from iris.data_types import Sample, ModelResponse, EvaluationResult
 
 
 class Benchmark(ABC):
@@ -11,5 +11,8 @@ class Benchmark(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def evaluate(self, responses: List[GenerativeLLMResponse]) -> List[GenerativeLLMResult]:
+    def _evaluate(self, responses: ModelResponse) -> EvaluationResult:
         raise NotImplementedError
+    
+    def evaluate(self, responses: List[ModelResponse]) -> List[EvaluationResult]:
+        return [self._evaluate(response) for response in responses]

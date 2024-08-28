@@ -1,19 +1,24 @@
-from typing import List
 from copy import deepcopy
-from dataclasses import dataclass
+from typing import List, Dict, Any
+from dataclasses import dataclass, field
 
 
 @dataclass
 class Sample:
     instruction: str = None
-    instruction_variations: List[str] = None
-
-    references: List[str] = None
-    reference_model: str = None
+    instruction_variations: List[str] = field(default_factory=list)
+    reference_contexts: List[str] = field(default_factory=list)
+    reference_answers: List[str] = field(default_factory=list)
+    reference_answers_model: str = None
 
 
 @dataclass
-class Response(Sample):
+class ModelResponse(Sample):
+    predicted_contexts: List[str] = field(default_factory=list)
+    predicted_answer: str = None
+    predicted_answer_variations: List[str] = field(default_factory=list)
+    predicted_answer_model: str = None
+
     @classmethod
     def from_sample(
         cls, 
@@ -22,44 +27,26 @@ class Response(Sample):
         return cls(
             instruction=sample.instruction,
             instruction_variations=deepcopy(sample.instruction_variations),
-            references=deepcopy(sample.references),
-            reference_model=sample.reference_model,
+            reference_contexts=deepcopy(sample.reference_contexts),
+            reference_answers=deepcopy(sample.reference_answers),
+            reference_answers_model=sample.reference_answers_model,
         )
-
-
-@dataclass
-class GenerativeLLMResponse(Response):
-    answer: str = None
-    answer_variations: List[str] = None
-    answer_model: str = None
-
+    
 
 @dataclass
-class EmbeddingLLMResponse(Response):
-    pass
+class EvaluationResult(ModelResponse):
+    scores: Dict[str, Any] = field(default_factory=dict)
 
-
-@dataclass
-class Result(Response):
     @classmethod
-    def from_response(cls, response: GenerativeLLMResponse):
+    def from_response(cls, response: ModelResponse):
         return cls(
             instruction=response.instruction,
             instruction_variations=deepcopy(response.instruction_variations),
-            references=deepcopy(response.references),
-            reference_model=response.reference_model,
-            answer=deepcopy(response.answer),
-            answer_variations=deepcopy(response.answer_variations),
-            answer_model=response.answer_model,
+            reference_contexts=deepcopy(response.reference_contexts),
+            reference_answers=deepcopy(response.reference_answers),
+            reference_answers_model=response.reference_answers_model,
+            predicted_contexts=deepcopy(response.predicted_contexts),
+            predicted_answer=response.predicted_answer,
+            predicted_answer_variations=deepcopy(response.predicted_answer_variations),
+            predicted_answer_model=response.predicted_answer_model,
         )
-
-
-@dataclass
-class GenerativeLLMResult(Result):
-    answer_score: float = None
-    consistency_score: float = None
-
-
-@dataclass
-class EmbeddingLLMResult(Result):
-    pass

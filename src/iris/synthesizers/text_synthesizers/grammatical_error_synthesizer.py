@@ -1,7 +1,7 @@
-from iris.synthesizers.text_synthesizers.base import BaseTextSynthesizer
+from iris.synthesizers.text_synthesizers.base import TextSynthesizer
 
 
-class GrammaticalErrorSynthesizer(BaseTextSynthesizer):
+class GrammaticalErrorSynthesizer(TextSynthesizer):
     """Synthesizer that generates misspelled text."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,6 +19,6 @@ if __name__ == "__main__":
             api_key="sk-proj-uvbi9yfICRLlEdB9WuVLT3BlbkFJLI51rD9gebE9T5pxxztV",
         ),
     )
-    resp = gen.synthesize("The quick brown fox jumps over the lazy dog.")
+    resp = gen._synthesize("The quick brown fox jumps over the lazy dog.")
     print(resp)
     print(type(resp))
