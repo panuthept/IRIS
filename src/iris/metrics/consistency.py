@@ -23,46 +23,29 @@ class ConsistencyRateMetric(Metric):
     def _compute_scores(self, response: ModelResponse) -> Dict:
         avg_score = []
         for predicted_answer_variation in response.predicted_answer_variations:
-            response = self.pipeline.run(
+            result = self.pipeline.run(
                 question=response.instruction,
                 reference_answer=response.predicted_answer,
                 answer=predicted_answer_variation,
             ).message.content
-            score = float(1 if response == "Same" else 0)
+            score = float(1 if result == "Same" else 0)
             avg_score.append(score)
         avg_score = np.mean(avg_score)
         return {"consistency_rate": avg_score}
 
 
 if __name__ == "__main__":
-    from iris.data_types import Sample
     from llama_index.llms.openai import OpenAI
-    from llama_index.llms.together import TogetherLLM
-    from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
-    from iris.synthesizers.text_synthesizers.paraphrasing_synthesizer import ParaphrasingSynthesizer
 
 
-    sample = Sample(instruction="Who is the first president of the United States?")
-    print(f"Question: {sample.instruction}")
-
-    synthesizer = ParaphrasingSynthesizer(
-        llm=OpenAI(
-            model="gpt-4o", 
-            api_key="sk-proj-uvbi9yfICRLlEdB9WuVLT3BlbkFJLI51rD9gebE9T5pxxztV",
-        ),
+    response = ModelResponse(
+        instruction="Who is the first president of the United States?",
+        predicted_answer="The first president of the United States was George Washington. He was inaugurated on April 30, 1789, and served two terms in office until March 4, 1797.",
+        predicted_answer_variations=[
+            "The first president of the United States was Barack Obama. He was inaugurated on April 30, 1789, and served two terms in office until March 4, 1797.",
+            "The inaugural president of the United States was George Washington. He was inaugurated on April 30, 1789, at Federal Hall in New York City, which was the temporary capital of the United States at the time.",
+        ],
     )
-    sample = synthesizer.synthesize(sample)
-    print(f"New question: {sample.instruction_variations}")
-
-    model = APIGenerativeLLM(
-        llm=TogetherLLM(
-            model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-            api_key="efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f",
-        )
-    )
-    response = model.complete(sample)
-    print(f"Response: {response.predicted_answer}")
-    print(f"Response Variations: {response.predicted_answer_variations}")
 
     metric = ConsistencyRateMetric(
         llm=OpenAI(
