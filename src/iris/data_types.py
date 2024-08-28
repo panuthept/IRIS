@@ -13,11 +13,7 @@ class Sample:
 
 
 @dataclass
-class GenerativeLLMResponse(Sample):
-    answer: str = None
-    answer_variations: List[str] = None
-    answer_model: str = None
-
+class Response(Sample):
     @classmethod
     def from_sample(
         cls, 
@@ -32,10 +28,19 @@ class GenerativeLLMResponse(Sample):
 
 
 @dataclass
-class GenerativeLLMResult(GenerativeLLMResponse):
-    answer_score: float = None
-    consistency_score: float = None
+class GenerativeLLMResponse(Response):
+    answer: str = None
+    answer_variations: List[str] = None
+    answer_model: str = None
 
+
+@dataclass
+class EmbeddingLLMResponse(Response):
+    pass
+
+
+@dataclass
+class Result(Response):
     @classmethod
     def from_response(cls, response: GenerativeLLMResponse):
         return cls(
@@ -47,3 +52,14 @@ class GenerativeLLMResult(GenerativeLLMResponse):
             answer_variations=deepcopy(response.answer_variations),
             answer_model=response.answer_model,
         )
+
+
+@dataclass
+class GenerativeLLMResult(Result):
+    answer_score: float = None
+    consistency_score: float = None
+
+
+@dataclass
+class EmbeddingLLMResult(Result):
+    pass
