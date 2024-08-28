@@ -1,8 +1,8 @@
 import numpy as np
 from typing import List
 from llama_index.core import PromptTemplate
-from iris.data_types import GenerativeLLMResponse, GenerativeLLMResult
 from llama_index.core.query_pipeline import QueryPipeline
+from iris.data_types import GenerativeLLMResponse, GenerativeLLMResult
 
 
 class ConsistencyRateMetrics:
