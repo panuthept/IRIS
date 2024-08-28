@@ -1,5 +1,5 @@
 import json
-from typing import List, Dict
+from typing import List
 from llama_index.core import PromptTemplate
 from llama_index.core.query_pipeline import QueryPipeline
 

@@ -1,5 +1,5 @@
 from iris.benchmarks.base import BaseBenchmark
 
 
-class MTBenchEvaluator(BaseBenchmark):
+class MTBenchBenchmark(BaseBenchmark):
     pass

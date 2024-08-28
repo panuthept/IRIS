@@ -1,4 +1,3 @@
-from llama_index.llms.openai import OpenAI
 from iris.synthesizers.text_synthesizers.base import BaseTextSynthesizer
 
 
@@ -12,6 +11,8 @@ class GrammaticalErrorSynthesizer(BaseTextSynthesizer):
     
 
 if __name__ == "__main__":
+    from llama_index.llms.openai import OpenAI
+    
     gen = GrammaticalErrorSynthesizer(
         llm=OpenAI(
             model="gpt-3.5-turbo", 

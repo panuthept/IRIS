@@ -1,4 +1,3 @@
-from llama_index.llms.openai import OpenAI
 from iris.synthesizers.text_synthesizers.base import BaseTextSynthesizer
 
 
@@ -13,6 +12,8 @@ class MisspellingSynthesizer(BaseTextSynthesizer):
     
 
 if __name__ == "__main__":
+    from llama_index.llms.openai import OpenAI
+
     gen = MisspellingSynthesizer(
         llm=OpenAI(
             model="gpt-3.5-turbo", 
