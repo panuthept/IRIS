@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
 from llama_index.core import PromptTemplate
-from iris.data_types import Response, Result
+from iris.data_types import GenerativeLLMResponse, GenerativeLLMResult
 from llama_index.core.query_pipeline import QueryPipeline
 
 
@@ -19,34 +19,35 @@ class ConsistencyRateMetrics:
         self.system_prompt = PromptTemplate(self.prompt_template)
         self.pipeline = QueryPipeline(chain=[self.system_prompt, self.llm])
 
-    def __call__(self, reference_responses: List[Response], target_responses: List[Response]):
-        assert len(reference_responses) == len(target_responses), "The number of reference and target responses should be the same. Got {} and {}.".format(len(reference_responses), len(target_responses))
+    def __call__(self, responses: List[GenerativeLLMResponse]):
+        results: List[GenerativeLLMResult] = []
+        for response in responses:
+            result = GenerativeLLMResult.from_response(response)
 
-        results: List[Result] = []
-        for reference_response, target_response in zip(reference_responses, target_responses):
             avg_score = []
-            for reference_answer in reference_response.responses:
-                for target_answer in target_response.responses:
-                    response = self.pipeline.run(
-                        question=reference_response.instruction,
-                        reference_answer=reference_answer,
-                        answer=target_answer,
-                    ).message.content
-                    score = float(1 if response == "Same" else 0)
-                    avg_score.append(score)
+            for answer_variation in response.answer_variations:
+                response = self.pipeline.run(
+                    question=response.instruction,
+                    reference_answer=response.answer,
+                    answer=answer_variation,
+                ).message.content
+                score = float(1 if response == "Same" else 0)
+                avg_score.append(score)
             avg_score = np.mean(avg_score)
-            result = Result.from_response(target_response, score=avg_score)
+            result.consistency_score = avg_score
             results.append(result)
         return results
 
 
 if __name__ == "__main__":
+    from iris.data_types import Sample, GenerativeLLMResponse
+    from iris.model_wrappers.api_model import APIGenerativeLLM
     from llama_index.llms.openai import OpenAI
     from llama_index.llms.together import TogetherLLM
     from iris.synthesizers.text_synthesizers.paraphrasing_synthesizer import ParaphrasingSynthesizer
 
-    question = "Who is the first president of the United States?"
-    print(f"Question: {question}")
+    sample = Sample(instruction="Who is the first president of the United States?")
+    print(f"Question: {sample.instruction}")
 
     synthesizer = ParaphrasingSynthesizer(
         llm=OpenAI(
@@ -54,20 +55,18 @@ if __name__ == "__main__":
             api_key="sk-proj-uvbi9yfICRLlEdB9WuVLT3BlbkFJLI51rD9gebE9T5pxxztV",
         ),
     )
-    question_variants = synthesizer.synthesize(question)
-    print(f"New question: {question_variants}")
+    sample = synthesizer.synthesize(sample)
+    print(f"New question: {sample.instruction_variations}")
 
-    llm = TogetherLLM(
-        model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-        api_key="efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f",
+    model = APIGenerativeLLM(
+        llm=TogetherLLM(
+            model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+            api_key="efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f",
+        )
     )
-    ref_resp = llm.complete(question).text
-    print(f"Reference response: {ref_resp}")
-    tar_resp = llm.complete(question_variants[0]).text
-    print(f"Target response: {tar_resp}")
-
-    ref_resp = [Response(instruction=question, responses=[ref_resp])]
-    tar_resp = [Response(instruction=question_variants[0], responses=[tar_resp])]
+    responses = model([sample])
+    print(f"Response: {responses[0].answer}")
+    print(f"Response Variations: {responses[0].answer_variations}")
 
     metric = ConsistencyRateMetrics(
         llm=OpenAI(
@@ -75,5 +74,5 @@ if __name__ == "__main__":
             api_key="sk-proj-uvbi9yfICRLlEdB9WuVLT3BlbkFJLI51rD9gebE9T5pxxztV",
         ),
     )
-    result = metric(ref_resp, tar_resp)
-    print(result)
+    results = metric(responses)
+    print(results[0])
