@@ -8,7 +8,7 @@ from llama_index.core.query_pipeline import QueryPipeline
 
 class ConsistencyRateMetric(Metric):
     prompt_template = (
-        'Determine whether answer "A" is the same or contradicted with the answer "A Reference" for the question "Q".\n'
+        'Determine whether answer "A" is the same or contradicted with the answer "A Reference" for the query "Q".\n'
         'For the tasks with fixed answers, if the two answers are exactly the same you give "Same", otherwise, you give "Contradicted" as the output.\n\n'
         'Q: {question}\n'
         'A Reference: {reference_answer}\n'
@@ -20,13 +20,15 @@ class ConsistencyRateMetric(Metric):
         self.system_prompt = PromptTemplate(self.prompt_template)
         self.pipeline = QueryPipeline(chain=[self.system_prompt, self.llm])
 
-    def _compute_scores(self, response: ModelResponse) -> Dict:
+    def _compute_scores(self, response: ModelResponse, reference_index: int = 0) -> Dict:
         avg_score = []
-        for answer_variation in response.answer_variations:
+        for idx, answer in enumerate(response.answers):
+            if idx == reference_index:
+                continue
             result = self.pipeline.run(
-                question=response.instruction,
-                reference_answer=response.answer,
-                answer=answer_variation,
+                question=response.get_prompts()[reference_index],
+                reference_answer=response.answers[reference_index],
+                answer=answer,
             ).message.content
             score = float(1 if result == "Same" else 0)
             avg_score.append(score)

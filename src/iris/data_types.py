@@ -10,6 +10,17 @@ class Sample:
     reference_contexts: List[str] = field(default_factory=list)
     reference_answers: List[str] = field(default_factory=list)
     reference_answers_model: str = None
+    prompt_template: str = "{instruction}\n{query}"
+
+    def get_prompts(self, prompt_template: str = None) -> List[str]:
+        prompts = []
+        for instruction in self.instructions:
+            prompt = (prompt_template or self.prompt_template).format(
+                instruction=instruction,
+                query=self.query,
+            )
+            prompts.append(prompt)
+        return prompts
 
 
 @dataclass

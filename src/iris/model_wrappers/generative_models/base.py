@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Callable
 from abc import ABC, abstractmethod
 from iris.data_types import Sample, ModelResponse
 
@@ -6,20 +6,19 @@ from iris.data_types import Sample, ModelResponse
 class GenerativeLLM(ABC):
     model_name = "GenerativeLLM"
 
+    def __init__(self, post_processing: Callable = None):
+        self.post_processing = post_processing
+
     @abstractmethod
-    def _complete(self, instruction: str) -> str:
+    def _complete(self, promt: str) -> str:
         raise NotImplementedError
     
     def complete(self, sample: Sample) -> ModelResponse:
-        assert sample.instruction, "Instruction is required for completion."
-
         # Intiial GenerativeLLMResponse
         response = ModelResponse.from_sample(sample)
-        # Get the answer
-        response.answer = self._complete(sample.instruction)
-        # Get the answer variations if any (optional)
-        if sample.instruction_variations:
-            response.answer_variations = [self._complete(instruction_variation) for instruction_variation in sample.instruction_variations]
+        # Get the answers
+        for promt in sample.get_prompts():
+            response.answers.append(self.post_processing(self._complete(promt)))
         # Set the answer model name
         response.answer_model = self.model_name
         return response

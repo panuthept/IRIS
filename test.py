@@ -2,40 +2,45 @@ from iris.data_types import Sample
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.together import TogetherLLM
 from iris.metrics.consistency import ConsistencyRateMetric
-from iris.utilities.loaders import save_model_answers, load_model_answers
 from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
-from iris.synthesizers.text_synthesizers.paraphrasing_synthesizer import ParaphrasingSynthesizer
 
 
 if __name__ == "__main__":
-    from iris.data_types import Sample
+    from typing import List
     from llama_index.llms.openai import OpenAI
     from llama_index.llms.together import TogetherLLM
+    from iris.data_types import Sample, ModelResponse, EvaluationResult
     from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
-    from iris.synthesizers.text_synthesizers.paraphrasing_synthesizer import ParaphrasingSynthesizer
 
 
-    sample = Sample(instruction="Who is the first president of the United States?")
-    print(f"Question: {sample.instruction}")
-
-    synthesizer = ParaphrasingSynthesizer(
-        llm=OpenAI(
-            model="gpt-4o", 
-            api_key="sk-proj-uvbi9yfICRLlEdB9WuVLT3BlbkFJLI51rD9gebE9T5pxxztV",
-        ),
-    )
-    sample = synthesizer.synthesize(sample)
-    print(f"New question: {sample.instruction_variations}")
+    # Dataset: List[Sample] -> Model: List[ModelResponse] -> Metric: List[EvaluationResult]
+    samples: List[Sample] = [
+        Sample(
+            instructions=[
+                "Output whether the sentiment of the input sentence is positive or negative.",
+                "Given an input text, output whether the sentiment is positive or negative.",
+                "For each input, determine if the sentiment in the input is prone to negative or positive opinion.",
+                "For each input, determine whether it expresses a positive or a negative opinion.",
+                "Classify the sentiment of the input sentence (options are positive or negative)",
+                "write \"positive\" if the input is a positive review, and \"negative\" if the input is a negative review",
+                "Determine whether the sentiment is positive or negative",
+                "Output whether the sentiment is positive or negative"
+            ],
+            query="A tender, heartfelt family drama.",
+            reference_answers=["Positive"],
+        )
+    ]
 
     model = APIGenerativeLLM(
         llm=TogetherLLM(
             model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
             api_key="efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f",
-        )
+        ),
+        system_prompt="Use deterministic output as 'Positive' or 'Negative' without additional information or character.",
+        post_processing=lambda x: x.strip().capitalize(),
     )
-    response = model.complete(sample)
-    print(f"Response: {response.answer}")
-    print(f"Response Variations: {response.answer_variations}")
+    responses: List[ModelResponse] = model.complete_batch(samples)
+    print(f"Responses: {responses[0].answers}")
 
     metric = ConsistencyRateMetric(
         llm=OpenAI(
@@ -43,18 +48,5 @@ if __name__ == "__main__":
             api_key="sk-proj-uvbi9yfICRLlEdB9WuVLT3BlbkFJLI51rD9gebE9T5pxxztV",
         ),
     )
-    result = metric.eval(response)
-    print(result)
-
-    # benchmark = AlpacaEvalBenchmark()
-    # test_samples: List[Sample] = AlpacaEvalBenchmark.get_test_set()
-
-    # model = HuggfaceInferenceLLM(
-    #     "meta-llama/Meta-Llama-3.1-8B-Instruct",
-    #     system_prompt=None,
-    # )
-    # responses: List[GenerativeLLMResponse] = model(test_samples)
-    # save_model_answers(responses, "./outputs/model_answers.jsonl")
-
-    # model_answers: List[GenerativeLLMResponse] = load_model_answers("./outputs/model_answers.jsonl")
-    # results: List[GenerativeLLMResult] = benchmark.evaluate(model_answers)
+    results: List[EvaluationResult] = metric.eval_batch(responses, reference_index = 0)
+    print(results)

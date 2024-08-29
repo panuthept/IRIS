@@ -3,7 +3,8 @@ import transformers
 
 
 class HuggfaceGenerativeLLM:
-    def __init__(self, huggingface_model_name_or_path: str, system_prompt: str = None):
+    def __init__(self, huggingface_model_name_or_path: str, system_prompt: str = None, **kwargs):
+        super().__init__(**kwargs)
         self.llm = transformers.pipeline(
             "text-generation", 
             model=huggingface_model_name_or_path,
@@ -13,13 +14,13 @@ class HuggfaceGenerativeLLM:
         self.model_name = huggingface_model_name_or_path
         self.system_prompt = system_prompt
 
-    def _complete(self, instruction: str) -> str:
+    def _complete(self, promt: str) -> str:
         if self.system_prompt:
             messages = [
                 {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": instruction},
+                {"role": "user", "content": promt},
             ]
         else:
-            messages = [{"role": "user", "content": instruction}]
+            messages = [{"role": "user", "content": promt}]
         answer = self.llm(messages)[0]["generated_text"][-1]
         return answer
