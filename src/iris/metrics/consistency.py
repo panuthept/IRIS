@@ -41,11 +41,27 @@ if __name__ == "__main__":
 
 
     response = ModelResponse(
-        instruction="Who is the first president of the United States?",
-        answer="The first president of the United States was George Washington. He was inaugurated on April 30, 1789, and served two terms in office until March 4, 1797.",
-        answer_variations=[
-            "The first president of the United States was Barack Obama. He was inaugurated on April 30, 1789, and served two terms in office until March 4, 1797.",
-            "The inaugural president of the United States was George Washington. He was inaugurated on April 30, 1789, at Federal Hall in New York City, which was the temporary capital of the United States at the time.",
+        instructions=[
+            "Output whether the sentiment of the input sentence is positive or negative.",
+            "Given an input text, output whether the sentiment is positive or negative.",
+            "For each input, determine if the sentiment in the input is prone to negative or positive opinion.",
+            "For each input, determine whether it expresses a positive or a negative opinion.",
+            "Classify the sentiment of the input sentence (options are positive or negative)",
+            "write \"positive\" if the input is a positive review, and \"negative\" if the input is a negative review",
+            "Determine whether the sentiment is positive or negative",
+            "Output whether the sentiment is positive or negative",
+        ],
+        query="A tender, heartfelt family drama.",
+        reference_answers=["Positive"],
+        answers=[
+            "Positive",
+            "Negative",
+            "Positive",
+            "Negative",
+            "Positive",
+            "Negative",
+            "Positive",
+            "Negative",
         ],
     )
 
@@ -57,5 +73,5 @@ if __name__ == "__main__":
     )
     result = metric.eval(response)
     print(result)
-    assert result.scores["consistency_rate"] == 0.5
+    assert result.scores["consistency_rate"] == 3/7
     print("Passed test!")
