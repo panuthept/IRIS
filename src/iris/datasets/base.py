@@ -1,16 +1,11 @@
-from typing import List
+from typing import List, Dict
 from iris.data_types import Sample
 from abc import ABC, abstractmethod
 
 
 class Dataset(ABC):
-    def __init__(self, path: str):
-        self.path = path
-        self.inputs = None
-        self.labels = None
-
     @abstractmethod
-    def _load_dataset(self, path: str) -> List[Sample]:
+    def _load_dataset(self) -> List[Dict]:
         raise NotImplementedError
 
     def as_samples(self) -> List[Sample]:

@@ -11,13 +11,19 @@ class Sample:
     reference_answers: List[str] = field(default_factory=list)
     reference_answers_model: str = None
     examples: List[Tuple[str, str]] = field(default_factory=list)
-    query_template: str = "Input: {query}\nOutput: {answer}"
-    prompt_template: str = "Instruction: {instruction}\n\n{examples}\n\n{query}"
+    example_template: str = "Input: {query}\nOutput: {answer}"
+    prompt_template: Dict[str, str] = field(default_factory=lambda: {
+        "instruction_only": "Instruction: {instruction}\nOutput: ",
+        "instruction_with_query": "Instruction: {instruction}\n\nInput: {query}\nOutput: ",
+        "instruction_with_examples_and_query": "Instruction: {instruction}\n\n{examples}\n\nInput: {query}\nOutput: ",
+        "query_only": "Input: {query}\nOutput: ",
+        "query_with_examples": "{examples}\n\nInput: {query}\nOutput: ",
+    })
 
     def get_example_string(self) -> str:
         example_prompts = []
         for example in self.examples:
-            example_prompt = self.query_template.format(
+            example_prompt = self.example_template.format(
                 query=example[0],
                 answer=example[1],
             )
@@ -26,14 +32,39 @@ class Sample:
 
     def get_prompts(self) -> List[str]:
         prompts = []
-        for instruction in self.instructions:
-            examples = self.get_example_string()
-            prompt = self.prompt_template.format(
-                instruction=instruction,
-                examples=examples,
-                query=self.query_template.format(query=self.query, answer=""),
-            )
+        if self.instructions:
+            for instruction in self.instructions:
+                if len(self.examples) > 0 and self.query:
+                    examples = self.get_example_string()
+                    prompt = self.prompt_template["instruction_with_examples_and_query"].format(
+                        instruction=instruction,
+                        examples=examples,
+                        query=self.query,
+                    )
+                elif self.query:
+                    prompt = self.prompt_template["instruction_with_query"].format(
+                        instruction=instruction,
+                        query=self.query,
+                    )
+                else:
+                    prompt = self.prompt_template["instruction_only"].format(
+                        instruction=instruction,
+                    )
+                prompts.append(prompt)
+        elif self.query:
+            if len(self.examples) > 0:
+                examples = self.get_example_string()
+                prompt = self.prompt_template["query_with_examples"].format(
+                    examples=examples,
+                    query=self.query,
+                )
+            elif self.query:
+                prompt = self.prompt_template["query_only"].format(
+                    query=self.query,
+                )
             prompts.append(prompt)
+        else:
+            raise ValueError("No query or instructions provided")
         return prompts
 
 
@@ -55,7 +86,7 @@ class ModelResponse(Sample):
             reference_answers=deepcopy(sample.reference_answers),
             reference_answers_model=sample.reference_answers_model,
             examples=deepcopy(sample.examples),
-            query_template=sample.query_template,
+            example_template=sample.example_template,
             prompt_template=sample.prompt_template,
         )
     
@@ -73,7 +104,7 @@ class EvaluationResult(ModelResponse):
             reference_answers=deepcopy(response.reference_answers),
             reference_answers_model=response.reference_answers_model,
             examples=deepcopy(response.examples),
-            query_template=response.query_template,
+            example_template=response.example_template,
             prompt_template=response.prompt_template,
             contexts=deepcopy(response.contexts),
             answers=deepcopy(response.answers),
