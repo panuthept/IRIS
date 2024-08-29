@@ -22,11 +22,11 @@ class ConsistencyRateMetric(Metric):
 
     def _compute_scores(self, response: ModelResponse) -> Dict:
         avg_score = []
-        for predicted_answer_variation in response.predicted_answer_variations:
+        for answer_variation in response.answer_variations:
             result = self.pipeline.run(
                 question=response.instruction,
-                reference_answer=response.predicted_answer,
-                answer=predicted_answer_variation,
+                reference_answer=response.answer,
+                answer=answer_variation,
             ).message.content
             score = float(1 if result == "Same" else 0)
             avg_score.append(score)
@@ -40,8 +40,8 @@ if __name__ == "__main__":
 
     response = ModelResponse(
         instruction="Who is the first president of the United States?",
-        predicted_answer="The first president of the United States was George Washington. He was inaugurated on April 30, 1789, and served two terms in office until March 4, 1797.",
-        predicted_answer_variations=[
+        answer="The first president of the United States was George Washington. He was inaugurated on April 30, 1789, and served two terms in office until March 4, 1797.",
+        answer_variations=[
             "The first president of the United States was Barack Obama. He was inaugurated on April 30, 1789, and served two terms in office until March 4, 1797.",
             "The inaugural president of the United States was George Washington. He was inaugurated on April 30, 1789, at Federal Hall in New York City, which was the temporary capital of the United States at the time.",
         ],

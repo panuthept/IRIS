@@ -14,10 +14,10 @@ class Sample:
 
 @dataclass
 class ModelResponse(Sample):
-    predicted_contexts: List[str] = field(default_factory=list)
-    predicted_answer: str = None
-    predicted_answer_variations: List[str] = field(default_factory=list)
-    predicted_answer_model: str = None
+    contexts: List[str] = field(default_factory=list)
+    answer: str = None
+    answer_variations: List[str] = field(default_factory=list)
+    answer_model: str = None
 
     @classmethod
     def from_sample(
@@ -45,8 +45,8 @@ class EvaluationResult(ModelResponse):
             reference_contexts=deepcopy(response.reference_contexts),
             reference_answers=deepcopy(response.reference_answers),
             reference_answers_model=response.reference_answers_model,
-            predicted_contexts=deepcopy(response.predicted_contexts),
-            predicted_answer=response.predicted_answer,
-            predicted_answer_variations=deepcopy(response.predicted_answer_variations),
-            predicted_answer_model=response.predicted_answer_model,
+            contexts=deepcopy(response.contexts),
+            answer=response.answer,
+            answer_variations=deepcopy(response.answer_variations),
+            answer_model=response.answer_model,
         )

@@ -34,8 +34,8 @@ if __name__ == "__main__":
         )
     )
     response = model.complete(sample)
-    print(f"Response: {response.predicted_answer}")
-    print(f"Response Variations: {response.predicted_answer_variations}")
+    print(f"Response: {response.answer}")
+    print(f"Response Variations: {response.answer_variations}")
 
     metric = ConsistencyRateMetric(
         llm=OpenAI(

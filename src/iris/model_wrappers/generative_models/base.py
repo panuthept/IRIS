@@ -16,12 +16,12 @@ class GenerativeLLM(ABC):
         # Intiial GenerativeLLMResponse
         response = ModelResponse.from_sample(sample)
         # Get the answer
-        response.predicted_answer = self._complete(sample.instruction)
+        response.answer = self._complete(sample.instruction)
         # Get the answer variations if any (optional)
         if sample.instruction_variations:
-            response.predicted_answer_variations = [self._complete(instruction_variation) for instruction_variation in sample.instruction_variations]
+            response.answer_variations = [self._complete(instruction_variation) for instruction_variation in sample.instruction_variations]
         # Set the answer model name
-        response.predicted_answer_model = self.model_name
+        response.answer_model = self.model_name
         return response
     
     def complete_batch(self, samples: List[Sample]) -> List[ModelResponse]:
