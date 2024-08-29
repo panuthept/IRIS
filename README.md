@@ -25,6 +25,10 @@ samples: List[Sample] = [
         ],
         query="A tender, heartfelt family drama.",
         reference_answers=["Positive"],
+        examples=[
+            ("Do we really need another film that praises female self-sacrifice?", "Negative"),
+            ("An average B-movie with no aspirations to be anything more.", "Negative"),
+        ]
     )
 ]
 
