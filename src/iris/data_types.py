@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 
 @dataclass
 class Sample:
-    instruction: str = None
-    instruction_variations: List[str] = field(default_factory=list)
+    query: str = None
+    instructions: List[str] = field(default_factory=list)
     reference_contexts: List[str] = field(default_factory=list)
     reference_answers: List[str] = field(default_factory=list)
     reference_answers_model: str = None
@@ -15,8 +15,7 @@ class Sample:
 @dataclass
 class ModelResponse(Sample):
     contexts: List[str] = field(default_factory=list)
-    answer: str = None
-    answer_variations: List[str] = field(default_factory=list)
+    answers: List[str] = field(default_factory=list)    # Number of answers is equal to the number of instructions
     answer_model: str = None
 
     @classmethod
@@ -25,8 +24,8 @@ class ModelResponse(Sample):
         sample: Sample, 
     ):
         return cls(
-            instruction=sample.instruction,
-            instruction_variations=deepcopy(sample.instruction_variations),
+            query=sample.query,
+            instructions=deepcopy(sample.instructions),
             reference_contexts=deepcopy(sample.reference_contexts),
             reference_answers=deepcopy(sample.reference_answers),
             reference_answers_model=sample.reference_answers_model,
@@ -40,13 +39,12 @@ class EvaluationResult(ModelResponse):
     @classmethod
     def from_response(cls, response: ModelResponse):
         return cls(
-            instruction=response.instruction,
-            instruction_variations=deepcopy(response.instruction_variations),
+            query=response.query,
+            instructions=deepcopy(response.instructions),
             reference_contexts=deepcopy(response.reference_contexts),
             reference_answers=deepcopy(response.reference_answers),
             reference_answers_model=response.reference_answers_model,
             contexts=deepcopy(response.contexts),
-            answer=response.answer,
-            answer_variations=deepcopy(response.answer_variations),
+            answers=deepcopy(response.answers),
             answer_model=response.answer_model,
         )
