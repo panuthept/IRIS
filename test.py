@@ -22,8 +22,13 @@ if __name__ == "__main__":
             ],
             query="A tender, heartfelt family drama.",
             reference_answers=["Positive"],
+            examples=[
+                ("Do we really need another film that praises female self-sacrifice?", "Negative"),
+                ("An average B-movie with no aspirations to be anything more.", "Negative"),
+            ]
         )
     ]
+    print(samples[0].get_prompts()[0])
 
     model = APIGenerativeLLM(
         llm=TogetherLLM(

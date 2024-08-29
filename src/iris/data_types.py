@@ -1,6 +1,6 @@
 from copy import deepcopy
-from typing import List, Dict, Any
 from dataclasses import dataclass, field
+from typing import Tuple, List, Dict, Any
 
 
 @dataclass
@@ -10,14 +10,28 @@ class Sample:
     reference_contexts: List[str] = field(default_factory=list)
     reference_answers: List[str] = field(default_factory=list)
     reference_answers_model: str = None
-    prompt_template: str = "Instruction: {instruction}\n\nQuery: {query}"
+    examples: List[Tuple[str, str]] = field(default_factory=list)
+    query_template: str = "Input: {query}\nOutput: {answer}"
+    prompt_template: str = "Instruction: {instruction}\n\n{examples}\n\n{query}"
 
-    def get_prompts(self, prompt_template: str = None) -> List[str]:
+    def get_example_string(self) -> str:
+        example_prompts = []
+        for example in self.examples:
+            example_prompt = self.query_template.format(
+                query=example[0],
+                answer=example[1],
+            )
+            example_prompts.append(example_prompt)
+        return "\n\n".join(example_prompts)
+
+    def get_prompts(self) -> List[str]:
         prompts = []
         for instruction in self.instructions:
-            prompt = (prompt_template or self.prompt_template).format(
+            examples = self.get_example_string()
+            prompt = self.prompt_template.format(
                 instruction=instruction,
-                query=self.query,
+                examples=examples,
+                query=self.query_template.format(query=self.query, answer=""),
             )
             prompts.append(prompt)
         return prompts
@@ -40,6 +54,9 @@ class ModelResponse(Sample):
             reference_contexts=deepcopy(sample.reference_contexts),
             reference_answers=deepcopy(sample.reference_answers),
             reference_answers_model=sample.reference_answers_model,
+            examples=deepcopy(sample.examples),
+            query_template=sample.query_template,
+            prompt_template=sample.prompt_template,
         )
     
 
@@ -55,6 +72,9 @@ class EvaluationResult(ModelResponse):
             reference_contexts=deepcopy(response.reference_contexts),
             reference_answers=deepcopy(response.reference_answers),
             reference_answers_model=response.reference_answers_model,
+            examples=deepcopy(response.examples),
+            query_template=response.query_template,
+            prompt_template=response.prompt_template,
             contexts=deepcopy(response.contexts),
             answers=deepcopy(response.answers),
             answer_model=response.answer_model,
