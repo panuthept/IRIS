@@ -31,7 +31,7 @@ if __name__ == "__main__":
             model="Qwen/Qwen1.5-0.5B-Chat",
             api_key="efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f",
         ),
-        system_prompt="Use deterministic output as 'Positive' or 'Negative' without additional information or character.",
+        system_prompt="You will be given a instruction and query, use deterministic output as 'Positive' or 'Negative' without additional information or character.",
         post_processing=lambda x: x.strip().capitalize(),
     )
     responses: List[ModelResponse] = model.complete_batch(samples)

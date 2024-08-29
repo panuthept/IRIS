@@ -10,7 +10,7 @@ class Sample:
     reference_contexts: List[str] = field(default_factory=list)
     reference_answers: List[str] = field(default_factory=list)
     reference_answers_model: str = None
-    prompt_template: str = "{instruction}\n{query}"
+    prompt_template: str = "Instruction: {instruction}\n\nQuery: {query}"
 
     def get_prompts(self, prompt_template: str = None) -> List[str]:
         prompts = []
