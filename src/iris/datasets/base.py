@@ -1,6 +1,6 @@
-from typing import List, Dict
-from abc import ABC, abstractmethod
+from typing import List
 from iris.data_types import Sample
+from abc import ABC, abstractmethod
 
 
 class Dataset(ABC):

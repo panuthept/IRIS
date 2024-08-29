@@ -1,18 +1,12 @@
-from iris.data_types import Sample
+from typing import List
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.together import TogetherLLM
 from iris.metrics.consistency import ConsistencyRateMetric
+from iris.data_types import Sample, ModelResponse, EvaluationResult
 from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
 
 
 if __name__ == "__main__":
-    from typing import List
-    from llama_index.llms.openai import OpenAI
-    from llama_index.llms.together import TogetherLLM
-    from iris.data_types import Sample, ModelResponse, EvaluationResult
-    from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
-
-
     # Dataset: List[Sample] -> Model: List[ModelResponse] -> Metric: List[EvaluationResult]
     samples: List[Sample] = [
         Sample(
@@ -33,7 +27,8 @@ if __name__ == "__main__":
 
     model = APIGenerativeLLM(
         llm=TogetherLLM(
-            model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+            # model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+            model="Qwen/Qwen1.5-0.5B-Chat",
             api_key="efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f",
         ),
         system_prompt="Use deterministic output as 'Positive' or 'Negative' without additional information or character.",
