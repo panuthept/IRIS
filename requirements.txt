@@ -1,3 +1,4 @@
 datasets
+rouge-score
 llama-index
 llama-index-llms-openai
