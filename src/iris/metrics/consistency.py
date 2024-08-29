@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Dict
+from typing import Dict
 from iris.metrics.base import Metric
 from iris.data_types import ModelResponse
 from llama_index.core import PromptTemplate
@@ -55,3 +55,5 @@ if __name__ == "__main__":
     )
     result = metric.eval(response)
     print(result)
+    assert result.scores["consistency_rate"] == 0.5
+    print("Passed test!")
