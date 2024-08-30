@@ -6,7 +6,7 @@ from collections import defaultdict
 from iris.datasets.base import Dataset
 
 
-class JailbreakBenchPromptCLFDataset(Dataset):
+class JailbreakBenchDataset(Dataset):
     instruction_paths = [
         "GCG/transfer/gpt-3.5-turbo-1106.json",
         "GCG/transfer/gpt-4-0125-preview.json",
@@ -30,7 +30,7 @@ class JailbreakBenchPromptCLFDataset(Dataset):
         self.data = self._load_dataset(path)
 
     def _load_dataset(self, path: str) -> Dict[str, List]:
-        # Load the dataset
+        # Load the behaviors dataset
         dataset = load_dataset("JailbreakBench/JBB-Behaviors", "behaviors")
         # Get the original instruction and reference answer
         samples = defaultdict(dict)
@@ -51,10 +51,34 @@ class JailbreakBenchPromptCLFDataset(Dataset):
                 for data in loaded_data["jailbreaks"]:
                     if data["prompt"] is not None:
                         samples["harmful"][data["index"]]["instructions"].append(data["prompt"])
+        # Load the judge_comparison dataset
+        dataset = load_dataset("JailbreakBench/JBB-Behaviors", "judge_comparison")
+        for data in dataset["test"]:
+            samples["judge_comparison"][data["Index"]] = {
+                "instructions": [
+                    f'{data["goal"]}\nResponse: {data["target_response"]}', 
+                    f'{data["prompt"]}\nResponse: {data["target_response"]}', 
+                ],
+                "reference_answers": ["Harmful" if data["human_majority"] == 1 else "Benign"]
+            }
         samples["harmful"] = list(samples["harmful"].values())
         samples["benign"] = list(samples["benign"].values())
+        samples["judge_comparison"] = list(samples["judge_comparison"].values())
         return samples
 
+    def as_samples(self, split="harmful") -> List[Sample]:
+        samples: List[Sample] = []
+        for sample in self.data[split]:
+            samples.append(
+                Sample(
+                    instructions=sample["instructions"],
+                    reference_answers=sample["reference_answers"],
+                )
+            )
+        return samples
+
+
+class JailbreakBenchPromptCLFDataset(JailbreakBenchDataset):
     def as_samples(self) -> List[Sample]:
         samples: List[Sample] = []
         for sample in self.data["harmful"]:
@@ -74,12 +98,42 @@ class JailbreakBenchPromptCLFDataset(Dataset):
         return samples
     
 
-class JailbreakBenchResponseCLFDataset(Dataset):
-    pass
+class JailbreakBenchResponseCLFDataset(JailbreakBenchDataset):
+    def as_samples(self) -> List[Sample]:
+        samples: List[Sample] = []
+        for sample in self.data["judge_comparison"]:
+            samples.append(
+                Sample(
+                    instructions=sample["instructions"],
+                    reference_answers=sample["reference_answers"],
+                )
+            )
+        return samples
 
 
 if __name__ == "__main__":
+    dataset = JailbreakBenchDataset()
+    samples = dataset.as_samples("harmful")
+    print("JailbreakBenchDataset:")
+    print(f"{samples[0].get_prompts()[0]}{samples[0].reference_answers[0]}")
+    print("-" * 100)
+    samples = dataset.as_samples("benign")
+    print(f"{samples[0].get_prompts()[0]}{samples[0].reference_answers[0]}")
+    print("-" * 100)
+    print("=" * 100)
+
     dataset = JailbreakBenchPromptCLFDataset()
     samples = dataset.as_samples()
-    print(samples[0].instructions)
-    print(samples[0].reference_answers)
+    print("JailbreakBenchPromptCLFDataset:")
+    print(f"{samples[0].get_prompts()[0]}{samples[0].reference_answers[0]}")
+    print("-" * 100)
+    print(f"{samples[-1].get_prompts()[0]}{samples[-1].reference_answers[0]}")
+    print("-" * 100)
+    print("=" * 100)
+
+    dataset = JailbreakBenchResponseCLFDataset()
+    samples = dataset.as_samples()
+    print("JailbreakBenchResponseCLFDataset:")
+    print(f"{samples[2].get_prompts()[0]}{samples[2].reference_answers[0]}")
+    print("-" * 100)
+    print(f"{samples[0].get_prompts()[0]}{samples[0].reference_answers[0]}")
