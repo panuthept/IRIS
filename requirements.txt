@@ -1,5 +1,8 @@
+tqdm
 datasets
+transformers
 accelerate
 rouge-score
 llama-index
 llama-index-llms-openai
+llama-index-llms-together
