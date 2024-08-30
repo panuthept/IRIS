@@ -9,8 +9,8 @@ from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
 
 if __name__ == "__main__":
     # Dataset: List[Sample] -> Model: List[ModelResponse] -> Metric: Tuple[List[EvaluationResult], SummarizedResult]
-    dataset = JailbreakBenchDataset()
-    samples: List[Sample] = dataset.as_samples(split="benign")[:1]
+    dataset = JailbreakBenchDataset(attack_engine="PAIR")
+    samples: List[Sample] = dataset.as_samples(split="harmful")[:1]
     print(samples[0].get_prompts()[0])
     print(samples[0].reference_answers)
 

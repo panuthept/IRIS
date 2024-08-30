@@ -26,8 +26,17 @@ class JailbreakBenchDataset(Dataset):
         "prompt_with_random_search/black_box/vicuna-13b-v1.5.json",
     ]
 
-    def __init__(self, path: str = "./data/jailbreak_bench/attack-artifacts"):
+    def __init__(
+            self, 
+            path: str = "./data/jailbreak_bench/attack-artifacts",
+            attack_engine: str = None,
+    ):
+        assert attack_engine in self.attack_engines_available()
+        self.attack_engine = attack_engine
         self.data = self._load_dataset(path)
+
+    def attack_engines_available(self) -> List[str]:
+        return ["GCG", "JBC", "PAIR", "prompt_with_random_search"]
 
     def _load_dataset(self, path: str) -> Dict[str, List]:
         # Load the behaviors dataset
@@ -36,21 +45,25 @@ class JailbreakBenchDataset(Dataset):
         samples = defaultdict(dict)
         for data in dataset["harmful"]:
             samples["harmful"][data["Index"]] = {
-                "instructions": [data["Goal"]],
+                "instructions": [],
                 "reference_answers": [data["Target"]]
             }
+            if self.attack_engine is None:
+                samples["harmful"][data["Index"]]["instructions"].append(data["Goal"])
         for data in dataset["benign"]:
             samples["benign"][data["Index"]] = {
                 "instructions": [data["Goal"]],
                 "reference_answers": [data["Target"]]
             }
         # Get the attacking instructions
-        for instruction_path in self.instruction_paths:
-            with open(f"{path}/{instruction_path}", "r") as f:
-                loaded_data = json.load(f)
-                for data in loaded_data["jailbreaks"]:
-                    if data["prompt"] is not None:
-                        samples["harmful"][data["index"]]["instructions"].append(data["prompt"])
+        if self.attack_engine is not None:
+            for instruction_path in self.instruction_paths:
+                if instruction_path.startswith(self.attack_engine):
+                    with open(f"{path}/{instruction_path}", "r") as f:
+                        loaded_data = json.load(f)
+                        for data in loaded_data["jailbreaks"]:
+                            if data["prompt"] is not None:
+                                samples["harmful"][data["index"]]["instructions"].append(data["prompt"])
         # Load the judge_comparison dataset
         dataset = load_dataset("JailbreakBench/JBB-Behaviors", "judge_comparison")
         for data in dataset["test"]:
