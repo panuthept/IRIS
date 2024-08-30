@@ -16,7 +16,6 @@ if __name__ == "__main__":
     dataset = JailbreakBenchDataset(attack_engine="PAIR")
     samples: List[Sample] = dataset.as_samples(split="harmful")[:1]
     print(samples[0].get_prompts()[0])
-    print(samples[0].reference_answers)
 
     model = HuggfaceGenerativeLLM(
         "Qwen/Qwen2-0.5B-Instruct",

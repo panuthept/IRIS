@@ -86,6 +86,9 @@ class JailbreakBenchDataset(Dataset):
                 Sample(
                     instructions=sample["instructions"],
                     reference_answers=sample["reference_answers"],
+                    prompt_template={
+                        "instruction_only": "{instruction}",
+                    }
                 )
             )
         return samples
