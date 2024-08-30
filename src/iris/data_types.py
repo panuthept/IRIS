@@ -1,3 +1,4 @@
+import numpy as np
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Tuple, List, Dict, Any
@@ -110,3 +111,25 @@ class EvaluationResult(ModelResponse):
             answers=deepcopy(response.answers),
             answer_model=response.answer_model,
         )
+    
+
+@dataclass
+class SummarizedResult:
+    scores: Dict[str, Any] = field(default_factory=dict)
+    supports: int = 0
+
+    @classmethod
+    def from_results(cls, results: List[EvaluationResult]):
+        summarized_result = cls()
+        for result in results:
+            for key, value in result.scores.items():
+                assert "all" in value.keys(), f"Missing 'all' key in {key} scores"
+                if key not in summarized_result.scores:
+                    summarized_result.scores[key] = {"all": []}
+                summarized_result.scores[key]["all"].extend(value["all"])
+        for key, value in summarized_result.scores.items():
+            summarized_result.scores[key]["mean"] = np.mean(value["all"])
+            summarized_result.scores[key]["std"] = np.std(value["all"])
+            summarized_result.supports = len(value["all"])
+            del summarized_result.scores[key]["all"]
+        return summarized_result

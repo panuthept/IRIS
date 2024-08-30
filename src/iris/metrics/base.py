@@ -1,7 +1,7 @@
 from tqdm import tqdm
-from typing import List, Dict
 from abc import ABC, abstractmethod
-from iris.data_types import ModelResponse, EvaluationResult
+from typing import List, Dict, Tuple
+from iris.data_types import ModelResponse, EvaluationResult, SummarizedResult
 
 
 class Metric(ABC):
@@ -14,7 +14,9 @@ class Metric(ABC):
         result.scores.update(self._compute_scores(response, **kwargs))
         return result
     
-    def eval_batch(self, responses: List[ModelResponse], verbose: bool = True, **kwargs) -> List[EvaluationResult]:
-        return [self.eval(response, **kwargs) for response in tqdm(responses, disable=not verbose)]
+    def eval_batch(self, responses: List[ModelResponse], verbose: bool = True, **kwargs) -> Tuple[List[EvaluationResult], SummarizedResult]:
+        all_results = [self.eval(response, **kwargs) for response in tqdm(responses, disable=not verbose)]
+        summarized_result = SummarizedResult.from_results(all_results)
+        return all_results, summarized_result
 
 

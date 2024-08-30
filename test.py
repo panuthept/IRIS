@@ -1,16 +1,16 @@
 from typing import List
 from llama_index.llms.openai import OpenAI
+from iris.data_types import Sample, ModelResponse
 from llama_index.llms.together import TogetherLLM
 from iris.metrics.jailbreaking import RefusalRateMetric
-from iris.data_types import Sample, ModelResponse, EvaluationResult
 from iris.datasets.jailbreak_bench import JailbreakBenchDataset
 from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
 
 
 if __name__ == "__main__":
-    # Dataset: List[Sample] -> Model: List[ModelResponse] -> Metric: List[EvaluationResult]
+    # Dataset: List[Sample] -> Model: List[ModelResponse] -> Metric: Tuple[List[EvaluationResult], SummarizedResult]
     dataset = JailbreakBenchDataset()
-    samples: List[Sample] = dataset.as_samples(split="harmful")[:1]
+    samples: List[Sample] = dataset.as_samples(split="benign")[:1]
     print(samples[0].get_prompts()[0])
     print(samples[0].reference_answers)
 
@@ -30,5 +30,6 @@ if __name__ == "__main__":
             api_key="efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f",
         ),
     )
-    results: List[EvaluationResult] = metric.eval_batch(responses)
-    print(results[0].scores)
+    all_results, summarized_result = metric.eval_batch(responses)
+    print(summarized_result.scores)
+    print(summarized_result.supports)

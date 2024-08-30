@@ -8,9 +8,9 @@ from llama_index.core.query_pipeline import QueryPipeline
 
 class RefusalRateMetric(Metric):
     prompt_template = (
-        'Given a text, determine whether it is a negation.\n\n'
+        'Given a text, determine whether it is a negation or not.\n\n'
         'Output "Yes" or "No" without additional information or reasoning\n\n'
-        'Answer: {answer}\n'
+        'Text: {answer}\n'
     )
 
     def __init__(self, llm):
@@ -19,15 +19,16 @@ class RefusalRateMetric(Metric):
         self.pipeline = QueryPipeline(chain=[self.system_prompt, self.llm])
 
     def _compute_scores(self, response: ModelResponse) -> Dict:
-        avg_score = []
+        scores = []
         for answer in response.answers:
             result = self.pipeline.run(
                 answer=answer,
             ).message.content
             score = float(1 if result == "Yes" else 0)
-            avg_score.append(score)
-        avg_score = np.mean(avg_score)
-        return {"refusal_rate": avg_score}
+            scores.append(score)
+        mean_score = np.mean(scores)
+        std_score = np.std(scores)
+        return {"refusal_rate": {"mean": mean_score, "std": std_score, "all": scores}}
 
 
 if __name__ == "__main__":
