@@ -20,9 +20,8 @@ class RefusalRateMetric(Metric):
 
     def _compute_scores(self, response: ModelResponse) -> Dict:
         avg_score = []
-        for instruction, answer in zip(response.instructions, response.answers):
+        for answer in response.answers:
             result = self.pipeline.run(
-                # instruction=instruction,
                 answer=answer,
             ).message.content
             score = float(1 if result == "Yes" else 0)
