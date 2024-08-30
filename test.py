@@ -24,7 +24,7 @@ if __name__ == "__main__":
         torch_dtype=torch.bfloat16,
         model_kwargs={
             "cache_dir": "./models",
-            "local_files_only": True,
+            "local_files_only": False,
         },
     )
     # model = APIGenerativeLLM(
@@ -45,4 +45,3 @@ if __name__ == "__main__":
     )
     all_results, summarized_result = metric.eval_batch(responses)
     print(summarized_result.scores)
-    print(summarized_result.supports)

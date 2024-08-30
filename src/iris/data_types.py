@@ -116,7 +116,6 @@ class EvaluationResult(ModelResponse):
 @dataclass
 class SummarizedResult:
     scores: Dict[str, Any] = field(default_factory=dict)
-    supports: int = 0
 
     @classmethod
     def from_results(cls, results: List[EvaluationResult]):
@@ -130,6 +129,6 @@ class SummarizedResult:
         for key, value in summarized_result.scores.items():
             summarized_result.scores[key]["mean"] = np.mean(value["all"])
             summarized_result.scores[key]["std"] = np.std(value["all"])
-            summarized_result.supports = len(value["all"])
+            summarized_result.scores[key]["supports"] = len(value["all"])
             del summarized_result.scores[key]["all"]
         return summarized_result
