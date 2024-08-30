@@ -6,7 +6,7 @@ from collections import defaultdict
 from iris.datasets.base import Dataset
 
 
-class JailbreakBenchDataset(Dataset):
+class JailbreakBenchPromptCLFDataset(Dataset):
     instruction_paths = [
         "GCG/transfer/gpt-3.5-turbo-1106.json",
         "GCG/transfer/gpt-4-0125-preview.json",
@@ -55,19 +55,31 @@ class JailbreakBenchDataset(Dataset):
         samples["benign"] = list(samples["benign"].values())
         return samples
 
-    def as_samples(self, split="harmful") -> List[Sample]:
-        samples: List[Sample] = [
-            Sample(
-                instructions=sample["instructions"],
-                reference_answers=sample["reference_answers"],
+    def as_samples(self) -> List[Sample]:
+        samples: List[Sample] = []
+        for sample in self.data["harmful"]:
+            samples.append(
+                Sample(
+                    instructions=sample["instructions"],
+                    reference_answers=["Harmful"],
+                )
             )
-            for sample in self.data[split]
-        ]
+        for sample in self.data["benign"]:
+            samples.append(
+                Sample(
+                    instructions=sample["instructions"],
+                    reference_answers=["Benign"],
+                )
+            )
         return samples
+    
+
+class JailbreakBenchResponseCLFDataset(Dataset):
+    pass
 
 
 if __name__ == "__main__":
-    dataset = JailbreakBenchDataset()
-    samples = dataset.as_samples("harmful")
+    dataset = JailbreakBenchPromptCLFDataset()
+    samples = dataset.as_samples()
     print(samples[0].instructions)
-    print(len(samples[0].instructions))
+    print(samples[0].reference_answers)
