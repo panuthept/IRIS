@@ -10,7 +10,7 @@ from iris.model_wrappers.generative_models.huggingface_model import HuggfaceGene
 if __name__ == "__main__":
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-    dataset = JailbreakBenchDataset(attack_engine="PAIR")
+    dataset = JailbreakBenchDataset(attack_engine="PAIR", cache_dir="./data/datasets/jailbreak_bench/jbb-behaviors")
     samples: List[Sample] = dataset.as_samples(split="harmful")
 
     model = HuggfaceGenerativeLLM(

@@ -30,17 +30,18 @@ class JailbreakBenchDataset(Dataset):
             self, 
             path: str = "./data/datasets/jailbreak_bench/attack-artifacts",
             attack_engine: str = None,
+            cache_dir: str = None
     ):
         assert attack_engine in self.attack_engines_available()
         self.attack_engine = attack_engine
-        self.data = self._load_dataset(path)
+        self.data = self._load_dataset(path, cache_dir)
 
     def attack_engines_available(self) -> List[str]:
         return ["GCG", "JBC", "PAIR", "prompt_with_random_search"]
 
-    def _load_dataset(self, path: str) -> Dict[str, List]:
+    def _load_dataset(self, path: str, cache_dir: str = None) -> Dict[str, List]:
         # Load the behaviors dataset
-        dataset = load_dataset("JailbreakBench/JBB-Behaviors", "behaviors")
+        dataset = load_dataset("JailbreakBench/JBB-Behaviors", "behaviors", cache_dir=cache_dir)
         # Get the original instruction and reference answer
         samples = defaultdict(dict)
         for data in dataset["harmful"]:

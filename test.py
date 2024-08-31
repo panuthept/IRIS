@@ -13,7 +13,7 @@ if __name__ == "__main__":
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     # Dataset: List[Sample] -> Model: List[ModelResponse] -> Metric: Tuple[List[EvaluationResult], SummarizedResult]
-    dataset = JailbreakBenchDataset(attack_engine="PAIR")
+    dataset = JailbreakBenchDataset(attack_engine="PAIR", cache_dir="./data/datasets/jailbreak_bench/jbb-behaviors")
     samples: List[Sample] = dataset.as_samples(split="harmful")[:1]
     print(samples[0].get_prompts()[0])
 
