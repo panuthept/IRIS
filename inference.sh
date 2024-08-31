@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
-#SBATCH --job-name=inference_iris
-#SBATCH --output=inference_iris.out
+#SBATCH --job-name=IRIS
+#SBATCH --output=inference.out
 #SBATCH --nodes=1
 #SBATCH --partition=scads-a100
 #SBATCH --account=scads
