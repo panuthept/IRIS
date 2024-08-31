@@ -1,18 +1,18 @@
 import json
 from typing import List
-from iris.data_types import GenerativeLLMResponse
+from iris.data_types import ModelResponse
 
 
-def save_model_answers(responses: List[GenerativeLLMResponse], path: str):
+def save_model_answers(responses: List[ModelResponse], path: str):
     with open(path, "w") as f:
         for response in responses:
             f.write(json.dumps(response) + "\n")
 
 
-def load_model_answers(path) -> List[GenerativeLLMResponse]:
-    responses: List[GenerativeLLMResponse] = []
+def load_model_answers(path) -> List[ModelResponse]:
+    responses: List[ModelResponse] = []
     with open(path, "r") as f:
         for line in f:
             response = json.loads(line)
-            responses.append(GenerativeLLMResponse(**response))
+            responses.append(ModelResponse(**response))
     return responses
