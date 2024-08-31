@@ -22,7 +22,7 @@ if __name__ == "__main__":
         pipeline_kwargs={
             "torch_dtype": torch.bfloat16,
             "model_kwargs": {
-                "cache_dir": "./models",
+                "cache_dir": "./data/models",
                 "local_files_only": False,
             }
         },
