@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     dataset = JailbreakBenchDataset(
         attack_engine="PAIR", 
-        cache_dir="./data/datasets/jailbreak_bench/jbb-behaviors"
+        cache_dir="./data/datasets/jailbreak_bench"
     )
     samples: List[Sample] = dataset.as_samples(split="harmful")
 
