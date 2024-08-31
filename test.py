@@ -20,11 +20,14 @@ if __name__ == "__main__":
     model = HuggfaceGenerativeLLM(
         "Qwen/Qwen2-0.5B-Instruct",
         max_tokens=512,
-        torch_dtype=torch.bfloat16,
-        model_kwargs={
-            "cache_dir": "./models",
-            "local_files_only": False,
+        pipeline_kwargs={
+            "torch_dtype": torch.bfloat16,
+            "model_kwargs": {
+                "cache_dir": "./models",
+                "local_files_only": False,
+            }
         },
+        cache_path="./cache",
     )
     # model = APIGenerativeLLM(
     #     llm=TogetherLLM(
