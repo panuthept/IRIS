@@ -66,7 +66,7 @@ class JailbreakBenchDataset(Dataset):
                             if data["prompt"] is not None:
                                 samples["harmful"][data["index"]]["instructions"].append(data["prompt"])
         # Load the judge_comparison dataset
-        dataset = load_dataset("JailbreakBench/JBB-Behaviors", "judge_comparison")
+        dataset = load_dataset("JailbreakBench/JBB-Behaviors", "judge_comparison", cache_dir=cache_dir)
         for data in dataset["test"]:
             samples["judge_comparison"][data["Index"]] = {
                 "instructions": [
