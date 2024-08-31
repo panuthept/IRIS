@@ -12,7 +12,7 @@ class ExactMatchMetric(Metric):
             scores.append(max_score)
         mean_score = np.mean(scores)
         std_score = np.std(scores)
-        return {"exact_match": {"mean": mean_score, "std": std_score}}
+        return {"exact_match": {"mean": mean_score, "std": std_score, "all": scores}}
 
 
 if __name__ == "__main__":

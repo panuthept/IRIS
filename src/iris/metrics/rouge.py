@@ -26,11 +26,11 @@ class RougeMetric(Metric):
                 scores[key].append(max_score[key])
         mean_scores = {key: np.mean(scores[key]) for key in scores}
         std_scores = {key: np.std(scores[key]) for key in scores}
-        return {self.rouge_type: {
-            "precision": {"mean": mean_scores["precision"], "std": std_scores["precision"]},
-            "recall": {"mean": mean_scores["recall"], "std": std_scores["recall"]},
-            "fmeasure": {"mean": mean_scores["fmeasure"], "std": std_scores["fmeasure"]},
-        }}
+        return {
+            "precision": {"mean": mean_scores["precision"], "std": std_scores["precision"], "all": scores["precision"]},
+            "recall": {"mean": mean_scores["recall"], "std": std_scores["recall"], "all": scores["recall"]},
+            "fmeasure": {"mean": mean_scores["fmeasure"], "std": std_scores["fmeasure"], "all": scores["fmeasure"]},
+        }
 
 
 if __name__ == "__main__":
@@ -48,20 +48,20 @@ if __name__ == "__main__":
     metric = RougeMetric()
     result = metric.eval(response)
     print(result)
-    assert result.scores["rougeL"]["precision"]["mean"] == 1/3
-    assert result.scores["rougeL"]["recall"]["mean"] == 0.5
-    assert result.scores["rougeL"]["fmeasure"]["mean"] == 0.4
-    assert result.scores["rougeL"]["precision"]["std"] == 0.0
-    assert result.scores["rougeL"]["recall"]["std"] == 0.0
-    assert result.scores["rougeL"]["fmeasure"]["std"] == 0.0
+    assert result.scores["precision"]["mean"] == 1/3
+    assert result.scores["recall"]["mean"] == 0.5
+    assert result.scores["fmeasure"]["mean"] == 0.4
+    assert result.scores["precision"]["std"] == 0.0
+    assert result.scores["recall"]["std"] == 0.0
+    assert result.scores["fmeasure"]["std"] == 0.0
 
     metric = RougeMetric(rouge_type="rouge1")
     result = metric.eval(response)
     print(result)
-    assert result.scores["rouge1"]["precision"]["mean"] == 0.3939393939393939
-    assert result.scores["rouge1"]["recall"]["mean"] == 0.5909090909090909
-    assert result.scores["rouge1"]["fmeasure"]["mean"] == 0.4727272727272727
-    assert result.scores["rouge1"]["precision"]["std"] == 0.0
-    assert result.scores["rouge1"]["recall"]["std"] == 0.0
-    assert result.scores["rouge1"]["fmeasure"]["std"] == 0.0
+    assert result.scores["precision"]["mean"] == 0.3939393939393939
+    assert result.scores["recall"]["mean"] == 0.5909090909090909
+    assert result.scores["fmeasure"]["mean"] == 0.4727272727272727
+    assert result.scores["precision"]["std"] == 0.0
+    assert result.scores["recall"]["std"] == 0.0
+    assert result.scores["fmeasure"]["std"] == 0.0
     print("Passed test!")

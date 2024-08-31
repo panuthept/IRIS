@@ -29,21 +29,17 @@ if __name__ == "__main__":
         },
         cache_path="./cache",
     )
-    # model = APIGenerativeLLM(
-    #     llm=TogetherLLM(
-    #         # model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-    #         model="meta-llama/Llama-2-13b-chat-hf",
-    #         api_key="efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f",
-    #     ),
-    # )
     responses: List[ModelResponse] = model.complete_batch(samples)
     print(f"Responses: {responses[0].answers}")
 
     metric = RefusalRateMetric(
-        llm=TogetherLLM(
-            model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-            api_key="efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f",
-        ),
+        judge=APIGenerativeLLM(
+            llm=TogetherLLM(
+                model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+                api_key="efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f"
+            ),
+            cache_path="./cache",
+        )
     )
     all_results, summarized_result = metric.eval_batch(responses)
     print(summarized_result.scores)

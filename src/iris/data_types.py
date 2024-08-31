@@ -14,11 +14,11 @@ class Sample:
     examples: List[Tuple[str, str]] = field(default_factory=list)
     example_template: str = "Input: {query}\nOutput: {answer}"
     prompt_template: Dict[str, str] = field(default_factory=lambda: {
-        "instruction_only": "Instruction: {instruction}\nOutput: ",
-        "instruction_with_query": "Instruction: {instruction}\n\nInput: {query}\nOutput: ",
-        "instruction_with_examples_and_query": "Instruction: {instruction}\n\n{examples}\n\nInput: {query}\nOutput: ",
-        "query_only": "Input: {query}\nOutput: ",
-        "query_with_examples": "{examples}\n\nInput: {query}\nOutput: ",
+        "instruction_only": "Instruction: {instruction}\n",
+        "instruction_with_query": "Instruction: {instruction}\nInput: {query}\n",
+        "instruction_with_examples_and_query": "Instruction: {instruction}\n{examples}\nInput: {query}\n",
+        "query_only": "Input: {query}\n",
+        "query_with_examples": "{examples}\nInput: {query}\n",
     })
 
     def get_example_string(self) -> str:

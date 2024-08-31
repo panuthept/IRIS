@@ -10,10 +10,12 @@ class GenerativeLLM(ABC):
             self, 
             system_prompt: str = None, 
             post_processing: Callable = None, 
+            use_cache: bool = True,
             cache_path: str = None,
     ):
         self.system_prompt = system_prompt
         self.post_processing = post_processing
+        self.use_cache = use_cache
         self.cache_storage = CacheStorage(self.get_model_name(), cache_path)
 
     @abstractmethod
@@ -27,11 +29,10 @@ class GenerativeLLM(ABC):
     def complete(
             self, 
             text: str, 
-            use_cache: bool = True, 
             **kwargs
     ) -> str:
         # Get the answer from cache if available
-        if use_cache:
+        if self.use_cache:
             answer = self.cache_storage.retrieve(text, system_prompt=self.system_prompt)
         if answer is None:
             answer = self._complete(text, **kwargs)
@@ -45,14 +46,13 @@ class GenerativeLLM(ABC):
     def complete_sample(
             self, 
             sample: Sample, 
-            use_cache: bool = True, 
             **kwargs
     ) -> ModelResponse:
         # Intiial GenerativeLLMResponse
         response = ModelResponse.from_sample(sample)
         # Get the answers
         for prompt in sample.get_prompts():
-            answer = self.complete(prompt, use_cache=use_cache, **kwargs)
+            answer = self.complete(prompt, **kwargs)
             response.answers.append(answer)
         # Set the answer model name
         response.answer_model = self.get_model_name()
@@ -61,8 +61,7 @@ class GenerativeLLM(ABC):
     def complete_batch(
             self, 
             samples: List[Sample], 
-            use_cache: bool = True,
             verbose: bool = True,
             **kwargs
     ) -> List[ModelResponse]:
-        return [self.complete_sample(sample, use_cache=use_cache, **kwargs) for sample in tqdm(samples, disable=not verbose)]
+        return [self.complete_sample(sample, **kwargs) for sample in tqdm(samples, disable=not verbose)]

@@ -41,5 +41,8 @@ class CacheStorage:
         if system_prompt is None:
             system_prompt = ""
 
+        if system_prompt not in self.storage:
+            self.storage[system_prompt] = {}
+            
         self.storage[system_prompt][prompt] = {"content": response, "timestamp": str(datetime.now())}
         self._save_storage()
