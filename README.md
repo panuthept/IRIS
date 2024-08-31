@@ -1,6 +1,12 @@
 # IRIS
 **I**mproving **R**obustness of LLMs on Input Variations by Mitigating Spurious **I**ntermediate **S**tates.
 
+# Download datasets
+```bash
+cd data
+sh download_datasets.sh
+```
+
 # Usage
 ```python
 from typing import List
