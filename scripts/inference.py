@@ -28,5 +28,6 @@ if __name__ == "__main__":
     responses: List[ModelResponse] = model.complete_batch(samples)
 
     # Save the responses to a file
-    os.makedirs("./outputs/Qwen/Qwen2-0.5B-Instruct", exist_ok=True)
-    save_model_answers(responses, "./outputs/Qwen/Qwen2-0.5B-Instruct/response.jsonl")
+    output_dir = "./outputs/JailbreakBenchDataset/PAIR/harmful/Qwen/Qwen2-0.5B-Instruct"
+    os.makedirs(output_dir, exist_ok=True)
+    save_model_answers(responses, f"{output_dir}/response.jsonl")
