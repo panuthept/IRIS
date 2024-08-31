@@ -1,40 +1,68 @@
 from tqdm import tqdm
 from typing import List, Callable
 from abc import ABC, abstractmethod
+from iris.cache import CacheStorage
 from iris.data_types import Sample, ModelResponse
 
 
 class GenerativeLLM(ABC):
-    model_name = "GenerativeLLM"
-
     def __init__(
             self, 
+            system_prompt: str = None, 
             post_processing: Callable = None, 
-            **kwargs
+            cache_path: str = None,
     ):
+        self.system_prompt = system_prompt
         self.post_processing = post_processing
+        self.cache_storage = CacheStorage(self.get_model_name(), cache_path)
+
+    @abstractmethod
+    def get_model_name(self) -> str:
+        raise NotImplementedError
 
     @abstractmethod
     def _complete(self, promt: str, **kwargs) -> str:
         raise NotImplementedError
     
-    def complete(self, sample: Sample, **kwargs) -> ModelResponse:
+    def complete(
+            self, 
+            text: str, 
+            use_cache: bool = True, 
+            **kwargs
+    ) -> str:
+        # Get the answer from cache if available
+        if use_cache:
+            answer = self.cache_storage.retrieve(text, system_prompt=self.system_prompt)
+        if answer is None:
+            answer = self._complete(text, **kwargs)
+            # Cache the answer
+            self.cache_storage.cache(answer, text, system_prompt=self.system_prompt)
+        # Post process the answer
+        if self.post_processing:
+            answer = self.post_processing(answer)
+        return answer
+    
+    def complete_sample(
+            self, 
+            sample: Sample, 
+            use_cache: bool = True, 
+            **kwargs
+    ) -> ModelResponse:
         # Intiial GenerativeLLMResponse
         response = ModelResponse.from_sample(sample)
         # Get the answers
-        for promt in sample.get_prompts():
-            answer = self._complete(promt, **kwargs)
-            if self.post_processing:
-                answer = self.post_processing(answer)
+        for prompt in sample.get_prompts():
+            answer = self.complete(prompt, use_cache=use_cache, **kwargs)
             response.answers.append(answer)
         # Set the answer model name
-        response.answer_model = self.model_name
+        response.answer_model = self.get_model_name()
         return response
     
     def complete_batch(
             self, 
             samples: List[Sample], 
+            use_cache: bool = True,
             verbose: bool = True,
             **kwargs
     ) -> List[ModelResponse]:
-        return [self.complete(sample, **kwargs) for sample in tqdm(samples, disable=not verbose)]
+        return [self.complete_sample(sample, use_cache=use_cache, **kwargs) for sample in tqdm(samples, disable=not verbose)]

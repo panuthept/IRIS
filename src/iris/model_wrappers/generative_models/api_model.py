@@ -1,4 +1,3 @@
-from typing import Callable
 from llama_index.llms.openai import OpenAI
 from llama_index.core.llms import ChatMessage
 from iris.model_wrappers.generative_models.base import GenerativeLLM
@@ -8,13 +7,13 @@ class APIGenerativeLLM(GenerativeLLM):
     def __init__(
             self, 
             llm: OpenAI, 
-            system_prompt: str = None, 
-            post_processing: Callable = None
+            **kwargs,
     ):
-        super().__init__(post_processing=post_processing)
         self.llm = llm
-        self.model_name = llm.model
-        self.system_prompt = system_prompt
+        super().__init__(**kwargs)
+
+    def get_model_name(self) -> str:
+        return self.llm.model
 
     def _complete(self, promt: str, **kwargs) -> str:
         if self.system_prompt:

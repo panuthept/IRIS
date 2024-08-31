@@ -28,7 +28,7 @@ class JailbreakBenchDataset(Dataset):
 
     def __init__(
             self, 
-            path: str = "./data/jailbreak_bench/attack-artifacts",
+            path: str = "./data/datasets/jailbreak_bench/attack-artifacts",
             attack_engine: str = None,
     ):
         assert attack_engine in self.attack_engines_available()

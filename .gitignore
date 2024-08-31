@@ -162,4 +162,5 @@ cython_debug/
 #.idea/
 data/datasets/
 models/
+cache/
 .DS_Store

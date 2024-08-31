@@ -1,27 +1,28 @@
 import transformers
-from typing import Callable
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 
 
 class HuggfaceGenerativeLLM(GenerativeLLM):
     def __init__(
             self, 
-            huggingface_model_name_or_path: str, 
-            system_prompt: str = None, 
+            huggingface_model_name_or_path: str,  
             max_tokens: int = None,
-            post_processing: Callable = None,
-            **kwargs
+            pipeline_kwargs: dict = None,
+            **kwargs,
     ):
-        super().__init__(post_processing=post_processing)
         self.llm = transformers.pipeline(
             "text-generation", 
             model=huggingface_model_name_or_path,
             device_map="auto",
-            **kwargs
+            **pipeline_kwargs
         )
         self.model_name = huggingface_model_name_or_path
-        self.system_prompt = system_prompt
         self.max_tokens = max_tokens
+        super().__init__(**kwargs)
+
+    def get_model_name(self) -> str:
+        # TODO: Add a better way to get the model name. the current way is not reliable as the huggingface_model_name_or_path can be a path
+        return self.model_name
 
     def _complete(self, promt: str, **kwargs) -> str:
         if self.system_prompt:
