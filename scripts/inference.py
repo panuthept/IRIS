@@ -8,6 +8,7 @@ from iris.model_wrappers.generative_models.huggingface_model import HuggfaceGene
 
 
 if __name__ == "__main__":
+    print(f"CUDA available: {torch.cuda.is_available()}")
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     dataset = JailbreakBenchDataset(
@@ -28,6 +29,7 @@ if __name__ == "__main__":
         },
         cache_path="./cache",
     )
+    print(f"Device: {model.llm.device}")
     responses: List[ModelResponse] = model.complete_batch(samples)
 
     # Save the responses to a file
