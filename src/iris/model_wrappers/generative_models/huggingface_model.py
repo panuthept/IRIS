@@ -10,6 +10,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             pipeline_kwargs: dict = None,
             **kwargs,
     ):
+        # TODO: transformers.pipeline does not allow batch generation. We need to find a way to generate multiple responses at once
         self.llm = transformers.pipeline(
             "text-generation", 
             model=huggingface_model_name_or_path,
