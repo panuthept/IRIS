@@ -75,16 +75,15 @@ class JailbreakBenchDataset(Dataset):
                 ],
                 "reference_answers": ["Harmful" if data["human_majority"] == 1 else "Benign"]
             }
-        samples["harmful"] = list(samples["harmful"].values())
-        samples["benign"] = list(samples["benign"].values())
-        samples["judge_comparison"] = list(samples["judge_comparison"].values())
+        # Convert to list and remove sample that has no instructions
+        samples["harmful"] = [sample for sample in samples["harmful"].values() if len(sample["instructions"]) > 0]
+        samples["benign"] = [sample for sample in samples["benign"].values() if len(sample["instructions"]) > 0]
+        samples["judge_comparison"] = [sample for sample in samples["judge_comparison"].values() if len(sample["instructions"]) > 0]
         return samples
 
     def as_samples(self, split="harmful") -> List[Sample]:
         samples: List[Sample] = []
         for sample in self.data[split]:
-            if len(sample["instructions"]) == 0:
-                continue
             samples.append(
                 Sample(
                     instructions=sample["instructions"],
