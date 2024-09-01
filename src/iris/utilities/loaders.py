@@ -6,7 +6,7 @@ from iris.data_types import ModelResponse
 def save_model_answers(responses: List[ModelResponse], path: str):
     with open(path, "w") as f:
         for response in responses:
-            f.write(json.dumps(response) + "\n")
+            f.write(json.dumps(response.as_dict()) + "\n")
 
 
 def load_model_answers(path) -> List[ModelResponse]:

@@ -21,6 +21,18 @@ class Sample:
         "query_with_examples": "{examples}\nInput: {query}\n",
     })
 
+    def as_dict(self) -> Dict[str, Any]:
+        return {
+            "query": self.query,
+            "instructions": self.instructions,
+            "reference_contexts": self.reference_contexts,
+            "reference_answers": self.reference_answers,
+            "reference_answers_model": self.reference_answers_model,
+            "examples": self.examples,
+            "example_template": self.example_template,
+            "prompt_template": self.prompt_template,
+        }
+
     def get_example_string(self) -> str:
         example_prompts = []
         for example in self.examples:
