@@ -9,16 +9,15 @@ sh download_datasets.sh
 
 # Usage
 ```python
-from typing import List
-from llama_index.llms.openai import OpenAI
 from llama_index.llms.together import TogetherLLM
-from iris.metrics.consistency import ConsistencyRateMetric
-from iris.data_types import Sample, ModelResponse, EvaluationResult
+from iris.metrics.jailbreaking import RefusalRateMetric
+from iris.datasets.jailbreak_bench import JailbreakBenchDataset
 from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
+from iris.model_wrappers.generative_models.huggingface_model import HuggfaceGenerativeLLM
 
 
 dataset = JailbreakBenchDataset(attack_engine="PAIR")
-samples: List[Sample] = dataset.as_samples(split="harmful")
+samples = dataset.as_samples(split="harmful")
 
 model = HuggfaceGenerativeLLM(
     "Qwen/Qwen2-0.5B-Instruct",
@@ -32,7 +31,7 @@ model = HuggfaceGenerativeLLM(
     },
     cache_path="./cache",
 )
-responses: List[ModelResponse] = model.complete_batch(samples)
+responses = model.complete_batch(samples)
 
 metric = RefusalRateMetric(
     judge=APIGenerativeLLM(
