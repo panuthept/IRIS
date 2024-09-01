@@ -105,6 +105,9 @@ class JailbreakBenchPromptCLFDataset(JailbreakBenchDataset):
                 Sample(
                     instructions=sample["instructions"],
                     reference_answers=["Harmful"],
+                    prompt_template={
+                        "instruction_only": "{instruction}",
+                    }
                 )
             )
         for sample in self.data["benign"]:
@@ -112,6 +115,9 @@ class JailbreakBenchPromptCLFDataset(JailbreakBenchDataset):
                 Sample(
                     instructions=sample["instructions"],
                     reference_answers=["Benign"],
+                    prompt_template={
+                        "instruction_only": "{instruction}",
+                    }
                 )
             )
         return samples
@@ -125,6 +131,9 @@ class JailbreakBenchResponseCLFDataset(JailbreakBenchDataset):
                 Sample(
                     instructions=sample["instructions"],
                     reference_answers=sample["reference_answers"],
+                    prompt_template={
+                        "instruction_only": "{instruction}",
+                    }
                 )
             )
         return samples
