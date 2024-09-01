@@ -7,6 +7,10 @@ class Dataset(ABC):
     @abstractmethod
     def _load_dataset(self) -> List[Dict]:
         raise NotImplementedError
+    
+    @abstractmethod
+    def get_size(self) -> int:
+        raise NotImplementedError
 
     def as_samples(self) -> List[Sample]:
         raise NotImplementedError

@@ -37,6 +37,9 @@ class JailbreakBenchDataset(Dataset):
         self.attack_engine = attack_engine
         self.data = self._load_dataset(path, cache_dir=cache_dir)
 
+    def split_available(self) -> List[str]:
+        return ["harmful", "benign", "judge_comparison"]
+
     def attack_engines_available(self) -> List[str]:
         return ["GCG", "JBC", "PAIR", "prompt_with_random_search"]
 
@@ -65,7 +68,8 @@ class JailbreakBenchDataset(Dataset):
                         loaded_data = json.load(f)
                         for data in loaded_data["jailbreaks"]:
                             if data["prompt"] is not None:
-                                samples["harmful"][data["index"]]["instructions"].append(data["prompt"])
+                                if data["prompt"] not in samples["harmful"][data["index"]]["instructions"]:
+                                    samples["harmful"][data["index"]]["instructions"].append(data["prompt"])
         # Load the judge_comparison dataset
         dataset = load_dataset("JailbreakBench/JBB-Behaviors", "judge_comparison", cache_dir=cache_dir)
         for data in dataset["test"]:
@@ -82,7 +86,13 @@ class JailbreakBenchDataset(Dataset):
         samples["judge_comparison"] = [sample for sample in samples["judge_comparison"].values() if len(sample["instructions"]) > 0]
         return samples
 
+    def get_size(self, split="harmful") -> int:
+        assert split in self.split_available(), f"Split {split} not available"
+        return len(self.data[split])
+
     def as_samples(self, split="harmful") -> List[Sample]:
+        assert split in self.split_available(), f"Split {split} not available"
+
         samples: List[Sample] = []
         for sample in self.data[split]:
             samples.append(
@@ -98,6 +108,9 @@ class JailbreakBenchDataset(Dataset):
 
 
 class JailbreakBenchPromptCLFDataset(JailbreakBenchDataset):
+    def get_size(self) -> int:
+        return len(self.data["harmful"]) + len(self.data["benign"])
+
     def as_samples(self) -> List[Sample]:
         samples: List[Sample] = []
         for sample in self.data["harmful"]:
@@ -124,6 +137,9 @@ class JailbreakBenchPromptCLFDataset(JailbreakBenchDataset):
     
 
 class JailbreakBenchResponseCLFDataset(JailbreakBenchDataset):
+    def get_size(self) -> int:
+        return len(self.data["judge_comparison"])
+
     def as_samples(self) -> List[Sample]:
         samples: List[Sample] = []
         for sample in self.data["judge_comparison"]:
