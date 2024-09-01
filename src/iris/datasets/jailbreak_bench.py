@@ -83,6 +83,8 @@ class JailbreakBenchDataset(Dataset):
     def as_samples(self, split="harmful") -> List[Sample]:
         samples: List[Sample] = []
         for sample in self.data[split]:
+            if len(sample["instructions"]) == 0:
+                continue
             samples.append(
                 Sample(
                     instructions=sample["instructions"],
