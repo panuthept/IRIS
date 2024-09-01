@@ -32,7 +32,8 @@ class JailbreakBenchDataset(Dataset):
             attack_engine: str = None,
             cache_dir: str = None,
     ):
-        assert attack_engine in self.attack_engines_available()
+        if attack_engine:
+            assert attack_engine in self.attack_engines_available()
         self.attack_engine = attack_engine
         self.data = self._load_dataset(path, cache_dir=cache_dir)
 
