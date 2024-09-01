@@ -7,6 +7,12 @@ cd data
 sh download_datasets.sh
 ```
 
+# Download models
+```bash
+cd data
+python download_model.py --model_name Qwen/Qwen2-0.5B-Instruct
+```
+
 # Usage
 ```python
 from llama_index.llms.together import TogetherLLM
