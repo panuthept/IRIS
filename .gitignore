@@ -163,4 +163,5 @@ cython_debug/
 data/datasets/
 data/models/
 cache/
+outputs/
 .DS_Store
