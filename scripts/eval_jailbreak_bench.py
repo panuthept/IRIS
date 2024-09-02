@@ -35,7 +35,7 @@ if __name__ == "__main__":
                 cache_path="./cache",
             )
         )
-        all_results, summarized_result = metric.eval_batch(responses)
+        all_results, summarized_result = metric.eval_batch(responses, verbose=False)
         print(f"Refusal rate: {summarized_result.scores}")
 
         metric = SafeResponseRateMetric(
@@ -48,5 +48,6 @@ if __name__ == "__main__":
                 cache_path="./cache",
             )
         )
-        all_results, summarized_result = metric.eval_batch(responses)
+        all_results, summarized_result = metric.eval_batch(responses, verbose=False)
         print(f"Safe response rate: {summarized_result.scores}")
+        print("-" * 100)
