@@ -6,3 +6,4 @@ rouge-score
 llama-index
 llama-index-llms-openai
 llama-index-llms-together
+llama-index-llms-openai-like
