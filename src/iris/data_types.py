@@ -89,6 +89,55 @@ class ModelResponse(Sample):
     contexts: List[str] = field(default_factory=list)
     answers: List[str] = field(default_factory=list)    # Number of answers is equal to the number of instructions
     answer_model: str = None
+    response_prompt_template: Dict[str, str] = field(default_factory=lambda: {
+        "instruction_only": "Instruction: {instruction}\nOutput: {answer}",
+        "instruction_with_query": "Instruction: {instruction}\nInput: {query}\nOutput: {answer}",
+        "instruction_with_examples_and_query": "Instruction: {instruction}\n{examples}\nInput: {query}\nOutput: {answer}",
+        "query_only": "Input: {query}\nOutput: {answer}",
+        "query_with_examples": "{examples}\nInput: {query}\nOutput: {answer}",
+    })
+
+    def get_prompts(self) -> List[str]:
+        prompts = []
+        if self.instructions:
+            for instruction, answer in zip(self.instructions, self.answers):
+                if len(self.examples) > 0 and self.query:
+                    examples = self.get_example_string()
+                    prompt = self.response_prompt_template["instruction_with_examples_and_query"].format(
+                        instruction=instruction,
+                        examples=examples,
+                        query=self.query,
+                        answer=answer,
+                    )
+                elif self.query:
+                    prompt = self.response_prompt_template["instruction_with_query"].format(
+                        instruction=instruction,
+                        query=self.query,
+                        answer=answer,
+                    )
+                else:
+                    prompt = self.response_prompt_template["instruction_only"].format(
+                        instruction=instruction,
+                        answer=answer,
+                    )
+                prompts.append(prompt)
+        elif self.query:
+            if len(self.examples) > 0:
+                examples = self.get_example_string()
+                prompt = self.response_prompt_template["query_with_examples"].format(
+                    examples=examples,
+                    query=self.query,
+                    answer=self.answers[0],
+                )
+            elif self.query:
+                prompt = self.response_prompt_template["query_only"].format(
+                    query=self.query,
+                    answer=self.answers[0],
+                )
+            prompts.append(prompt)
+        else:
+            raise ValueError("No query or instructions provided")
+        return prompts
 
     @classmethod
     def from_sample(
