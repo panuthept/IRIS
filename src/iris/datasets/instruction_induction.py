@@ -1,3 +1,4 @@
+import os
 import json
 from typing import List, Dict
 from iris.data_types import Sample
@@ -35,16 +36,14 @@ class InstructionIndutionDataset(Dataset):
 
     def __init__(
             self, 
-            path: str = "./data/datasets/instruction_induction/data/annotations/",
-            execute_path: str = "./data/datasets/instruction_induction/data/raw/execute/",
-            induction_engine: str = None,
-            cache_dir: str = None
+            task_name: str,
+            path: str = "./data/datasets/instruction_induction",
     ):
-        assert induction_engine in self.induction_engines_available()
-        self.induction_engine = induction_engine
-        self.data = self._load_dataset(path, execute_path, cache_dir)
+        assert task_name in self.task_available()
+        self.task_name = task_name
+        self.data = self._load_dataset(path)
 
-    def induction_engines_available(self) -> List[str]:
+    def task_available(self) -> List[str]:
         return ["diff", "sum",  "first_word_letter.json", "second_word_letter", "rhymes",
                 "synonyms", "singular_to_plural", "translation_en-es", "translation_en-fr",
                 "translation_en-de", "antonyms", "letters_list", "larger_animal", "num_to_verbal",
@@ -52,14 +51,17 @@ class InstructionIndutionDataset(Dataset):
                 "taxonomy_animal", "active_to_passive", "negation", "word_in_context", 
                 "cause_and_effect", "sentence_similarity"]
 
-    def _load_dataset(self, path: str, execute_path: str, cache_dir: str = None) -> Dict[str, List]:
+    def _load_dataset(self, path: str) -> Dict[str, List]:
+        annotations_path = os.path.join(path, "data", "annotations")
+        execute_path = os.path.join(path, "data", "raw", "execute")
+
         # Load the instruction induction dataset
-        with open(f"{path}/{self.induction_engine}.json", encoding="utf-8") as f_examples:
+        with open(f"{annotations_path}/{self.task_name}.json", encoding="utf-8") as f_examples:
             data = json.load(f_examples)
         instructions = data["annotations"]
 
         # Load reference answer dataset
-        with open(f'{execute_path}/{self.induction_engine}.json', 'r', encoding='utf-8') as test_f:
+        with open(f'{execute_path}/{self.task_name}.json', 'r', encoding='utf-8') as test_f:
             test_data = json.load(test_f)['examples']
 
         # Get the original instruction induction and reference answer
@@ -68,7 +70,7 @@ class InstructionIndutionDataset(Dataset):
             samples[int(id_)] = {
                 "instructions": instructions,
                 "query": example["input"],
-                "reference_answers": example["output"],
+                "reference_answers": [example["output"]],
             }
 
         samples = list(samples.values())
@@ -77,7 +79,7 @@ class InstructionIndutionDataset(Dataset):
     def get_size(self) -> int:
         return len(self.data)
 
-    def as_samples(self) -> List[Sample]:
+    def as_samples(self, prompt_template: Dict[str, str] = None) -> List[Sample]:
         samples: List[Sample] = []
         for sample in self.data:
             samples.append(
@@ -87,15 +89,16 @@ class InstructionIndutionDataset(Dataset):
                     reference_answers=sample["reference_answers"],
                     prompt_template={
                         "instruction_with_query": "Instruction: {instruction}\nInput: {query}\n",
-                    }
+                    } if prompt_template is None else prompt_template
                 )
             )
         return samples
 
 
 if __name__ == "__main__":
-    dataset = InstructionIndutionDataset(induction_engine="sentiment")
+    dataset = InstructionIndutionDataset(task_name="sentiment")
     samples = dataset.as_samples()
     print("InstructionIndutionDataset:")
-    print(f"{samples[0].get_prompts()[0]}{samples[0].reference_answers[0]}")
+    print(f"{samples[0].get_prompts()}")
+    print(f"Label: {samples[0].reference_answers[0]}")
     print("-" * 100)
