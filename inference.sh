@@ -22,44 +22,9 @@ fi
 model_name=$1
 max_tokens=$2
 
-echo "Evaluating $model_name with $max_tokens max tokens on JailbreakBench dataset:"
+echo "Evaluating $model_name with $max_tokens max tokens on InstructionIndutionDataset dataset:"
 
-echo "Original benign set:"
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/inference_jailbreak_bench.py \
+CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/inference_instruction_induction.py \
+    --task_name sentiment \
     --model_name $model_name \
     --max_tokens $max_tokens \
-    --dataset_split benign
-
-echo "Original harmful set:"
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/inference_jailbreak_bench.py \
-    --model_name $model_name \
-    --max_tokens $max_tokens \
-    --dataset_split harmful
-
-echo "GCG harmful set:"
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/inference_jailbreak_bench.py \
-    --model_name $model_name \
-    --max_tokens $max_tokens \
-    --attack_engine GCG \
-    --dataset_split harmful
-
-echo "JBC harmful set:"
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/inference_jailbreak_bench.py \
-    --model_name $model_name \
-    --max_tokens $max_tokens \
-    --attack_engine JBC \
-    --dataset_split harmful
-
-echo "PAIR harmful set:"
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/inference_jailbreak_bench.py \
-    --model_name $model_name \
-    --max_tokens $max_tokens \
-    --attack_engine PAIR \
-    --dataset_split harmful
-
-echo "Random search harmful set:"
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/inference_jailbreak_bench.py \
-    --model_name $model_name \
-    --max_tokens $max_tokens \
-    --attack_engine prompt_with_random_search \
-    --dataset_split harmful
