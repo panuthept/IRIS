@@ -7,33 +7,6 @@ from iris.datasets.base import Dataset
 
 
 class InstructionIndutionDataset(Dataset):
-    instruction_paths = [
-        "diff.json",
-        "sum.json",
-        "first_word_letter.json",
-        "second_word_letter.json",
-        "rhymes.json",
-        "synonyms.json",
-        "singular_to_plural.json",
-        "translation_en-es.json",
-        "translation_en-fr.json",
-        "translation_en-de.json",
-        "antonyms.json",
-        "letters_list.json",
-        "larger_animal.json",
-        "num_to_verbal.json",
-        "sentiment.json",
-        "orthography_starts_with.json",
-        "common_concept.json",
-        "informal_to_formal.json",
-        "taxonomy_animal.json",
-        "active_to_passive.json",
-        "negation.json",
-        "word_in_context.json",
-        "cause_and_effect.json",
-        "sentence_similarity.json"
-    ]
-
     def __init__(
             self, 
             task_name: str,
