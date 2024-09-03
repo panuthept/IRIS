@@ -1,0 +1,4 @@
+from iris.synthesizers.text_synthesizers.base import TextSynthesizer
+from iris.synthesizers.text_synthesizers.misspelling_synthesizer import MisspellingSynthesizer
+from iris.synthesizers.text_synthesizers.paraphrasing_synthesizer import ParaphrasingSynthesizer
+from iris.synthesizers.text_synthesizers.grammatical_error_synthesizer import GrammaticalErrorSynthesizer
