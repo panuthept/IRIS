@@ -68,19 +68,19 @@ class InstructionIndutionDataset(Dataset):
         elif self.task_name in ["rhymes"]:
             return {
                 "instructions": instructions,
-                "query": example["concept"],
+                "query": example["input"],
                 "reference_answers": example["other_rhymes"],
             }
         elif self.task_name in ["translation_en-de", "translation_en-es", "translation_en-fr"]:
             return {
                 "instructions": instructions,
-                "query": example["concept"],
+                "query": example["input"],
                 "reference_answers": example["possible_translations"],
             }
         elif self.task_name in ["word_in_context"]:
             return {
                 "instructions": instructions,
-                "query": example["concept"],
+                "query": example["input"],
                 "reference_answers": example["possible_outputs"],
             }
         else:
