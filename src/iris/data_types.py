@@ -184,15 +184,31 @@ class SummarizedResult:
     @classmethod
     def from_results(cls, results: List[EvaluationResult]):
         summarized_result = cls()
+
+        all_scores = {}
+        instruction_scores = {}
         for result in results:
             for key, value in result.scores.items():
                 assert "all" in value.keys(), f"Missing 'all' key in {key} scores"
-                if key not in summarized_result.scores:
-                    summarized_result.scores[key] = {"all": []}
-                summarized_result.scores[key]["all"].extend(value["all"])
-        for key, value in summarized_result.scores.items():
-            summarized_result.scores[key]["mean"] = np.mean(value["all"])
-            summarized_result.scores[key]["std"] = np.std(value["all"])
-            summarized_result.scores[key]["supports"] = len(value["all"])
-            del summarized_result.scores[key]["all"]
+                if key not in all_scores:
+                    all_scores[key] = []
+                all_scores[key].extend(value["all"])
+
+                if key not in instruction_scores:
+                    instruction_scores[key] = {}
+                for idx, score in enumerate(value["all"]):
+                    if idx not in instruction_scores[key]:
+                        instruction_scores[key][idx] = []
+                    instruction_scores[key][idx].append(score)
+        instruction_scores = {metric: [np.mean(instruction_scores[metric][idx]) for idx in instruction_scores[metric]] for metric in instruction_scores}
+
+        for metric in instruction_scores:
+            summarized_result.scores[metric] = {
+                "mean_inst": np.mean(instruction_scores[metric]),
+                "std_inst": np.std(instruction_scores[metric]),
+                "supports_inst": len(instruction_scores[metric]),
+                "mean_all": np.mean(all_scores[metric]),
+                "std_all": np.std(all_scores[metric]),
+                "supports_all": len(all_scores[metric]),
+            }
         return summarized_result
