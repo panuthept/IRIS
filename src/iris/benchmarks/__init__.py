@@ -1,0 +1,2 @@
+from iris.benchmarks.base import Benchmark
+from iris.benchmarks.instruction_induction import InstructionIndutionBenchmark
