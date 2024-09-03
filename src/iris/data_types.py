@@ -188,18 +188,18 @@ class SummarizedResult:
         all_scores = {}
         instruction_scores = {}
         for result in results:
-            for key, value in result.scores.items():
-                assert "all" in value.keys(), f"Missing 'all' key in {key} scores"
-                if key not in all_scores:
-                    all_scores[key] = []
-                all_scores[key].extend(value["all"])
+            for metric, value in result.scores.items():
+                assert "all" in value.keys(), f"Missing 'all' key in {metric} scores"
+                if metric not in all_scores:
+                    all_scores[metric] = []
+                all_scores[metric].extend(value["all"])
 
-                if key not in instruction_scores:
-                    instruction_scores[key] = {}
+                if metric not in instruction_scores:
+                    instruction_scores[metric] = {}
                 for idx, score in enumerate(value["all"]):
-                    if idx not in instruction_scores[key]:
-                        instruction_scores[key][idx] = []
-                    instruction_scores[key][idx].append(score)
+                    if idx not in instruction_scores[metric]:
+                        instruction_scores[metric][idx] = []
+                    instruction_scores[metric][idx].append(score)
         instruction_scores = {metric: [np.mean(instruction_scores[metric][idx]) for idx in instruction_scores[metric]] for metric in instruction_scores}
 
         for metric in instruction_scores:

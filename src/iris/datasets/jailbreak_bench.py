@@ -37,10 +37,12 @@ class JailbreakBenchDataset(Dataset):
         self.attack_engine = attack_engine
         self.data = self._load_dataset(path, cache_dir=cache_dir)
 
-    def split_available(self) -> List[str]:
+    @classmethod
+    def split_available(cls) -> List[str]:
         return ["harmful", "benign", "judge_comparison"]
 
-    def attack_engines_available(self) -> List[str]:
+    @classmethod
+    def attack_engines_available(cls) -> List[str]:
         return ["GCG", "JBC", "PAIR", "prompt_with_random_search"]
 
     def _load_dataset(self, path: str, cache_dir: str = None) -> Dict[str, List]:
