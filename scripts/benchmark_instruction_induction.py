@@ -49,4 +49,8 @@ if __name__ == "__main__":
             print(f"Device: {model.llm.device}")
 
     benchmark_results = benchmark.evaluate(model=model, model_name=args.model_name)
-    print(benchmark_results)
+    for task, task_results in benchmark_results.items():
+        print(f"Task: {task}")
+        print(f"EM: {round(task_results['exact_match']['mean_inst'], 2)} ± {round(task_results['exact_match']['std_inst'], 2)}")
+        print(f"RougeL: {round(task_results['fmeasure']['mean_inst'], 2)} ± {round(task_results['fmeasure']['std_inst'], 2)}")
+        print("-" * 100)
