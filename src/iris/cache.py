@@ -6,6 +6,7 @@ from iris.consts.default_paths import CACHE_STORAGE_DEFAULT_PATH
 
 
 class CacheStorage:
+    temp_file_name = "temp.json"
     cache_file_name = "cache.json"
 
     def __init__(self, name: str, cache_path: str = None):
@@ -24,8 +25,18 @@ class CacheStorage:
         # Create the cache directory if it does not exist
         if not os.path.exists(os.path.join(self.cache_path, self.name)):
             os.makedirs(os.path.join(self.cache_path, self.name))
-        with open(os.path.join(self.cache_path, self.name, self.cache_file_name), "w") as f:
+
+        # Save to temp file first
+        with open(os.path.join(self.cache_path, self.name, self.temp_file_name), "w") as f:
             json.dump(self.storage, f, indent=4)
+        # Move to the actual file
+        os.rename(
+            os.path.join(self.cache_path, self.name, self.temp_file_name),
+            os.path.join(self.cache_path, self.name, self.cache_file_name),
+        )
+        # Remove the temp file
+        if os.path.exists(os.path.join(self.cache_path, self.name, self.temp_file_name)):
+            os.remove(os.path.join(self.cache_path, self.name, self.temp_file_name))
 
     def retrieve(self, prompt: str, system_prompt: str = None) -> str:
         if system_prompt is None:
