@@ -14,5 +14,5 @@ def load_model_answers(path) -> List[ModelResponse]:
     with open(path, "r") as f:
         for line in f:
             response = json.loads(line)
-            responses.append(ModelResponse(**response))
+            responses.append(ModelResponse(**{k: v for k, v in response.items() if k in ModelResponse.__dataclass_fields__}))
     return responses

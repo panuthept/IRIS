@@ -18,13 +18,22 @@ class InstructionIndutionBenchmark(Benchmark):
             RougeMetric("rougeL"),
         ]
 
-    def evaluate(self, model: GenerativeLLM, tasks: List[str] = None) -> Dict[str, SummarizedResult]:
+    def evaluate(
+        self, 
+        model: GenerativeLLM = None, 
+        model_name: str = None,
+        tasks: List[str] = None
+    ) -> Dict[str, SummarizedResult]:
+        if model is None:
+            assert model_name is not None, "Either model or model_name must be provided"
+        model_name = model.get_model_name() if model is not None else model_name
+
         if tasks is None:
             tasks = InstructionIndutionDataset.task_available()
 
         # Inference for each task
         for task in tqdm(tasks, desc="Inference"):
-            output_path = f"{self.save_path}/{task}/{model.get_model_name()}"
+            output_path = f"{self.save_path}/{task}/{model_name}"
             if os.path.exists(f"{output_path}/response.jsonl"):
                 continue
             # Load the dataset
@@ -41,9 +50,9 @@ class InstructionIndutionBenchmark(Benchmark):
         # Evaluate the responses
         benchmark_results = {}
         for task in tqdm(tasks, desc="Evaluation"):
-            output_path = f"{self.save_path}/{task}/{model.get_model_name()}"
+            output_path = f"{self.save_path}/{task}/{model_name}"
             # Load responses
-            responses: List[ModelResponse] = load_model_answers(output_path)
+            responses: List[ModelResponse] = load_model_answers(f"{output_path}/response.jsonl")
 
             # Evaluate responses
             task_results = {}
