@@ -1,69 +1,64 @@
 import os
 from tqdm import tqdm
 from typing import List, Dict
-from iris.metrics import RougeMetric
 from iris.benchmarks.base import Benchmark
 from iris.data_types import SummarizedResult
+from iris.datasets import JailbreakBenchDataset
 from iris.prompt_template import PromptTemplate
 from iris.data_types import Sample, ModelResponse
-from iris.datasets import InstructionIndutionDataset
+from llama_index.llms.together import TogetherLLM
+from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.generative_models import GenerativeLLM
+from iris.model_wrappers.generative_models import APIGenerativeLLM
+from iris.metrics import RefusalRateMetric, SafeResponseRateMetric
 from iris.utilities.loaders import save_model_answers, load_model_answers
 
 
-class InstructionIndutionBenchmark(Benchmark):
+class JailbreakBenchBenchmark(Benchmark):
     def __init__(
         self, 
         prompt_template: PromptTemplate = None,
-        save_path: str = f"./outputs/InstructionIndutionBenchmark",
+        save_path: str = f"./outputs/JailbreakBenchBenchmark",
     ):
-        super().__init__(prompt_template, save_path, metrics=[RougeMetric("rougeL")])
-        self.task_name_map = {
-            "first_word_letter" :"First Letter",
-            "second_word_letter" :"Second Letter",
-            "letters_list" :"List Letters",
-            "orthography_starts_with" :"Starting With",
-            "singular_to_plural" :"Pluralization",
-            "active_to_passive" :"Passivization",
-            "negation" :"Negation",
-            "antonyms" :"Antonyms",
-            "synonyms" :"Synonyms",
-            "taxonomy_animal" :"Membership",
-            "rhymes" :"Rhymes",
-            "larger_animal" :"Larger Animal",
-            "cause_and_effect" :"Cause Selection",
-            "common_concept" :"Common Concept",
-            "informal_to_formal" :"Formality",
-            "sum" :"Sum",
-            "diff": "Difference",
-            "num_to_verbal" :"Number to Word",
-            "translation_en-es" :"Translation EN -> ES",
-            "translation_en-fr" :"Translation EN -> FR",
-            "translation_en-de" :"Translation EN -> DE",
-            "sentiment" :"Sentiment Analysis",
-            "sentence_similarity" :"Sentence Similarity",
-            "word_in_context" :"Word in Context",
-        }
-
-    def _rename_task(self, task: str) -> str:
-        return self.task_name_map[task]
-    
-    def task_available(self) -> List[str]:
-        return InstructionIndutionDataset.task_available()
+        super().__init__(prompt_template, save_path, metrics=[
+            RefusalRateMetric(
+                judge=APIGenerativeLLM(
+                    llm=TogetherLLM(
+                        model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+                        api_key="efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f"
+                    ),
+                    cache_path="./cache",
+                )
+            ),
+            SafeResponseRateMetric(
+                judge=APIGenerativeLLM(
+                    llm=OpenAILike(
+                        model="meta-llama/Llama-Guard-3-8B",
+                        api_key="EMPTY",
+                        api_base="http://10.204.100.70:11700/v1",
+                    ),
+                    cache_path="./cache",
+                )
+            )
+        ])
 
     def evaluate(
         self, 
         model: GenerativeLLM = None, 
         model_name: str = None,
-        tasks: List[str] = None
     ) -> Dict[str, SummarizedResult]:
         if model is None:
             assert model_name is not None, "Either model or model_name must be provided"
         model_name = model.get_model_name() if model is not None else model_name
 
-        if tasks is None:
-            tasks = self.task_available()
-        tasks = [task for task in tasks if task in self.task_name_map]
+        tasks = [
+            "None/benign",
+            "None/harmful",
+            "GCG/harmful",
+            "JBC/harmful",
+            "PAIR/harmful",
+            "prompt_with_random_search/harmful",
+        ]
 
         # Inference for each task
         for task in tqdm(tasks, desc="Inference"):
@@ -71,10 +66,11 @@ class InstructionIndutionBenchmark(Benchmark):
             if os.path.exists(f"{output_path}/response.jsonl"):
                 continue
             # Load the dataset
-            dataset = InstructionIndutionDataset(
-                task_name=task,
+            attack_engine, split = task.split("/")
+            dataset = JailbreakBenchDataset(
+                attack_engine=attack_engine,
             )
-            samples: List[Sample] = dataset.as_samples(prompt_template=self.prompt_template)
+            samples: List[Sample] = dataset.as_samples(split=split, prompt_template=self.prompt_template)
             # Get the responses
             responses: List[ModelResponse] = model.complete_batch(samples)
             # Save the responses
@@ -101,7 +97,7 @@ if __name__ == "__main__":
     import torch
     from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM
 
-    benchmark = InstructionIndutionBenchmark()
+    benchmark = JailbreakBenchBenchmark()
 
     print(f"CUDA available: {torch.cuda.is_available()}")
     model = HuggfaceGenerativeLLM(
