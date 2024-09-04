@@ -17,7 +17,7 @@ if __name__ == "__main__":
         attack_engine="PAIR", 
         cache_dir="./data/datasets/jailbreak_bench",
     )
-    samples: List[Sample] = dataset.as_samples(split="harmful")[:1]
+    samples: List[Sample] = dataset.as_samples(split="harmful")[:2]
     print(samples[0].get_prompts()[0])
 
     model = HuggfaceGenerativeLLM(

@@ -4,6 +4,7 @@ from typing import List, Dict
 from iris.data_types import Sample
 from collections import defaultdict
 from iris.datasets.base import Dataset
+from iris.prompt_template import PromptTemplate
 
 
 class InstructionIndutionDataset(Dataset):
@@ -87,7 +88,7 @@ class InstructionIndutionDataset(Dataset):
     def get_size(self) -> int:
         return len(self.data)
 
-    def as_samples(self, prompt_template: Dict[str, str] = None) -> List[Sample]:
+    def as_samples(self, prompt_template: PromptTemplate = None) -> List[Sample]:
         samples: List[Sample] = []
         for sample in self.data:
             samples.append(
@@ -95,9 +96,9 @@ class InstructionIndutionDataset(Dataset):
                     instructions=sample["instructions"],
                     query=sample["query"],
                     reference_answers=sample["reference_answers"],
-                    prompt_template={
-                        "instruction_with_query": "Instruction: {instruction}\nInput: {query}\nOutput: ",
-                    } if prompt_template is None else prompt_template
+                    prompt_template=PromptTemplate(
+                        instruction_query_template="Instruction: {instruction}\nInput: {query}\nOutput: ",
+                    ) if prompt_template is None else prompt_template
                 )
             )
         return samples

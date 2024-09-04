@@ -3,6 +3,7 @@ from typing import List, Dict
 from datasets import load_dataset
 from collections import defaultdict
 from iris.datasets.base import Dataset
+from iris.prompt_template import PromptTemplate
 from iris.data_types import Sample, ModelResponse
 
 
@@ -96,7 +97,7 @@ class JailbreakBenchDataset(Dataset):
         assert split in self.split_available(), f"Split {split} not available"
         return len(self.data[split])
 
-    def as_samples(self, split="harmful", prompt_template: Dict[str, str] = None) -> List[Sample]:
+    def as_samples(self, split="harmful", prompt_template: PromptTemplate = None) -> List[Sample]:
         assert split in self.split_available(), f"Split {split} not available"
 
         samples: List[Sample] = []
@@ -105,9 +106,9 @@ class JailbreakBenchDataset(Dataset):
                 Sample(
                     instructions=sample["instructions"],
                     reference_answers=sample["reference_answers"],
-                    prompt_template={
-                        "instruction_only": "{instruction}",
-                    } if prompt_template is None else prompt_template
+                    prompt_template=PromptTemplate(
+                        instruction_template="{instruction}",
+                    ) if prompt_template is None else prompt_template
                 )
             )
         return samples
@@ -125,7 +126,7 @@ class JailbreakBenchPromptCLFDataset(JailbreakBenchDataset):
         elif split == "benign":
             return len(self.data["benign"])
 
-    def as_samples(self, split="harmful", prompt_template: Dict[str, str] = None) -> List[Sample]:
+    def as_samples(self, split="harmful", prompt_template: PromptTemplate = None) -> List[Sample]:
         assert split in self.split_available(), f"Split {split} not available"
 
         samples: List[Sample] = []
@@ -135,9 +136,9 @@ class JailbreakBenchPromptCLFDataset(JailbreakBenchDataset):
                     Sample(
                         instructions=sample["instructions"],
                         reference_answers=["Harmful"],
-                        prompt_template={
-                            "instruction_only": "{instruction}",
-                        } if prompt_template is None else prompt_template
+                        prompt_template=PromptTemplate(
+                            instruction_template="{instruction}",
+                        ) if prompt_template is None else prompt_template
                     )
                 )
         elif split == "benign":
@@ -146,9 +147,9 @@ class JailbreakBenchPromptCLFDataset(JailbreakBenchDataset):
                     Sample(
                         instructions=sample["instructions"],
                         reference_answers=["Benign"],
-                        prompt_template={
-                            "instruction_only": "{instruction}",
-                        } if prompt_template is None else prompt_template
+                        prompt_template=PromptTemplate(
+                            instruction_template="{instruction}",
+                        ) if prompt_template is None else prompt_template
                     )
                 )
         return samples
@@ -170,7 +171,7 @@ class JailbreakBenchResponseCLFDataset(JailbreakBenchDataset):
             sample_count += 1
         return sample_count
 
-    def as_samples(self, split="harmful", prompt_template: Dict[str, str] = None) -> List[Sample]:
+    def as_samples(self, split="harmful", prompt_template: PromptTemplate = None) -> List[Sample]:
         assert split in self.split_available(), f"Split {split} not available"
 
         samples: List[Sample] = []
@@ -183,14 +184,14 @@ class JailbreakBenchResponseCLFDataset(JailbreakBenchDataset):
                 Sample(
                     instructions=sample["instructions"],
                     reference_answers=sample["reference_answers"],
-                    prompt_template={
-                        "instruction_only": "{instruction}",
-                    } if prompt_template is None else prompt_template
+                    prompt_template=PromptTemplate(
+                        instruction_template="{instruction}",
+                    ) if prompt_template is None else prompt_template
                 )
             )
         return samples
     
-    def as_responses(self, split="harmful", response_prompt_template: Dict[str, str] = None) -> List[ModelResponse]:
+    def as_responses(self, split="harmful", prompt_template: PromptTemplate = None) -> List[ModelResponse]:
         assert split in self.split_available(), f"Split {split} not available"
         
         responses: List[ModelResponse] = []
@@ -204,9 +205,10 @@ class JailbreakBenchResponseCLFDataset(JailbreakBenchDataset):
                     instructions=sample["instructions"],
                     answers=sample["answers"],
                     reference_answers=sample["reference_answers"],
-                    response_prompt_template={
-                        "instruction_only": "{instruction}\n\n{answer}",
-                    } if response_prompt_template is None else response_prompt_template
+                    prompt_template=PromptTemplate(
+                        instruction_template="{instruction}",
+                        instruction_answer_template="{instruction}\n\n{answer}",
+                    ) if prompt_template is None else prompt_template
                 )
             )
         return responses
