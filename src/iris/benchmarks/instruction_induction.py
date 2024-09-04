@@ -14,9 +14,37 @@ class InstructionIndutionBenchmark(Benchmark):
     def __init__(self, save_path: str = f"./outputs/InstructionIndutionBenchmark"):
         self.save_path = save_path
         self.metrics = [
-            ExactMatchMetric(),
             RougeMetric("rougeL"),
         ]
+        self.task_name_map = {
+            "first_word_letter" :"First Letter",
+            "second_word_letter" :"Second Letter",
+            "letters_list" :"List Letters",
+            "orthography_starts_with" :"Starting With",
+            "singular_to_plural" :"Pluralization",
+            "active_to_passive" :"Passivization",
+            "negation" :"Negation",
+            "antonyms" :"Antonyms",
+            "synonyms" :"Synonyms",
+            "taxonomy_animal" :"Membership",
+            "rhymes" :"Rhymes",
+            "larger_animal" :"Larger Animal",
+            "cause_and_effect" :"Cause Selection",
+            "common_concept" :"Common Concept",
+            "informal_to_formal" :"Formality",
+            "sum" :"Sum",
+            "diff": "Difference",
+            "num_to_verbal" :"Number to Word",
+            "translation_en-es" :"Translation EN -> ES",
+            "translation_en-fr" :"Translation EN -> FR",
+            "translation_en-de" :"Translation EN -> DE",
+            "sentiment" :"Sentiment Analysis",
+            "sentence_similarity" :"Sentence Similarity",
+            "word_in_context" :"Word in Context",
+        }
+
+    def _rename_task(self, task: str) -> str:
+        return self.task_name_map[task]
 
     def evaluate(
         self, 
@@ -59,7 +87,7 @@ class InstructionIndutionBenchmark(Benchmark):
             for metric in self.metrics:
                 _, summarized_result = metric.eval_batch(responses, verbose=False)
                 task_results.update(summarized_result.scores)
-            benchmark_results[task] = task_results
+            benchmark_results[self._rename_task(task)] = task_results
         return benchmark_results
 
 

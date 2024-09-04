@@ -13,17 +13,10 @@ class RougeMetric(Metric):
     def _compute_scores(self, response: ModelResponse) -> Dict:
         scores = {"precision": [], "recall": [], "fmeasure": []}
         for answer in response.answers:
-            max_score = {"precision": 0, "recall": 0, "fmeasure": 0}
-            for ref in response.reference_answers:
-                score = self.scorer.score(ref, answer)[self.rouge_type]
-                if score.fmeasure > max_score["fmeasure"]:
-                    max_score = {
-                        "precision": score.precision,
-                        "recall": score.recall,
-                        "fmeasure": score.fmeasure,
-                    }
-            for key in scores:
-                scores[key].append(max_score[key])
+            score = self.scorer.score_multi(response.reference_answers, answer)[self.rouge_type]
+            scores["precision"].append(score.precision)
+            scores["recall"].append(score.recall)
+            scores["fmeasure"].append(score.fmeasure)
         mean_scores = {key: np.mean(scores[key]) for key in scores}
         std_scores = {key: np.std(scores[key]) for key in scores}
         return {
