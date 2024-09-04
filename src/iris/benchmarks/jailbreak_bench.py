@@ -10,8 +10,8 @@ from llama_index.llms.together import TogetherLLM
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.generative_models import GenerativeLLM
 from iris.model_wrappers.generative_models import APIGenerativeLLM
-from iris.metrics import RefusalRateMetric, SafeResponseRateMetric
 from iris.utilities.loaders import save_model_answers, load_model_answers
+from iris.metrics import RefusalRateMetric, SafeResponseRateMetric, Metric
 
 
 class JailbreakBenchBenchmark(Benchmark):
@@ -20,7 +20,13 @@ class JailbreakBenchBenchmark(Benchmark):
         prompt_template: PromptTemplate = None,
         save_path: str = f"./outputs/JailbreakBenchBenchmark",
     ):
-        super().__init__(prompt_template, save_path, metrics=[
+        super().__init__(
+            prompt_template=prompt_template, 
+            save_path=save_path
+        )
+
+    def get_metrics(self) -> List[Metric]:
+        return [
             RefusalRateMetric(
                 judge=APIGenerativeLLM(
                     llm=TogetherLLM(
@@ -40,7 +46,7 @@ class JailbreakBenchBenchmark(Benchmark):
                     cache_path="./cache",
                 )
             )
-        ])
+        ]
 
     def evaluate(
         self, 
@@ -86,7 +92,7 @@ class JailbreakBenchBenchmark(Benchmark):
 
             # Evaluate responses
             task_results = {}
-            for metric in self.metrics:
+            for metric in self.get_metrics():
                 _, summarized_result = metric.eval_batch(responses, verbose=False)
                 task_results.update(summarized_result.scores)
             benchmark_results[self._rename_task(task)] = task_results

@@ -1,8 +1,8 @@
 import os
 from tqdm import tqdm
 from typing import List, Dict
-from iris.metrics import RougeMetric
 from iris.benchmarks.base import Benchmark
+from iris.metrics import Metric, RougeMetric
 from iris.data_types import SummarizedResult
 from iris.prompt_template import PromptTemplate
 from iris.data_types import Sample, ModelResponse
@@ -17,7 +17,10 @@ class InstructionIndutionBenchmark(Benchmark):
         prompt_template: PromptTemplate = None,
         save_path: str = f"./outputs/InstructionIndutionBenchmark",
     ):
-        super().__init__(prompt_template, save_path, metrics=[RougeMetric("rougeL")])
+        super().__init__(
+            prompt_template=prompt_template, 
+            save_path=save_path, 
+        )
         self.task_name_map = {
             "first_word_letter" :"First Letter",
             "second_word_letter" :"Second Letter",
@@ -44,6 +47,9 @@ class InstructionIndutionBenchmark(Benchmark):
             "sentence_similarity" :"Sentence Similarity",
             "word_in_context" :"Word in Context",
         }
+
+    def get_metrics(self) -> List[Metric]:
+        return [RougeMetric("rougeL")]
 
     def _rename_task(self, task: str) -> str:
         return self.task_name_map[task]
@@ -90,7 +96,7 @@ class InstructionIndutionBenchmark(Benchmark):
 
             # Evaluate responses
             task_results = {}
-            for metric in self.metrics:
+            for metric in self.get_metrics():
                 _, summarized_result = metric.eval_batch(responses, verbose=False)
                 task_results.update(summarized_result.scores)
             benchmark_results[self._rename_task(task)] = task_results
