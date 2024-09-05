@@ -3,7 +3,7 @@
 #SBATCH --job-name=IRIS_JailbreaKV_28k
 #SBATCH --output=benchmark_jailbreakv_28k_multigpu.out
 #SBATCH --nodes=1
-#SBATCH --partition=a100
+#SBATCH --partition=scads-a100
 #SBATCH --account=scads
 #SBATCH --gres=gpu:2
 #SBATCH --mem=128gb
