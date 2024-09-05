@@ -77,7 +77,7 @@ class InstructionIndutionBenchmark(Benchmark):
 
         # Inference for each task
         for task in tqdm(tasks, desc="Inference"):
-            output_path = f"{self.save_path}/{task}/{model_name}"
+            output_path = f"{self.save_path}/{task}/{self.in_context_examples_num}/{self.in_context_seed}/{model_name}"
             if os.path.exists(f"{output_path}/response.jsonl"):
                 continue
             # Load the dataset
@@ -96,7 +96,7 @@ class InstructionIndutionBenchmark(Benchmark):
         # Evaluate the responses
         benchmark_results = {}
         for task in tqdm(tasks, desc="Evaluation"):
-            output_path = f"{self.save_path}/{task}/{model_name}"
+            output_path = f"{self.save_path}/{task}/{self.in_context_examples_num}/{self.in_context_seed}/{model_name}"
             # Load responses
             responses: List[ModelResponse] = load_model_answers(f"{output_path}/response.jsonl")
 
