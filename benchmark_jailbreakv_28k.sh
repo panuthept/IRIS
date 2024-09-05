@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
-#SBATCH --job-name=IRIS
-#SBATCH --output=benchmark.out
+#SBATCH --job-name=IRIS_JailbreaKV_28k
+#SBATCH --output=benchmark_jailbreakv_28k.out
 #SBATCH --nodes=1
 #SBATCH --partition=scads-a100
 #SBATCH --account=scads
