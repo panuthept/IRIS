@@ -20,31 +20,31 @@ if [ "$SLURM_JOBTMP" != "" ]; then
 fi
 
 echo "Evaluating Qwen/Qwen2-0.5B-Instruct:"
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreakv_28k.py.py \
+CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreakv_28k.py \
     --model_name Qwen/Qwen2-0.5B-Instruct \
     --max_tokens 512 \
 
 echo "Evaluating Qwen/Qwen2-1.5B-Instruct:"
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreakv_28k.py.py \
+CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreakv_28k.py \
     --model_name Qwen/Qwen2-1.5B-Instruct \
     --max_tokens 512 \
 
 echo "Evaluating Qwen/Qwen2-7B-Instruct:"
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreakv_28k.py.py \
+CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreakv_28k.py \
     --model_name Qwen/Qwen2-7B-Instruct \
     --max_tokens 512 \
 
 echo "Evaluating google/gemma-2-2b-it:"
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreakv_28k.py.py \
+CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreakv_28k.py \
     --model_name google/gemma-2-2b-it \
     --max_tokens 512 \
 
 echo "Evaluating google/gemma-2-9b-it:"
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreakv_28k.py.py \
+CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreakv_28k.py \
     --model_name google/gemma-2-9b-it \
     --max_tokens 512 \
 
 echo "Evaluating meta-llama/Meta-Llama-3.1-8B-Instruct:"
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreakv_28k.py.py \
+CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreakv_28k.py \
     --model_name meta-llama/Meta-Llama-3.1-8B-Instruct \
     --max_tokens 512 \
