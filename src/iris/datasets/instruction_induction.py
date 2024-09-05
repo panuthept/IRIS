@@ -39,8 +39,8 @@ class InstructionIndutionDataset(Dataset):
         if self.task_name in ["cause_and_effect"]:
             datum = {
                 "instructions": instructions,
-                "query": example["cause"],
-                "reference_answers": [example["effect"]],
+                "query": f"{example['cause']} {example['effect']}",
+                "reference_answers": [example["cause"]],
             }
         elif self.task_name in ["common_concept"]:
             datum = {
@@ -52,7 +52,7 @@ class InstructionIndutionDataset(Dataset):
             datum = {
                 "instructions": instructions,
                 "query": example["input"],
-                "reference_answers": example["other_rhymes"],
+                "reference_answers": [answer for answer in example["other_rhymes"] if answer != example["input"]],
             }
         elif self.task_name in ["translation_en-de", "translation_en-es", "translation_en-fr"]:
             datum = {
@@ -138,7 +138,7 @@ class InstructionIndutionDataset(Dataset):
 
 if __name__ == "__main__":
     dataset = InstructionIndutionDataset(
-        task_name="sentiment",
+        task_name="word_in_context",
         in_context_examples_num=5,
     )
     samples = dataset.as_samples(split="test")
