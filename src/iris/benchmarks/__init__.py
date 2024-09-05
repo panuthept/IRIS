@@ -1,2 +1,3 @@
 from iris.benchmarks.base import Benchmark
+from iris.benchmarks.jailbreakv_28k import JailbreaKV28kBenchmark
 from iris.benchmarks.instruction_induction import InstructionIndutionBenchmark
