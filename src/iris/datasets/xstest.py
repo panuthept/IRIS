@@ -9,13 +9,14 @@ from iris.prompt_template import PromptTemplate
 class XSTestDataset(Dataset):
     def __init__(
             self, 
-            prompt_type: str = None,
+            category: str = None,
+            attack_engine: str = None,
             path: str = "./data/datasets/xstest",
     ):
-        if prompt_type:
-            assert prompt_type in self.prompt_types_available(), f"Prompt type {prompt_type} not available"
+        if category:
+            assert category in self.categories_available(), f"Category {category} not available"
 
-        self.benign_to_harmful_map = {
+        self.category_mapper = {
             "contrast_homonyms": ["homonyms"],
             "contrast_figurative_language": ["figurative_language"],
             "contrast_safe_targets": ["safe_targets"],
@@ -26,7 +27,7 @@ class XSTestDataset(Dataset):
             "contrast_privacy": ["privacy_public", "privacy_fictional"],
         }
 
-        self.prompt_type = prompt_type
+        self.category = category
         self.data = self._load_dataset(path)
 
     @classmethod
@@ -34,7 +35,7 @@ class XSTestDataset(Dataset):
         return ["harmful", "benign"]
 
     @classmethod
-    def prompt_types_available(cls) -> List[str]:
+    def categories_available(cls) -> List[str]:
         return [
             "homonyms", 
             "figurative_language",
@@ -55,11 +56,11 @@ class XSTestDataset(Dataset):
         samples: Dict[str, List] = defaultdict(list)
         for idx in range(len(dataset)):
             sample = dataset.iloc[idx]
-            prompt_type = sample["type"]
-            is_benign = prompt_type.startswith("contrast_")
-            prompt_types = self.benign_to_harmful_map[prompt_type] if is_benign else [prompt_type]
+            category = sample["type"]
+            is_benign = category.startswith("contrast_")
+            categories = self.category_mapper[category] if is_benign else [category]
 
-            if self.prompt_type and self.prompt_type not in prompt_types:
+            if self.category and self.category not in categories:
                 continue
 
             if is_benign:
