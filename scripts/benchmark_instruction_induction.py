@@ -13,12 +13,17 @@ if __name__ == "__main__":
     parser = parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="Qwen/Qwen2-0.5B-Instruct")
     parser.add_argument("--eval_only", action="store_true")
+    parser.add_argument("--examples_num", type=int, default=0)
+    parser.add_argument("--examples_seed", type=int, default=42)
     parser.add_argument("--api_key", type=str, default=None)
     parser.add_argument("--api_base", type=str, default=None)
     parser.add_argument("--max_tokens", type=int, default=512)
     args = parser.parse_args()
 
-    benchmark = InstructionIndutionBenchmark()
+    benchmark = InstructionIndutionBenchmark(
+        in_context_examples_num=args.examples_num,
+        in_context_seed=args.examples_seed,
+    )
 
     # Get model
     model = None

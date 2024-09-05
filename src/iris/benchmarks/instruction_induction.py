@@ -15,12 +15,16 @@ class InstructionIndutionBenchmark(Benchmark):
     def __init__(
         self, 
         prompt_template: PromptTemplate = None,
+        in_context_examples_num: int = 0,
+        in_context_seed: int = 42,
         save_path: str = f"./outputs/InstructionIndutionBenchmark",
     ):
         super().__init__(
             prompt_template=prompt_template, 
             save_path=save_path, 
         )
+        self.in_context_examples_num = in_context_examples_num
+        self.in_context_seed = in_context_seed
         self.task_name_map = {
             "first_word_letter" :"First Letter",
             "second_word_letter" :"Second Letter",
@@ -79,8 +83,10 @@ class InstructionIndutionBenchmark(Benchmark):
             # Load the dataset
             dataset = InstructionIndutionDataset(
                 task_name=task,
+                in_context_examples_num=self.in_context_examples_num,
+                in_context_seed=self.in_context_seed,
             )
-            samples: List[Sample] = dataset.as_samples(prompt_template=self.prompt_template)
+            samples: List[Sample] = dataset.as_samples(split="test", prompt_template=self.prompt_template)
             # Get the responses
             responses: List[ModelResponse] = model.complete_batch(samples)
             # Save the responses
