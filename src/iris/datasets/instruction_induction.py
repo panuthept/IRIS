@@ -1,8 +1,8 @@
 import os
 import json
+import numpy as np
 from typing import List, Dict
 from iris.data_types import Sample
-from collections import defaultdict
 from iris.datasets.base import Dataset
 from iris.prompt_template import PromptTemplate
 
@@ -11,10 +11,14 @@ class InstructionIndutionDataset(Dataset):
     def __init__(
             self, 
             task_name: str,
+            in_context_examples_num: int = 0,
+            in_context_seed: int = 42,
             path: str = "./data/datasets/instruction_induction",
     ):
         assert task_name in self.task_available()
         self.task_name = task_name
+        self.in_context_examples_num = in_context_examples_num
+        self.in_context_seed = in_context_seed
         self.data = self._load_dataset(path)
 
     @classmethod
@@ -26,78 +30,106 @@ class InstructionIndutionDataset(Dataset):
                 "taxonomy_animal", "active_to_passive", "negation", "word_in_context", 
                 "cause_and_effect", "sentence_similarity"]
     
-    def _get_datum(self, instructions, example):
+    def _get_datum(
+            self, 
+            instructions: str, 
+            example: str, 
+            in_context_examples: List[str] = None
+    ):
         if self.task_name in ["cause_and_effect"]:
-            return {
+            datum = {
                 "instructions": instructions,
                 "query": example["cause"],
                 "reference_answers": [example["effect"]],
             }
         elif self.task_name in ["common_concept"]:
-            return {
+            datum = {
                 "instructions": instructions,
                 "query": example["concept"],
                 "reference_answers": example["items"],
             }
         elif self.task_name in ["rhymes"]:
-            return {
+            datum = {
                 "instructions": instructions,
                 "query": example["input"],
                 "reference_answers": example["other_rhymes"],
             }
         elif self.task_name in ["translation_en-de", "translation_en-es", "translation_en-fr"]:
-            return {
+            datum = {
                 "instructions": instructions,
                 "query": example["input"],
                 "reference_answers": example["possible_translations"],
             }
         elif self.task_name in ["word_in_context"]:
-            return {
+            datum = {
                 "instructions": instructions,
                 "query": example["input"],
                 "reference_answers": example["possible_outputs"],
             }
         else:
-            return {
+            datum = {
                 "instructions": instructions,
                 "query": example["input"],
                 "reference_answers": [example["output"]],
             }
 
+        if in_context_examples is not None:
+            datum["examples"] = in_context_examples
+        return datum
+
     def _load_dataset(self, path: str) -> Dict[str, List]:
         annotations_path = os.path.join(path, "data", "annotations")
         execute_path = os.path.join(path, "data", "raw", "execute")
+        induce_path = os.path.join(path, "data", "raw", "induce")
 
         # Load the instruction induction dataset
         with open(f"{annotations_path}/{self.task_name}.json", encoding="utf-8") as f_examples:
             data = json.load(f_examples)
         instructions = data["annotations"]
 
-        # Load reference answer dataset
-        with open(f'{execute_path}/{self.task_name}.json', 'r', encoding='utf-8') as test_f:
-            test_data = json.load(test_f)['examples']
+        # Load train set
+        train_data = []
+        with open(f'{induce_path}/{self.task_name}.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)['examples']
+            for example in data.values():
+                train_data.append(self._get_datum(instructions, example))
 
-        # Get the original instruction induction and reference answer
-        data = defaultdict(dict)
-        for idx, example in test_data.items():
-            data[int(idx)] = self._get_datum(instructions, example)
+        # Add in-context examples (optional)
+        in_context_examples = []
+        if self.in_context_examples_num > 0:
+            np.random.seed(self.in_context_seed)
+            in_context_examples = list(np.random.choice(train_data, size=self.in_context_examples_num, replace=False))
+            in_context_examples = [(example["query"], example["reference_answers"][0]) for example in in_context_examples]
 
-        data = list(data.values())
-        return data
+        # Load test set
+        test_data = []
+        with open(f'{execute_path}/{self.task_name}.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)['examples']
+            for example in data.values():
+                test_data.append(self._get_datum(instructions, example, in_context_examples=in_context_examples))
+
+        datasets = {
+            "train": train_data,
+            "test": test_data,
+        }
+        return datasets
 
     def get_size(self) -> int:
         return len(self.data)
 
-    def as_samples(self, prompt_template: PromptTemplate = None) -> List[Sample]:
+    def as_samples(self, split: str = "test", prompt_template: PromptTemplate = None) -> List[Sample]:
         samples: List[Sample] = []
-        for sample in self.data:
+        for sample in self.data[split]:
             samples.append(
                 Sample(
                     instructions=sample["instructions"],
+                    examples=sample.get("examples", []),
                     query=sample["query"],
                     reference_answers=sample["reference_answers"],
                     prompt_template=PromptTemplate(
                         instruction_query_template="Instruction: {instruction}\nInput: {query}\nOutput: ",
+                        query_answer_template="Input: {query}\nOutput: {answer}",
+                        instruction_examples_query_template="Instruction: {instruction}\n{examples}\nInput: {query}\nOutput: ",
                     ) if prompt_template is None else prompt_template
                 )
             )
@@ -105,9 +137,12 @@ class InstructionIndutionDataset(Dataset):
 
 
 if __name__ == "__main__":
-    dataset = InstructionIndutionDataset(task_name="sentiment")
-    samples = dataset.as_samples()
-    print("InstructionIndutionDataset:")
-    print(f"{samples[0].get_prompts()}")
+    dataset = InstructionIndutionDataset(
+        task_name="sentiment",
+        in_context_examples_num=5,
+    )
+    samples = dataset.as_samples(split="test")
+    print(f"{samples[0].get_prompts()[0]}")
+    print()
     print(f"Label: {samples[0].reference_answers[0]}")
     print("-" * 100)
