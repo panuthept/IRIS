@@ -24,6 +24,15 @@ class JailbreaKV28kBenchmark(Benchmark):
             prompt_template=prompt_template, 
             save_path=save_path
         )
+        self.task_name_map = {
+            "None" :"Harmful (Original)",
+            "template" :"Harmful (Template)",
+            "persuade" :"Harmful (Persuade)",
+            "logic" :"Harmful (Logic)",
+        }
+
+    def _rename_task(self, task: str) -> str:
+        return self.task_name_map[task]
 
     def get_metrics(self) -> List[Metric]:
         return [

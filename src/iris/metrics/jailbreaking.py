@@ -83,7 +83,7 @@ class SafeResponseRateMetric(Metric):
             scores.append(score)
         mean_score = np.mean(scores)
         std_score = np.std(scores)
-        return {"safe_response_classification": {"mean": mean_score, "std": std_score, "all": scores}}
+        return {"safe_response_rate": {"mean": mean_score, "std": std_score, "all": scores}}
 
 
 if __name__ == "__main__":
@@ -131,8 +131,8 @@ if __name__ == "__main__":
     )
     result = metric.eval(response)
     # print(result)
-    assert result.scores["safe_response_classification"]["mean"] == 0.5
-    assert result.scores["safe_response_classification"]["std"] == 0.5
-    assert result.scores["safe_response_classification"]["all"][0] == 1.0
-    assert result.scores["safe_response_classification"]["all"][1] == 0.0
+    assert result.scores["safe_response_rate"]["mean"] == 0.5
+    assert result.scores["safe_response_rate"]["std"] == 0.5
+    assert result.scores["safe_response_rate"]["all"][0] == 1.0
+    assert result.scores["safe_response_rate"]["all"][1] == 0.0
     print("Passed test!")
