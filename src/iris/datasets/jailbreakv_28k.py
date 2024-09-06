@@ -1,29 +1,34 @@
 import pandas as pd
-from typing import List, Dict
-from iris.data_types import Sample
+from typing import List, Dict, Set
 from collections import defaultdict
-from iris.datasets.base import Dataset
-from iris.prompt_template import PromptTemplate
+from iris.datasets.base import JailbreakDataset
 
 
-class JailbreaKV28kDataset(Dataset):
+class JailbreaKV28kDataset(JailbreakDataset):
     def __init__(
             self, 
-            safety_policy: str = None,
+            category: str = None,
+            intention: str = None,
             attack_engine: str = None,
             path: str = "./data/datasets/jailbreakv_28k/JailBreakV_28K",
     ):
-        if safety_policy:
-            assert safety_policy in self.safety_policies_available(), f"Safety policy {safety_policy} not available"
-        if attack_engine:
-            assert attack_engine in self.attack_engines_available(), f"Attack engine {attack_engine} not available"
-
-        self.safety_policy = safety_policy
-        self.attack_engine = attack_engine
-        self.data = self._load_dataset(path)
+        super().__init__(
+            path=path,
+            category=category,
+            intention=intention,
+            attack_engine=attack_engine
+        )
 
     @classmethod
-    def safety_policies_available(cls) -> List[str]:
+    def split_available(cls) -> List[str]:
+        return ["test"]
+    
+    @classmethod
+    def intentions_available(cls) -> List[str]:
+        return ["harmful"]
+
+    @classmethod
+    def categories_available(cls) -> List[str]:
         return [
             "illegal_activity", 
             "violence",
@@ -47,50 +52,36 @@ class JailbreaKV28kDataset(Dataset):
     def attack_engines_available(cls) -> List[str]:
         return ["template", "persuade", "logic"]
 
-    def _load_dataset(self, path: str, cache_dir: str = None) -> List[Dict]:
+    def _load_dataset(self, path: str) -> Dict[str, List]:
         # Load dataset
         dataset = pd.read_csv(f"{path}/JailBreakV_28K.csv")
         # Read dataset
-        samples: Dict[str, List] = defaultdict(set)
+        test_data: Dict[str, Set] = defaultdict(set)
         for idx in range(len(dataset)):
             sample = dataset.iloc[idx]
-            policy = sample["policy"].replace(" ", "_").lower()
-            format = sample["format"].lower()
+            category = sample["policy"].replace(" ", "_").lower()
+            attack_engine = sample["format"].lower()
 
-            if policy not in self.safety_policies_available():
+            if category not in self.categories_available():
                 continue
-            if format not in self.attack_engines_available():
+            if attack_engine not in self.attack_engines_available():
                 continue
-            if self.safety_policy and policy != self.safety_policy:
+            if self.category and category != self.category:
                 continue
-            if self.attack_engine and format != self.attack_engine:
+            if self.attack_engine and attack_engine != self.attack_engine:
                 continue
 
-            samples[sample["redteam_query"]].add(sample["jailbreak_query"])
-        # Convert to list
-        data = [{"instructions": list(jailbreak_queries) if self.attack_engine else [redteam_query]} for redteam_query, jailbreak_queries in samples.items()]
-        return data
-
-    def get_size(self) -> int:
-        return len(self.data)
-
-    def as_samples(self, prompt_template: PromptTemplate = None) -> List[Sample]:
-        samples: List[Sample] = []
-        for sample in self.data:
-            samples.append(
-                Sample(
-                    instructions=sample["instructions"],
-                    prompt_template=PromptTemplate(
-                        instruction_template="{instruction}",
-                    ) if prompt_template is None else prompt_template
-                )
-            )
-        return samples
+            test_data[sample["redteam_query"]].add(sample["jailbreak_query"])
+        # Formalize the data
+        test_data = [{
+            "instructions": list(jailbreak_queries) if self.attack_engine else [redteam_query],
+            "reference_instruction": redteam_query if self.attack_engine else None,
+        } for redteam_query, jailbreak_queries in test_data.items()]
+        return {"test": [sample for sample in test_data if len(sample["instructions"]) > 0]}
 
 
 if __name__ == "__main__":
-    dataset = JailbreaKV28kDataset(attack_engine="template", safety_policy="violence")
+    dataset = JailbreaKV28kDataset()
     print(dataset.get_size())
     samples = dataset.as_samples()
-    print(f"{len(samples[0].get_prompts())}")
     print(f"{samples[0].get_prompts()[0]}")

@@ -9,6 +9,7 @@ from iris.prompt_template import PromptTemplate
 class Sample:
     query: str = None
     instructions: List[str] = field(default_factory=list)
+    reference_instruction: str = None   # reference instruction is used for consistency checking
     reference_contexts: List[str] = field(default_factory=list)
     reference_answers: List[str] = field(default_factory=list)
     reference_answers_model: str = None

@@ -1,21 +1,17 @@
 import pandas as pd
 from typing import List, Dict
-from iris.data_types import Sample
 from collections import defaultdict
-from iris.datasets.base import Dataset
-from iris.prompt_template import PromptTemplate
+from iris.datasets.base import JailbreakDataset
 
 
-class XSTestDataset(Dataset):
+class XSTestDataset(JailbreakDataset):
     def __init__(
             self, 
             category: str = None,
+            intention: str = None,
             attack_engine: str = None,
             path: str = "./data/datasets/xstest",
     ):
-        if category:
-            assert category in self.categories_available(), f"Category {category} not available"
-
         self.category_mapper = {
             "contrast_homonyms": ["homonyms"],
             "contrast_figurative_language": ["figurative_language"],
@@ -26,13 +22,16 @@ class XSTestDataset(Dataset):
             "contrast_historical_events": ["historical_events"],
             "contrast_privacy": ["privacy_public", "privacy_fictional"],
         }
-
-        self.category = category
-        self.data = self._load_dataset(path)
+        super().__init__(
+            path=path,
+            category=category,
+            intention=intention,
+            attack_engine=attack_engine
+        )
 
     @classmethod
     def split_available(cls) -> List[str]:
-        return ["harmful", "benign"]
+        return ["test"]
 
     @classmethod
     def categories_available(cls) -> List[str]:
@@ -53,7 +52,7 @@ class XSTestDataset(Dataset):
         # Load dataset
         dataset = pd.read_csv(f"{path}/xstest_v2_prompts.csv")
         # Read dataset
-        samples: Dict[str, List] = defaultdict(list)
+        test_data: Dict[str, List] = defaultdict(list)
         for idx in range(len(dataset)):
             sample = dataset.iloc[idx]
             category = sample["type"]
@@ -64,36 +63,23 @@ class XSTestDataset(Dataset):
                 continue
 
             if is_benign:
-                samples["benign"].append({"instructions": [sample["prompt"]]})
+                test_data["benign"].append({"instructions": [sample["prompt"]]})
             else:
-                samples["harmful"].append({"instructions": [sample["prompt"]]})
-        return samples
-
-    def get_size(self, split="harmful") -> int:
-        assert split in self.split_available(), f"Split {split} not available"
-        return len(self.data[split])
-
-    def as_samples(self, split="harmful", prompt_template: PromptTemplate = None) -> List[Sample]:
-        assert split in self.split_available(), f"Split {split} not available"
-
-        samples: List[Sample] = []
-        for sample in self.data[split]:
-            samples.append(
-                Sample(
-                    instructions=sample["instructions"],
-                    prompt_template=PromptTemplate(
-                        instruction_template="{instruction}",
-                    ) if prompt_template is None else prompt_template
-                )
-            )
-        return samples
+                test_data["harmful"].append({"instructions": [sample["prompt"]]})
+        # Formalize the data
+        if self.intention:
+            return {"test": test_data[self.intention]}
+        else:
+            return {"test": test_data["harmful"] + test_data["benign"]}
 
 
 if __name__ == "__main__":
-    dataset = XSTestDataset()
-    print(dataset.get_size(split="harmful"))
-    print(dataset.get_size(split="benign"))
-    samples = dataset.as_samples(split="harmful")
+    dataset = XSTestDataset(intention="harmful")
+    print(dataset.get_size())
+    samples = dataset.as_samples()
     print(f"{samples[0].get_prompts()[0]}")
-    samples = dataset.as_samples(split="benign")
+
+    dataset = XSTestDataset(intention="benign")
+    print(dataset.get_size())
+    samples = dataset.as_samples()
     print(f"{samples[0].get_prompts()[0]}")
