@@ -1,20 +1,10 @@
-import os
-from tqdm import tqdm
-from typing import List, Dict
-from iris.benchmarks.base import Benchmark
-from iris.data_types import SummarizedResult
+from typing import List, Tuple
 from iris.datasets import JailbreakBenchDataset
 from iris.prompt_template import PromptTemplate
-from iris.data_types import Sample, ModelResponse
-from llama_index.llms.together import TogetherLLM
-from llama_index.llms.openai_like import OpenAILike
-from iris.model_wrappers.generative_models import GenerativeLLM
-from iris.model_wrappers.generative_models import APIGenerativeLLM
-from iris.utilities.loaders import save_model_answers, load_model_answers
-from iris.metrics import RefusalRateMetric, SafeResponseRateMetric, Metric
+from iris.benchmarks.base import JailbreakBenchmark
 
 
-class JailbreakBenchBenchmark(Benchmark):
+class JailbreakBenchBenchmark(JailbreakBenchmark):
     def __init__(
         self, 
         prompt_template: PromptTemplate = None,
@@ -25,78 +15,23 @@ class JailbreakBenchBenchmark(Benchmark):
             save_path=save_path
         )
 
-    def get_metrics(self) -> List[Metric]:
+    def get_evaluation_settings(self) -> List[Tuple[str, str, str, str, str]]:
+        # Return a list of [(intention, category, attack_engine, save_name, setting_name), ...]
         return [
-            RefusalRateMetric(
-                judge=APIGenerativeLLM(
-                    llm=TogetherLLM(
-                        model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-                        api_key="efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f"
-                    ),
-                    cache_path="./cache",
-                )
-            ),
-            SafeResponseRateMetric(
-                judge=APIGenerativeLLM(
-                    llm=OpenAILike(
-                        model="meta-llama/Llama-Guard-3-8B",
-                        api_key="EMPTY",
-                        api_base="http://10.204.100.70:11700/v1",
-                    ),
-                    cache_path="./cache",
-                )
-            )
+            ("benign", None, None, "benign", "Benign (Original)"),
+            ("harmful", None, None, "harmful", "Harmful (Original)"),
+            ("harmful", None, "GCG", "harmful_gcg", "Harmful (GCG)"),
+            ("harmful", None, "JBC", "harmful_jbc", "Harmful (JBC)"),
+            ("harmful", None, "PAIR", "harmful_pair", "Harmful (PAIR)"),
+            ("harmful", None, "prompt_with_random_search", "harmful_prompt_with_random_search", "Harmful (Prompt with Random Search)"),
         ]
 
-    def evaluate(
-        self, 
-        model: GenerativeLLM = None, 
-        model_name: str = None,
-    ) -> Dict[str, SummarizedResult]:
-        if model is None:
-            assert model_name is not None, "Either model or model_name must be provided"
-        model_name = model.get_model_name() if model is not None else model_name
-
-        tasks = [
-            "None/benign",
-            "None/harmful",
-            "GCG/harmful",
-            "JBC/harmful",
-            "PAIR/harmful",
-            "prompt_with_random_search/harmful",
-        ]
-
-        # Inference for each task
-        for task in tqdm(tasks, desc="Inference"):
-            output_path = f"{self.save_path}/{task}/{model_name}"
-            if os.path.exists(f"{output_path}/response.jsonl"):
-                continue
-            # Load the dataset
-            attack_engine, split = task.split("/")
-            dataset = JailbreakBenchDataset(
-                attack_engine=attack_engine,
-            )
-            samples: List[Sample] = dataset.as_samples(split=split, prompt_template=self.prompt_template)
-            # Get the responses
-            responses: List[ModelResponse] = model.complete_batch(samples)
-            # Save the responses
-            os.makedirs(output_path, exist_ok=True)
-            save_model_answers(responses, f"{output_path}/response.jsonl")
-
-        # Evaluate the responses
-        benchmark_results = {}
-        for task in tqdm(tasks, desc="Evaluation"):
-            output_path = f"{self.save_path}/{task}/{model_name}"
-            # Load responses
-            responses: List[ModelResponse] = load_model_answers(f"{output_path}/response.jsonl")
-
-            # Evaluate responses
-            task_results = {}
-            for metric in self.get_metrics():
-                _, summarized_result = metric.eval_batch(responses, verbose=False)
-                task_results.update(summarized_result.scores)
-            benchmark_results[self._rename_task(task)] = task_results
-        return benchmark_results
+    def get_dataset(self, intention: str, category: str, attack_engine: str) -> JailbreakBenchDataset:
+        return JailbreakBenchDataset(
+            intention=intention,
+            category=category,
+            attack_engine=attack_engine,
+        )
 
 
 if __name__ == "__main__":
