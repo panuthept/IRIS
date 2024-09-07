@@ -35,6 +35,13 @@ class Sample:
                         continue
                 data[key] = value
         return data
+    
+    def get_ref_prompt(self) -> str:
+        return self.prompt_template.get_prompt(
+            query=self.query, 
+            instruction=self.reference_instruction, 
+            examples=self.examples if len(self.examples) > 0 else None,
+        )
 
     def get_prompts(self) -> List[str]:
         prompts = []
