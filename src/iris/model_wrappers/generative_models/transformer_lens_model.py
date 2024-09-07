@@ -33,6 +33,8 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
             use_cache=False,
             **kwargs,
     ):
+        if use_cache:
+            raise ValueError("Caching is not supported for TransformerLensGenerativeLLM")
         # We have to initialize the tokenizer separately, as we need to set the cache_dir
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             huggingface_model_name_or_path,
