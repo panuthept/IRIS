@@ -33,6 +33,7 @@ class GenerativeLLM(ABC):
             **kwargs
     ) -> str:
         # Get the answer from cache if available
+        answer = None
         if self.use_cache:
             answer = self.cache_storage.retrieve(prompt, system_prompt=self.system_prompt)
         if answer is None:
