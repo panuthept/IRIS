@@ -38,6 +38,7 @@ if __name__ == "__main__":
         else:
             print(f"CUDA available: {torch.cuda.is_available()}")
             if args.intervention:
+                print(f"Intervention Layers: {args.intervention_layers}")
                 model = TransformerLensGenerativeLLM(
                     args.model_name,
                     max_tokens=args.max_tokens,
