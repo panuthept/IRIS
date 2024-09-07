@@ -41,7 +41,7 @@ class Sample:
             query=self.query, 
             instruction=self.reference_instruction, 
             examples=self.examples if len(self.examples) > 0 else None,
-        )
+        ) if self.reference_instruction is not None else None
 
     def get_prompts(self) -> List[str]:
         prompts = []
