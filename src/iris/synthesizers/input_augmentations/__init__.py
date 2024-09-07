@@ -1,0 +1,4 @@
+from iris.synthesizers.input_augmentations.base import TextSynthesizer
+from iris.synthesizers.input_augmentations.misspelling_synthesizer import MisspellingSynthesizer
+from iris.synthesizers.input_augmentations.paraphrasing_synthesizer import ParaphrasingSynthesizer
+from iris.synthesizers.input_augmentations.grammatical_error_synthesizer import GrammaticalErrorSynthesizer

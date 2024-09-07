@@ -1,23 +1,25 @@
-from iris.synthesizers.text_synthesizers.base import TextSynthesizer
+from iris.synthesizers.input_augmentations.base import TextSynthesizer
 
 
-class GrammaticalErrorSynthesizer(TextSynthesizer):
+class MisspellingSynthesizer(TextSynthesizer):
     """Synthesizer that generates misspelled text."""
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, max_misspelled_nums: int = 1, **kwargs):
         super().__init__(*args, **kwargs)
         self.instruction = (
-            "Generate a grammatical error version of the input text.\n"
-        )
+            "Generate a misspelled version of the input text.\n"
+            "Maximum number of misspelled words: {max_misspelled_nums}."
+        ).format(max_misspelled_nums=max_misspelled_nums)
     
 
 if __name__ == "__main__":
     from llama_index.llms.openai import OpenAI
-    
-    gen = GrammaticalErrorSynthesizer(
+
+    gen = MisspellingSynthesizer(
         llm=OpenAI(
             model="gpt-3.5-turbo", 
             api_key="sk-proj-uvbi9yfICRLlEdB9WuVLT3BlbkFJLI51rD9gebE9T5pxxztV",
         ),
+        max_misspelled_nums=2,
     )
     resp = gen._synthesize("The quick brown fox jumps over the lazy dog.")
     print(resp)
