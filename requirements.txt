@@ -1,6 +1,7 @@
 tqdm
 datasets
 transformers
+transformer-lens
 accelerate
 rouge-score
 llama-index

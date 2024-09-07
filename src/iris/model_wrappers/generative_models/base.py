@@ -23,21 +23,23 @@ class GenerativeLLM(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def _complete(self, promt: str, **kwargs) -> str:
+    def _complete(self, prompt: str, ref_prompt: str = None, **kwargs) -> str:
         raise NotImplementedError
     
     def complete(
             self, 
-            text: str, 
+            prompt: str, 
+            ref_prompt: str = None,   # reference prompt for TransformerLens
             **kwargs
     ) -> str:
         # Get the answer from cache if available
+        answer = None
         if self.use_cache:
-            answer = self.cache_storage.retrieve(text, system_prompt=self.system_prompt)
+            answer = self.cache_storage.retrieve(prompt, system_prompt=self.system_prompt)
         if answer is None:
-            answer = self._complete(text, **kwargs)
+            answer = self._complete(prompt, ref_prompt=ref_prompt, **kwargs)
             # Cache the answer
-            self.cache_storage.cache(answer, text, system_prompt=self.system_prompt)
+            self.cache_storage.cache(answer, prompt, system_prompt=self.system_prompt)
         # Post process the answer
         if self.post_processing:
             answer = self.post_processing(answer)
@@ -52,7 +54,8 @@ class GenerativeLLM(ABC):
         response = ModelResponse.from_sample(sample)
         # Get the answers
         for prompt in sample.get_prompts():
-            answer = self.complete(prompt, **kwargs)
+            ref_prompt = sample.get_ref_prompt()
+            answer = self.complete(prompt, ref_prompt=ref_prompt, **kwargs)
             response.answers.append(answer)
         # Set the answer model name
         response.answer_model = self.get_model_name()
