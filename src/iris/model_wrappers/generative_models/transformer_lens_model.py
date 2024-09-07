@@ -239,7 +239,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
             ref_messages: List[Dict] = None, 
             **kwargs
     ) -> str:
-        input_ids = model.tokenizer.apply_chat_template(
+        input_ids = self.tokenizer.apply_chat_template(
             messages,
             add_generation_prompt=True,
             return_dict=True,
@@ -249,7 +249,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
 
         ref_input_ids = None
         if ref_messages:
-            ref_input_ids = model.tokenizer.apply_chat_template(
+            ref_input_ids = self.tokenizer.apply_chat_template(
                 ref_messages,
                 add_generation_prompt=True,
                 return_dict=True,
