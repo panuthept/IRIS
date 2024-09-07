@@ -73,7 +73,14 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
         padding_side: Optional[Literal["left", "right"]] = USE_DEFAULT_VALUE,
         verbose: bool = True,
     ) -> Int[torch.Tensor, "batch pos_plus_new_tokens"]:
-        """Sample Tokens from the Model.
+        """
+        ######################## Disclaimer #############################
+        These chuck of code is copied from the transformer_lens library. 
+        The only change is the addition of the ref_input parameter.
+        We temporarily disabled the use_past_kv_cache parameter for the sake of simplicity.
+        #################################################################
+
+        Sample Tokens from the Model.
 
         Sample tokens from the model until the model outputs eos_token or max_new_tokens is reached.
 
