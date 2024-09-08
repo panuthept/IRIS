@@ -1,4 +1,4 @@
-from iris.synthesizers.input_augmentations.base import TextSynthesizer
+from iris.synthesizers.instruction_augmentations.base import TextSynthesizer
 
 
 class ParaphrasingSynthesizer(TextSynthesizer):
