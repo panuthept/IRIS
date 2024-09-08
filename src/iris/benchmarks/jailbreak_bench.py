@@ -31,6 +31,7 @@ class JailbreakBenchBenchmark(JailbreakBenchmark):
             intention=intention,
             category=category,
             attack_engine=attack_engine,
+            cache_dir="./data/datasets/jailbreak_bench",
         )
 
 
