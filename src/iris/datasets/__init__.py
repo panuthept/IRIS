@@ -1,5 +1,6 @@
 from iris.datasets.xstest import XSTestDataset
 from iris.datasets.base import Dataset, JailbreakDataset
+from iris.datasets.wildguardmix import WildGuardMixDataset
 from iris.datasets.jailbreakv_28k import JailbreaKV28kDataset
 from iris.datasets.jailbreak_bench import JailbreakBenchDataset
 from iris.datasets.instruction_induction import InstructionIndutionDataset
