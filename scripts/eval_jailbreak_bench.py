@@ -14,12 +14,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     output_paths = [
-        f"./outputs/JailbreakBenchDataset/None/benign/{args.model_name}/response.jsonl",
-        f"./outputs/JailbreakBenchDataset/None/harmful/{args.model_name}/response.jsonl",
-        f"./outputs/JailbreakBenchDataset/GCG/harmful/{args.model_name}/response.jsonl",
-        f"./outputs/JailbreakBenchDataset/JBC/harmful/{args.model_name}/response.jsonl",
-        f"./outputs/JailbreakBenchDataset/PAIR/harmful/{args.model_name}/response.jsonl",
-        f"./outputs/JailbreakBenchDataset/prompt_with_random_search/harmful/{args.model_name}/response.jsonl",
+        f"./outputs/JailbreakBenchBenchmark/benign/{args.model_name}/response.jsonl",
+        f"./outputs/JailbreakBenchBenchmark/harmful/{args.model_name}/response.jsonl",
+        f"./outputs/JailbreakBenchBenchmark/harmful_gcg/{args.model_name}/response.jsonl",
+        f"./outputs/JailbreakBenchBenchmark/harmful_jbc/{args.model_name}/response.jsonl",
+        # f"./outputs/JailbreakBenchBenchmark/harmful_pair/{args.model_name}/response.jsonl",
+        # f"./outputs/JailbreakBenchBenchmark/harmful_prompt_with_random_search/{args.model_name}/response.jsonl",
     ]
 
     for output_path in output_paths:
