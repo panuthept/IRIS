@@ -15,7 +15,7 @@ class APIGenerativeLLM(GenerativeLLM):
     def get_model_name(self) -> str:
         return self.llm.model
 
-    def _complete(self, promt: str, **kwargs) -> str:
+    def _complete(self, promt: str, ref_prompt: str = None, **kwargs) -> str:
         if self.system_prompt:
             messages = [
                 ChatMessage(role="system", content=self.system_prompt),

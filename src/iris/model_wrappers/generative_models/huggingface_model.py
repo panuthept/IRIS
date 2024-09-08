@@ -25,7 +25,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         # TODO: Add a better way to get the model name. the current way is not reliable as the huggingface_model_name_or_path can be a path
         return self.model_name
 
-    def _complete(self, promt: str, **kwargs) -> str:
+    def _complete(self, promt: str, ref_prompt: str = None, **kwargs) -> str:
         if self.system_prompt:
             messages = [
                 {"role": "system", "content": self.system_prompt},
