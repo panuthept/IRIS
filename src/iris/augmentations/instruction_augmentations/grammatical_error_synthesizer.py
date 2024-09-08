@@ -1,4 +1,4 @@
-from iris.synthesizers.instruction_augmentations.base import TextSynthesizer
+from iris.augmentations.instruction_augmentations.base import TextSynthesizer
 
 
 class GrammaticalErrorSynthesizer(TextSynthesizer):

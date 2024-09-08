@@ -1,8 +1,15 @@
 import json
 from typing import List
 from iris.data_types import Sample
+from abc import ABC, abstractmethod
 from llama_index.core import PromptTemplate
 from llama_index.core.query_pipeline import QueryPipeline
+
+
+class InstructionAugmentation(ABC):
+    @abstractmethod
+    def augment(self, sample: Sample) -> List[Sample]:
+        pass
 
 
 class TextSynthesizer:
