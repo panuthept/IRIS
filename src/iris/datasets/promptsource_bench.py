@@ -9,9 +9,6 @@ from collections import defaultdict
 from iris.data_types import Sample
 from iris.datasets.base import Dataset
 from iris.prompt_template import PromptTemplate
-
-
-sys.path.append(os.path.dirname("./data/datasets/promptsource/"))
 from promptsource.templates import DatasetTemplates
 
 
@@ -207,7 +204,7 @@ class PromptSourceDataset(Dataset):
 if __name__ == "__main__":
     dataset = PromptSourceDataset(
                 task_name="ag_news",
-                prompt_name="classify_question_first",)
+                prompt_name="classify_question_first")
     samples = dataset.as_samples(split="train")
     print(f"{samples[0].get_prompts()[0]}")
     print()
