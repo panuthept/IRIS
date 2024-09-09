@@ -164,4 +164,5 @@ data/datasets/
 data/models/
 cache/
 outputs/
+dependencies/
 .DS_Store
