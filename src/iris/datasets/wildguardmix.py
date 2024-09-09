@@ -1,4 +1,3 @@
-import json
 from typing import List, Dict
 from datasets import load_dataset
 from collections import defaultdict
