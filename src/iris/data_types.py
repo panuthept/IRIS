@@ -9,6 +9,7 @@ from iris.prompt_template import PromptTemplate
 class Sample:
     query: str = None
     instructions: List[str] = field(default_factory=list)
+    classsified_instructions: List[str] = field(default_factory=list)
     reference_instruction: str = None   # reference instruction is used for consistency checking
     reference_contexts: List[str] = field(default_factory=list)
     reference_answers: List[str] = field(default_factory=list)
@@ -66,6 +67,7 @@ class Sample:
 class ModelResponse(Sample):
     contexts: List[str] = field(default_factory=list)
     answers: List[str] = field(default_factory=list)    # Number of answers is equal to the number of instructions
+    classsified_answers: List[str] = field(default_factory=list)
     answer_model: str = None
 
     def as_dict(self) -> Dict[str, Any]:
