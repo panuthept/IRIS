@@ -76,6 +76,7 @@ class JailbreakBenchmark(Benchmark):
         self, 
         model: GenerativeLLM = None, 
         model_name: str = None,
+        inference_only: bool = False
     ) -> Dict[str, SummarizedResult]:
         if model is None:
             assert model_name is not None, "Either model or model_name must be provided"
@@ -99,6 +100,9 @@ class JailbreakBenchmark(Benchmark):
             # Save the responses
             os.makedirs(output_path, exist_ok=True)
             save_model_answers(responses, f"{output_path}/response.jsonl")
+
+        if inference_only:
+            return
 
         # Evaluate the responses
         benchmark_results = {}

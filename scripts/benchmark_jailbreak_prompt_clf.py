@@ -12,6 +12,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, default="meta-llama/Llama-Guard-3-8B")
     parser.add_argument("--benchmark_name", type=str, default="jailbreak_bench")
     parser.add_argument("--eval_only", action="store_true")
+    parser.add_argument("--inference_only", action="store_true")
     parser.add_argument("--api_key", type=str, default=None)
     parser.add_argument("--api_base", type=str, default=None)
     args = parser.parse_args()
@@ -41,7 +42,10 @@ if __name__ == "__main__":
         print(f"Device: {model.device}")
 
     benchmark_results = benchmark.evaluate(model=model, model_name=args.model_name)
-    for task, task_results in benchmark_results.items():
-        print(f"{task}:")
-        print(f"Accuracy: {round(task_results['exact_match']['mean_all'], 2)}")
-        print("-" * 100)
+    if args.inference_only:
+        print("Done inference only mode.")
+    else:
+        for task, task_results in benchmark_results.items():
+            print(f"{task}:")
+            print(f"Accuracy: {round(task_results['exact_match']['mean_all'], 2)}")
+            print("-" * 100)
