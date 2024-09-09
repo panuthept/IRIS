@@ -9,10 +9,11 @@ from iris.prompt_template import PromptTemplate
 class Sample:
     query: str = None
     instructions: List[str] = field(default_factory=list)
-    classsified_instructions: List[str] = field(default_factory=list)
-    reference_instruction: str = None   # reference instruction is used for consistency checking
+    instructions_pred_label: List[str] = field(default_factory=list)   # 'harmful' or 'benign'
+    instructions_true_label: List[str] = field(default_factory=list)   # 'harmful' or 'benign'
+    reference_instruction: str = None                             # Reference instruction is used for consistency checking
     reference_contexts: List[str] = field(default_factory=list)
-    reference_answers: List[str] = field(default_factory=list)
+    reference_answers: List[str] = field(default_factory=list)    # Reference answers can be used for evaluation both answers and classsified_instructions
     reference_answers_model: str = None
     examples: List[Tuple[str, str]] = field(default_factory=list)
     example_template: str = "Input: {query}\nOutput: {answer}"
@@ -67,7 +68,8 @@ class Sample:
 class ModelResponse(Sample):
     contexts: List[str] = field(default_factory=list)
     answers: List[str] = field(default_factory=list)    # Number of answers is equal to the number of instructions
-    classsified_answers: List[str] = field(default_factory=list)
+    answers_pred_label: List[str] = field(default_factory=list)
+    answers_true_label: List[str] = field(default_factory=list)
     answer_model: str = None
 
     def as_dict(self) -> Dict[str, Any]:
