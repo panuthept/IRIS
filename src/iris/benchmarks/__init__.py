@@ -1,6 +1,6 @@
 from iris.benchmarks.xstest import XSTestBenchmark
 from iris.benchmarks.base import Benchmark, JailbreakBenchmark
 from iris.benchmarks.jailbreakv_28k import JailbreaKV28kBenchmark
-from iris.benchmarks.jailbreak_bench import JailbreakBenchBenchmark
 from iris.benchmarks.instruction_induction import InstructionIndutionBenchmark
 from iris.benchmarks.wildguardmix import WildGuardMixBenchmark, WildGuardMixPromptCLFBenchmark
+from iris.benchmarks.jailbreak_bench import JailbreakBenchBenchmark, JailbreakBenchPromptCLFBenchmark
