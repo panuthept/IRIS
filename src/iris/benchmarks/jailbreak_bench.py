@@ -1,7 +1,7 @@
 from typing import List, Tuple
-from iris.datasets import JailbreakBenchDataset
 from iris.prompt_template import PromptTemplate
 from iris.benchmarks.base import JailbreakBenchmark
+from iris.datasets import JailbreakBenchDataset, JailbreakBenchPromptCLFDataset
 
 
 class JailbreakBenchBenchmark(JailbreakBenchmark):
@@ -28,6 +28,26 @@ class JailbreakBenchBenchmark(JailbreakBenchmark):
 
     def get_dataset(self, intention: str, category: str, attack_engine: str) -> JailbreakBenchDataset:
         return JailbreakBenchDataset(
+            intention=intention,
+            category=category,
+            attack_engine=attack_engine,
+            cache_dir="./data/datasets/jailbreak_bench",
+        )
+    
+
+class JailbreakBenchPromptCLFBenchmark(JailbreakBenchmark):
+    def __init__(
+        self, 
+        prompt_template: PromptTemplate = None,
+        save_path: str = f"./outputs/JailbreakBenchPromptCLFBenchmark",
+    ):
+        super().__init__(
+            prompt_template=prompt_template, 
+            save_path=save_path
+        )
+
+    def get_dataset(self, intention: str, category: str, attack_engine: str) -> JailbreakBenchPromptCLFDataset:
+        return JailbreakBenchPromptCLFDataset(
             intention=intention,
             category=category,
             attack_engine=attack_engine,
