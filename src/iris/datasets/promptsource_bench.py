@@ -12,7 +12,6 @@ from iris.prompt_template import PromptTemplate
 
 
 class PromptSourceDataset(Dataset):
-    from promptsource.templates import DatasetTemplates
     
     def __init__(
             self, 
@@ -22,6 +21,8 @@ class PromptSourceDataset(Dataset):
             path: str = "./data/datasets/promptsource/promptsource/templates",
             cache_dir: str = None,
     ):
+        from promptsource.templates import DatasetTemplates
+        
         self.task_name = task_name
         self.sub_task_name = sub_task_name
         self.prompt_name = prompt_name
