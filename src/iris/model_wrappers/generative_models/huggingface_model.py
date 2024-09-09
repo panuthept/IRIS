@@ -25,13 +25,19 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         # TODO: Add a better way to get the model name. the current way is not reliable as the huggingface_model_name_or_path can be a path
         return self.model_name
 
-    def _complete(self, promt: str, ref_prompt: str = None, **kwargs) -> str:
-        if self.system_prompt:
-            messages = [
-                {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": promt},
-            ]
+    def _complete(self, prompt: str, ref_prompt: str = None, apply_chat_template: bool = True, **kwargs) -> str:
+        if apply_chat_template:
+            if self.system_prompt:
+                messages = [
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": prompt},
+                ]
+            else:
+                messages = [{"role": "user", "content": prompt}]
+            answer = self.llm(messages, max_new_tokens=self.max_tokens, **kwargs)[0]["generated_text"][-1]["content"]
         else:
-            messages = [{"role": "user", "content": promt}]
-        answer = self.llm(messages, max_new_tokens=self.max_tokens, **kwargs)[0]["generated_text"][-1]["content"]
+            if self.system_prompt:
+                prompt = f"{self.system_prompt}\n\n{prompt}"
+            completed_text = self.llm(prompt, max_length=self.max_tokens, **kwargs)[0]["generated_text"]
+            answer = completed_text[len(prompt):]
         return answer

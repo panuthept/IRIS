@@ -52,7 +52,6 @@ class WildGuardMixDataset(JailbreakDataset):
         # Load test dataset
         test_dataset = load_dataset("allenai/wildguardmix", "wildguardtest", cache_dir=self.cache_dir)
         # Read test dataset
-        test_data: Dict[str, List] = defaultdict(list)
         for sample in test_dataset["test"]:
             if sample["prompt_harm_label"] is None:
                 continue

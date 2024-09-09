@@ -9,15 +9,15 @@ from iris.data_types import Sample, ModelResponse
 from llama_index.llms.together import TogetherLLM
 from llama_index.llms.openai_like import OpenAILike
 from iris.utilities.loaders import save_model_answers, load_model_answers
-from iris.metrics import RefusalRateMetric, SafeResponseRateMetric, Metric
 from iris.model_wrappers.generative_models import GenerativeLLM, APIGenerativeLLM
+from iris.metrics import RefusalRateMetric, SafeResponseRateMetric, ExactMatchMetric, Metric
 
 
 class Benchmark(ABC):
     def __init__(
         self,
         prompt_template: PromptTemplate = None,
-        save_path: str = f"./outputs/InstructionIndutionBenchmark",
+        save_path: str = f"./outputs/Benchmark",
     ):
         self.prompt_template = prompt_template
         self.save_path = save_path
@@ -114,3 +114,18 @@ class JailbreakBenchmark(Benchmark):
                 results.update(summarized_result.scores)
             benchmark_results[setting["setting_name"]] = results
         return benchmark_results
+    
+
+class JailbreakPromptCLFBenchmark(JailbreakBenchmark):
+    def __init__(
+        self,
+        prompt_template: PromptTemplate = None,
+        save_path: str = f"./outputs/JailbreakPromptCLFBenchmark",
+    ):
+        super().__init__(
+            prompt_template=prompt_template,
+            save_path=save_path
+        )
+
+    def get_metrics(self) -> List[Metric]:
+        return [ExactMatchMetric()]

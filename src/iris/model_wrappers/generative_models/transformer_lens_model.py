@@ -275,21 +275,57 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
         )
         output_ids = output_ids[:, input_lens:-1]
         return self.llm.to_string(output_ids)
+    
+    def _complate_prompt(
+            self,
+            prompt: str,
+            ref_prompt: str = None,
+            **kwargs
+    ) -> str:
+        input_ids = self.tokenizer(
+            prompt,
+            return_tensors="pt",
+        )["input_ids"]
+        input_lens = input_ids.size(1)
 
-    def _complete(self, promt: str, ref_prompt: str = None, **kwargs) -> str:
-        if self.system_prompt:
-            messages = [
-                {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": promt},
-            ]
-            ref_messages = [
-                {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": ref_prompt},
-            ] if ref_prompt else None
+        ref_input_ids = None
+        if ref_prompt:
+            ref_input_ids = self.tokenizer(
+                ref_prompt,
+                return_tensors="pt",
+            )["input_ids"]
+        
+        output_ids = self._generate(
+            input=input_ids, 
+            ref_input=ref_input_ids,
+            max_new_tokens=self.max_tokens, 
+            temperature=0, 
+            verbose=False,
+            **kwargs
+        )
+        output_ids = output_ids[:, input_lens:-1]
+        return self.llm.to_string(output_ids)
+
+    def _complete(self, promt: str, ref_prompt: str = None, apply_chat_template: bool = True, **kwargs) -> str:
+        if apply_chat_template:
+            if self.system_prompt:
+                messages = [
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": promt},
+                ]
+                ref_messages = [
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": ref_prompt},
+                ] if ref_prompt else None
+            else:
+                messages = [{"role": "user", "content": promt}]
+                ref_messages = [{"role": "user", "content": ref_prompt}] if ref_prompt else None
+            answer = self._complete_messages(messages, ref_messages=ref_messages, **kwargs)
         else:
-            messages = [{"role": "user", "content": promt}]
-            ref_messages = [{"role": "user", "content": ref_prompt}] if ref_prompt else None
-        answer = self._complete_messages(messages, ref_messages=ref_messages, **kwargs)
+            if self.system_prompt:
+                prompt = f"{self.system_prompt}\n\n{promt}"
+                ref_prompt = f"{self.system_prompt}\n\n{ref_prompt}" if ref_prompt else None
+            answer = self._complate_prompt(prompt, ref_messages=ref_prompt, **kwargs)
         return answer
 
 
