@@ -9,7 +9,7 @@ from collections import defaultdict
 from iris.data_types import Sample
 from iris.datasets.base import Dataset
 from iris.prompt_template import PromptTemplate
-from promptsource.templates import DatasetTemplates
+
 
 class PromptSourceDataset(Dataset):
     
