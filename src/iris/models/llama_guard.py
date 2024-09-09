@@ -1,4 +1,3 @@
-import torch
 from copy import deepcopy
 from iris.data_types import Sample, ModelResponse
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM
@@ -78,14 +77,16 @@ class LlamaGuard:
             huggingface_model_name_or_path: str = "meta-llama/Llama-Guard-3-8B", 
             max_tokens: int = 512,
             pipeline_kwargs: dict = None,
+            cache_path: str = "./cache",
     ):
         self.model = HuggfaceGenerativeLLM(
             huggingface_model_name_or_path,
             max_tokens=max_tokens,
             pipeline_kwargs=pipeline_kwargs,
-            cache_path="./cache",
+            cache_path=cache_path,
             use_cache=False,
         )
+        self.device = self.model.llm.device
 
         self.sample_clf_prompt_template = (
             "[INST] Task: Check if there is unsafe content in 'User' messages in conversations according to our safety policy with the below categories.\n\n"
