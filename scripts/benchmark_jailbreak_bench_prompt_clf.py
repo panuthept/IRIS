@@ -18,7 +18,6 @@ if __name__ == "__main__":
     # parser.add_argument('--intervention_layers', nargs='+', type=int, default=[19, 20, 21, 22])
     parser.add_argument("--api_key", type=str, default=None)
     parser.add_argument("--api_base", type=str, default=None)
-    parser.add_argument("--max_tokens", type=int, default=512)
     args = parser.parse_args()
 
     benchmark = JailbreakBenchPromptCLFBenchmark()
@@ -29,7 +28,6 @@ if __name__ == "__main__":
         print(f"CUDA available: {torch.cuda.is_available()}")
         model = LlamaGuard(
             huggingface_model_name_or_path=args.model_name,
-            max_tokens=args.max_tokens,
             pipeline_kwargs={
                 "torch_dtype": torch.bfloat16,
                 "model_kwargs": {
