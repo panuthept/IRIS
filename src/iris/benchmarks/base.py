@@ -17,7 +17,7 @@ class Benchmark(ABC):
     def __init__(
         self,
         prompt_template: PromptTemplate = None,
-        save_path: str = f"./outputs/InstructionIndutionBenchmark",
+        save_path: str = f"./outputs/Benchmark",
     ):
         self.prompt_template = prompt_template
         self.save_path = save_path
