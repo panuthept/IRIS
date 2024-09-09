@@ -35,7 +35,7 @@ class JailbreakBenchBenchmark(JailbreakBenchmark):
         )
     
 
-class JailbreakBenchPromptCLFBenchmark(JailbreakBenchmark):
+class JailbreakBenchPromptCLFBenchmark(JailbreakBenchBenchmark):
     def __init__(
         self, 
         prompt_template: PromptTemplate = None,
