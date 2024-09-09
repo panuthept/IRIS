@@ -1,7 +1,7 @@
 from typing import List, Tuple
-from iris.datasets import WildGuardMixDataset
 from iris.prompt_template import PromptTemplate
 from iris.benchmarks.base import JailbreakBenchmark
+from iris.datasets import WildGuardMixDataset, WildGuardMixPromptCLFDataset
 
 
 class WildGuardMixBenchmark(JailbreakBenchmark):
@@ -26,6 +26,26 @@ class WildGuardMixBenchmark(JailbreakBenchmark):
 
     def get_dataset(self, intention: str, category: str, attack_engine: str) -> WildGuardMixDataset:
         return WildGuardMixDataset(
+            intention=intention,
+            category=category,
+            attack_engine=attack_engine,
+            cache_dir="./data/datasets/wildguardmix",
+        )
+    
+
+class WildGuardMixPromptCLFBenchmark(WildGuardMixBenchmark):
+    def __init__(
+        self, 
+        prompt_template: PromptTemplate = None,
+        save_path: str = f"./outputs/WildGuardMixPromptCLFBenchmark",
+    ):
+        super().__init__(
+            prompt_template=prompt_template, 
+            save_path=save_path
+        )
+
+    def get_dataset(self, intention: str, category: str, attack_engine: str) -> WildGuardMixPromptCLFDataset:
+        return WildGuardMixPromptCLFDataset(
             intention=intention,
             category=category,
             attack_engine=attack_engine,
