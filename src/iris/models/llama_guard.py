@@ -76,18 +76,13 @@ class LlamaGuard:
     def __init__(
             self, 
             huggingface_model_name_or_path: str = "meta-llama/Llama-Guard-3-8B", 
-            max_tokens: int = 512
+            max_tokens: int = 512,
+            pipeline_kwargs: dict = None,
     ):
         self.model = HuggfaceGenerativeLLM(
             huggingface_model_name_or_path,
             max_tokens=max_tokens,
-            pipeline_kwargs={
-                "torch_dtype": torch.bfloat16,
-                "model_kwargs": {
-                    "cache_dir": "./data/models",
-                    "local_files_only": False,
-                }
-            },
+            pipeline_kwargs=pipeline_kwargs,
             cache_path="./cache",
             use_cache=False,
         )
