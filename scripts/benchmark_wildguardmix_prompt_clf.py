@@ -2,7 +2,7 @@ import os
 import torch
 import argparse
 from iris.models.llama_guard import LlamaGuard
-from iris.benchmarks import JailbreakBenchPromptCLFBenchmark
+from iris.benchmarks import WildGuardMixPromptCLFBenchmark
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("--api_base", type=str, default=None)
     args = parser.parse_args()
 
-    benchmark = JailbreakBenchPromptCLFBenchmark()
+    benchmark = WildGuardMixPromptCLFBenchmark()
 
     # Get model
     model = None
