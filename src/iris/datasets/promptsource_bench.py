@@ -11,11 +11,9 @@ from iris.datasets.base import Dataset
 from iris.prompt_template import PromptTemplate
 
 
-sys.path.append(os.path.dirname("./data/datasets/promptsource/"))
-from promptsource.templates import DatasetTemplates
-
-
 class PromptSourceDataset(Dataset):
+    from promptsource.templates import DatasetTemplates
+    
     def __init__(
             self, 
             task_name: str,
