@@ -2,7 +2,7 @@ import os
 from tqdm import tqdm
 from typing import List, Dict
 from iris.benchmarks.base import Benchmark
-from iris.metrics import Metric, RougeMetric
+from iris.metrics import Metric, ExactMatchMetric
 from iris.data_types import SummarizedResult
 from iris.prompt_template import PromptTemplate
 from iris.data_types import Sample, ModelResponse
@@ -26,7 +26,7 @@ class PromptSourceBenchmark(Benchmark):
         }
 
     def get_metrics(self) -> List[Metric]:
-        return [RougeMetric("rougeL")]
+        return [ExactMatchMetric()]
 
     def _rename_task(self, task: str) -> str:
         return self.task_name_map[task]

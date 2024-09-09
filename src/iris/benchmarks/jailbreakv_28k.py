@@ -16,12 +16,12 @@ class JailbreaKV28kBenchmark(JailbreakBenchmark):
         )
 
     def get_evaluation_settings(self) -> List[Tuple[str, str, str, str, str]]:
-        # Return a list of [(intention, category, attack_engine, save_name, setting_name), ...]
+        # Return a list of [{"intention": string, "category": string, "attack_engine": string, "save_name": string, "setting_name": string}, ...]
         return [
-            ("harmful", None, None, "harmful", "Harmful (Original)"),
-            ("harmful", None, "template", "harmful_template", "Harmful (Template)"),
-            ("harmful", None, "persuade", "harmful_persuade", "Harmful (Persuade)"),
-            ("harmful", None, "logic", "harmful_logic", "Harmful (Logic)"),
+            {"intention": "harmful", "save_name": "harmful", "setting_name": "Harmful (Original)"},
+            {"intention": "harmful", "attack_engine": "template", "save_name": "harmful_template", "setting_name": "Harmful (Template)"},
+            {"intention": "harmful", "attack_engine": "persuade", "save_name": "harmful_persuade", "setting_name": "Harmful (Persuade)"},
+            {"intention": "harmful", "attack_engine": "logic", "save_name": "harmful_logic", "setting_name": "Harmful (Logic)"},
         ]
 
     def get_dataset(self, intention: str, category: str, attack_engine: str) -> JailbreaKV28kDataset:

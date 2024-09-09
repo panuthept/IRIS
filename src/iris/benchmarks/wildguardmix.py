@@ -1,14 +1,14 @@
 from typing import List, Tuple
 from iris.prompt_template import PromptTemplate
 from iris.benchmarks.base import JailbreakBenchmark
-from iris.datasets import JailbreakBenchDataset, JailbreakBenchPromptCLFDataset
+from iris.datasets import WildGuardMixDataset, WildGuardMixPromptCLFDataset
 
 
-class JailbreakBenchBenchmark(JailbreakBenchmark):
+class WildGuardMixBenchmark(JailbreakBenchmark):
     def __init__(
         self, 
         prompt_template: PromptTemplate = None,
-        save_path: str = f"./outputs/JailbreakBenchBenchmark",
+        save_path: str = f"./outputs/WildGuardMixBenchmark",
     ):
         super().__init__(
             prompt_template=prompt_template, 
@@ -19,39 +19,37 @@ class JailbreakBenchBenchmark(JailbreakBenchmark):
         # Return a list of [{"intention": string, "category": string, "attack_engine": string, "save_name": string, "setting_name": string}, ...]
         return [
             {"intention": "benign", "save_name": "benign", "setting_name": "Benign (Original)"},
+            {"intention": "benign", "attack_engine": "adversarial", "save_name": "benign_adversarial", "setting_name": "Benign (Adversarial)"},
             {"intention": "harmful", "save_name": "harmful", "setting_name": "Harmful (Original)"},
-            {"intention": "harmful", "attack_engine": "GCG", "save_name": "harmful_gcg", "setting_name": "Harmful (GCG)"},
-            {"intention": "harmful", "attack_engine": "JBC", "save_name": "harmful_jbc", "setting_name": "Harmful (JBC)"},
-            {"intention": "harmful", "attack_engine": "PAIR", "save_name": "harmful_pair", "setting_name": "Harmful (PAIR)"},
-            {"intention": "harmful", "attack_engine": "prompt_with_random_search", "save_name": "harmful_prompt_with_random_search", "setting_name": "Harmful (Prompt with Random Search)"},
+            {"intention": "harmful", "attack_engine": "adversarial", "save_name": "harmful_adversarial", "setting_name": "Harmful (Adversarial)"},
         ]
 
-    def get_dataset(self, intention: str, category: str, attack_engine: str) -> JailbreakBenchDataset:
-        return JailbreakBenchDataset(
+    def get_dataset(self, intention: str, category: str, attack_engine: str) -> WildGuardMixDataset:
+        return WildGuardMixDataset(
             intention=intention,
             category=category,
             attack_engine=attack_engine,
-            cache_dir="./data/datasets/jailbreak_bench",
+            cache_dir="./data/datasets/wildguardmix",
         )
     
 
-class JailbreakBenchPromptCLFBenchmark(JailbreakBenchBenchmark):
+class WildGuardMixPromptCLFBenchmark(WildGuardMixBenchmark):
     def __init__(
         self, 
         prompt_template: PromptTemplate = None,
-        save_path: str = f"./outputs/JailbreakBenchPromptCLFBenchmark",
+        save_path: str = f"./outputs/WildGuardMixPromptCLFBenchmark",
     ):
         super().__init__(
             prompt_template=prompt_template, 
             save_path=save_path
         )
 
-    def get_dataset(self, intention: str, category: str, attack_engine: str) -> JailbreakBenchPromptCLFDataset:
-        return JailbreakBenchPromptCLFDataset(
+    def get_dataset(self, intention: str, category: str, attack_engine: str) -> WildGuardMixPromptCLFDataset:
+        return WildGuardMixPromptCLFDataset(
             intention=intention,
             category=category,
             attack_engine=attack_engine,
-            cache_dir="./data/datasets/jailbreak_bench",
+            cache_dir="./data/datasets/wildguardmix",
         )
 
 
@@ -59,7 +57,7 @@ if __name__ == "__main__":
     import torch
     from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM
 
-    benchmark = JailbreakBenchBenchmark()
+    benchmark = WildGuardMixBenchmark()
 
     print(f"CUDA available: {torch.cuda.is_available()}")
     model = HuggfaceGenerativeLLM(
