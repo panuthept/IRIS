@@ -3,9 +3,6 @@ import torch
 import argparse
 from iris.models.llama_guard import LlamaGuard
 from iris.benchmarks import JailbreakBenchPromptCLFBenchmark
-from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
-from iris.model_wrappers.generative_models.huggingface_model import HuggfaceGenerativeLLM
-from iris.model_wrappers.generative_models.transformer_lens_model import TransformerLensGenerativeLLM
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
