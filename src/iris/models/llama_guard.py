@@ -75,7 +75,7 @@ class LlamaGuard:
     def __init__(
             self, 
             huggingface_model_name_or_path: str = "meta-llama/Llama-Guard-3-8B", 
-            max_tokens: int = 512,
+            max_tokens: int = 10,
             pipeline_kwargs: dict = None,
             cache_path: str = "./cache",
     ):
