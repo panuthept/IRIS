@@ -2,7 +2,7 @@ import os
 import torch
 import argparse
 from iris.models.llama_guard import LlamaGuard
-from iris.benchmarks import JailbreakBenchPromptCLFBenchmark
+from iris.benchmarks import JailbreakBenchPromptCLFBenchmark, WildGuardMixPromptCLFBenchmark
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -10,14 +10,18 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 if __name__ == "__main__":
     parser = parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="meta-llama/Llama-Guard-3-8B")
+    parser.add_argument("--benchmark_name", type=str, default="jailbreak_bench")
     parser.add_argument("--eval_only", action="store_true")
-    # parser.add_argument("--intervention", action="store_true")
-    # parser.add_argument('--intervention_layers', nargs='+', type=int, default=[19, 20, 21, 22])
     parser.add_argument("--api_key", type=str, default=None)
     parser.add_argument("--api_base", type=str, default=None)
     args = parser.parse_args()
 
-    benchmark = JailbreakBenchPromptCLFBenchmark()
+    assert args.benchmark_name in ["jailbreak_bench", "wildguardmix"]
+    if args.benchmark_name == "jailbreak_bench":
+        benchmark = JailbreakBenchPromptCLFBenchmark()
+    else:
+        benchmark = WildGuardMixPromptCLFBenchmark()
+    print(f"Running benchmark: {args.benchmark_name}")
 
     # Get model
     model = None
