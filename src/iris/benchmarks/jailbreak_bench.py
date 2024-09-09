@@ -16,14 +16,14 @@ class JailbreakBenchBenchmark(JailbreakBenchmark):
         )
 
     def get_evaluation_settings(self) -> List[Tuple[str, str, str, str, str]]:
-        # Return a list of [(intention, category, attack_engine, save_name, setting_name), ...]
+        # Return a list of [{"intention": string, "category": string, "attack_engine": string, "save_name": string, "setting_name": string}, ...]
         return [
-            ("benign", None, None, "benign", "Benign (Original)"),
-            ("harmful", None, None, "harmful", "Harmful (Original)"),
-            ("harmful", None, "GCG", "harmful_gcg", "Harmful (GCG)"),
-            ("harmful", None, "JBC", "harmful_jbc", "Harmful (JBC)"),
-            ("harmful", None, "PAIR", "harmful_pair", "Harmful (PAIR)"),
-            ("harmful", None, "prompt_with_random_search", "harmful_prompt_with_random_search", "Harmful (Prompt with Random Search)"),
+            {"intention": "benign", "save_name": "benign", "setting_name": "Benign (Original)"},
+            {"intention": "harmful", "save_name": "harmful", "setting_name": "Harmful (Original)"},
+            {"intention": "harmful", "attack_engine": "GCG", "save_name": "harmful_gcg", "setting_name": "Harmful (GCG)"},
+            {"intention": "harmful", "attack_engine": "JBC", "save_name": "harmful_jbc", "setting_name": "Harmful (JBC)"},
+            {"intention": "harmful", "attack_engine": "PAIR", "save_name": "harmful_pair", "setting_name": "Harmful (PAIR)"},
+            {"intention": "harmful", "attack_engine": "prompt_with_random_search", "save_name": "harmful_prompt_with_random_search", "setting_name": "Harmful (Prompt with Random Search)"},
         ]
 
     def get_dataset(self, intention: str, category: str, attack_engine: str) -> JailbreakBenchDataset:

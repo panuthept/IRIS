@@ -16,12 +16,12 @@ class WildGuardMixBenchmark(JailbreakBenchmark):
         )
 
     def get_evaluation_settings(self) -> List[Tuple[str, str, str, str, str]]:
-        # Return a list of [(intention, category, attack_engine, save_name, setting_name), ...]
+        # Return a list of [{"intention": string, "category": string, "attack_engine": string, "save_name": string, "setting_name": string}, ...]
         return [
-            ("benign", None, None, "benign", "Benign (Original)"),
-            ("benign", None, "adversarial", "benign_adversarial", "Benign (Adversarial)"),
-            ("harmful", None, None, "harmful", "Harmful (Original)"),
-            ("harmful", None, "adversarial", "harmful_adversarial", "Harmful (Adversarial)"),
+            {"intention": "benign", "save_name": "benign", "setting_name": "Benign (Original)"},
+            {"intention": "benign", "attack_engine": "adversarial", "save_name": "benign_adversarial", "setting_name": "Benign (Adversarial)"},
+            {"intention": "harmful", "save_name": "harmful", "setting_name": "Harmful (Original)"},
+            {"intention": "harmful", "attack_engine": "adversarial", "save_name": "harmful_adversarial", "setting_name": "Harmful (Adversarial)"},
         ]
 
     def get_dataset(self, intention: str, category: str, attack_engine: str) -> WildGuardMixDataset:

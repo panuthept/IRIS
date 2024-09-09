@@ -1,7 +1,7 @@
 import os
 from tqdm import tqdm
 from abc import ABC, abstractmethod
-from typing import List, Dict, Tuple
+from typing import List, Dict, Any
 from iris.datasets import JailbreakDataset
 from iris.data_types import SummarizedResult
 from iris.prompt_template import PromptTemplate
@@ -42,8 +42,8 @@ class JailbreakBenchmark(Benchmark):
             save_path=save_path
         )
 
-    def get_evaluation_settings(self) -> List[Tuple[str, str, str, str, str]]:
-        # Return a list of [(intention, category, attack_engine, save_name, setting_name), ...]
+    def get_evaluation_settings(self) -> List[Dict[str, Any]]:
+        # Return a list of [{"intention": string, "category": string, "attack_engine": string, "save_name": string, "setting_name": string}, ...]
         raise NotImplementedError
 
     def get_dataset(self, intention: str, category: str, attack_engine: str) -> JailbreakDataset:
@@ -83,15 +83,15 @@ class JailbreakBenchmark(Benchmark):
 
         # Inference for each task
         evaluation_settings = self.get_evaluation_settings()
-        for intention, category, attack_engine, save_name, _ in tqdm(evaluation_settings, desc="Inference"):
-            output_path = f"{self.save_path}/{save_name}/{model_name}"
+        for setting in tqdm(evaluation_settings, desc="Inference"):
+            output_path = f"{self.save_path}/{setting['save_name']}/{model_name}"
             if os.path.exists(f"{output_path}/response.jsonl"):
                 continue
             # Load the dataset
             dataset = self.get_dataset(
-                intention=intention,
-                category=category,
-                attack_engine=attack_engine,
+                intention=setting.get("intention", None),
+                category=setting.get("category", None),
+                attack_engine=setting.get("attack_engine", None),
             )
             samples: List[Sample] = dataset.as_samples(split="test", prompt_template=self.prompt_template)
             # Get the responses
@@ -102,8 +102,8 @@ class JailbreakBenchmark(Benchmark):
 
         # Evaluate the responses
         benchmark_results = {}
-        for intention, category, attack_engine, save_name, setting_name in tqdm(evaluation_settings, desc="Evaluation"):
-            output_path = f"{self.save_path}/{save_name}/{model_name}"
+        for setting in tqdm(evaluation_settings, desc="Evaluation"):
+            output_path = f"{self.save_path}/{setting['save_name']}/{model_name}"
             # Load responses
             responses: List[ModelResponse] = load_model_answers(f"{output_path}/response.jsonl")
 
@@ -112,5 +112,5 @@ class JailbreakBenchmark(Benchmark):
             for metric in self.get_metrics():
                 _, summarized_result = metric.eval_batch(responses, verbose=False)
                 results.update(summarized_result.scores)
-            benchmark_results[setting_name] = results
+            benchmark_results[setting["setting_name"]] = results
         return benchmark_results
