@@ -63,12 +63,12 @@ class XSTestDataset(JailbreakDataset):
                 continue
 
             if is_harmful:
-                test_data["benign"].append({
+                test_data["harmful"].append({
                     "instructions": [sample["prompt"]],
                     "instructions_true_label": ["Harmful"],
                 })
             else:
-                test_data["harmful"].append({
+                test_data["benign"].append({
                     "instructions": [sample["prompt"]],
                     "instructions_true_label": ["Benign"],
                 })
