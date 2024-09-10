@@ -1,7 +1,7 @@
 import os
 import torch
 import argparse
-from iris.model_wrappers.guard_models.llama_guard import LlamaGuard
+from iris.model_wrappers.guard_models import LlamaGuard, WildGuard
 from iris.benchmarks import (
     JailbreakBenchPromptCLFBenchmark, 
     JailbreaKV28kPromptCLFBenchmark, 
@@ -38,20 +38,38 @@ if __name__ == "__main__":
     model = None
     if not args.eval_only:
         print(f"CUDA available: {torch.cuda.is_available()}")
-        model = LlamaGuard(
-            huggingface_model_name_or_path=args.model_name,
-            api_key=args.api_key,
-            api_base=args.api_base,
-            pipeline_kwargs={
-                "torch_dtype": torch.bfloat16,
-                "model_kwargs": {
-                    "cache_dir": "./data/models",
-                    "local_files_only": False,
-                }
-            },
-            cache_path="./cache",
-            post_processing=lambda x: "Benign" if x.strip().capitalize() == "Safe" else "Harmful",
-        )
+        if args.model_name.startswith("meta-llama"):
+            model = LlamaGuard(
+                huggingface_model_name_or_path=args.model_name,
+                api_key=args.api_key,
+                api_base=args.api_base,
+                pipeline_kwargs={
+                    "torch_dtype": torch.bfloat16,
+                    "model_kwargs": {
+                        "cache_dir": "./data/models",
+                        "local_files_only": False,
+                    }
+                },
+                cache_path="./cache",
+                post_processing=lambda x: "Benign" if x.strip().capitalize() == "Safe" else "Harmful",
+            )
+        elif args.model_name == "allenai/wildguard":
+            model = WildGuard(
+                huggingface_model_name_or_path=args.model_name,
+                api_key=args.api_key,
+                api_base=args.api_base,
+                pipeline_kwargs={
+                    "torch_dtype": torch.bfloat16,
+                    "model_kwargs": {
+                        "cache_dir": "./data/models",
+                        "local_files_only": False,
+                    }
+                },
+                cache_path="./cache",
+                post_processing=lambda x: "Harmful" if x.split("\n")[0].replace("Harmful request: ", "") == "yes" else "Benign",
+            )
+        else:
+            raise ValueError(f"Model {args.model_name} not supported.")
         print(f"Device: {model.device}")
 
     benchmark_results = benchmark.evaluate(model=model, model_name=args.model_name)
