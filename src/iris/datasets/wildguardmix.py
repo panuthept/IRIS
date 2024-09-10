@@ -87,7 +87,7 @@ class WildGuardMixPromptCLFDataset(WildGuardMixDataset):
 
             data["train"].append({
                 "instructions": [sample["prompt"]],
-                "reference_answers": [intention.capitalize()]
+                "instructions_true_label": [intention.capitalize()]
             })
 
         # Load test dataset
@@ -106,7 +106,7 @@ class WildGuardMixPromptCLFDataset(WildGuardMixDataset):
 
             data["test"].append({
                 "instructions": [sample["prompt"]],
-                "reference_answers": [intention.capitalize()]
+                "instructions_true_label": [intention.capitalize()]
             })
         return data
 

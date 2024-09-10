@@ -1,3 +1,4 @@
+from typing import Callable
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
@@ -79,6 +80,8 @@ class LlamaGuard(GuardLLM):
             api_base: str = None,
             max_tokens: int = 10,
             pipeline_kwargs: dict = None,
+            post_processing: Callable = None, 
+            use_cache: bool = True,
             cache_path: str = "./cache",
     ):
         self.model_name = huggingface_model_name_or_path
@@ -90,15 +93,18 @@ class LlamaGuard(GuardLLM):
                     api_key=api_key,
                     api_base=api_base,
                 ),
-                cache_path="./cache",
+                post_processing=post_processing,
+                cache_path=cache_path,
+                use_cache=use_cache,
             )
         else:
             self.model = HuggfaceGenerativeLLM(
                 huggingface_model_name_or_path,
                 max_tokens=max_tokens,
                 pipeline_kwargs=pipeline_kwargs,
+                post_processing=post_processing,
                 cache_path=cache_path,
-                use_cache=False,
+                use_cache=use_cache,
             )
             self.device = self.model.llm.device
 

@@ -96,13 +96,13 @@ class JailbreakBenchPromptCLFDataset(JailbreakBenchDataset):
             test_data["benign"][sample["Index"]] = {
                 "instructions": [sample["Goal"]],
                 "reference_instruction": sample["Goal"],
-                "reference_answers": ["Benign"]
+                "instructions_true_label": ["Benign"]
             }
         for sample in dataset["harmful"]:
             test_data["harmful"][sample["Index"]] = {
                 "instructions": [] if self.attack_engine else [sample["Goal"]],
                 "reference_instruction": sample["Goal"],
-                "reference_answers": ["Harmful"]
+                "instructions_true_label": ["Harmful"]
             }
         # Get jailbreak prompts
         if self.attack_engine:
@@ -164,7 +164,7 @@ class JailbreakBenchResponseCLFDataset(JailbreakDataset):
                 "instructions": [sample["goal"] if self.attack_engine is None else sample["prompt"]],
                 "answers": [sample["target_response"]],
                 "reference_instruction": sample["goal"],
-                "reference_answers": ["Harmful" if sample["human_majority"] == 1 else "Benign"]
+                "answers_true_label": ["Harmful" if sample["human_majority"] == 1 else "Benign"]
             })
         return {"test": test_data["harmful"]}
 

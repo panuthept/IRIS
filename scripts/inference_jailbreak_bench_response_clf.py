@@ -4,8 +4,8 @@ import argparse
 from typing import List
 from iris.data_types import ModelResponse
 from iris.prompt_template import PromptTemplate
+from iris.utilities.loaders import save_responses
 from llama_index.llms.openai_like import OpenAILike
-from iris.utilities.loaders import save_model_answers
 from iris.datasets.jailbreak_bench import JailbreakBenchResponseCLFDataset
 from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
 from iris.model_wrappers.generative_models.huggingface_model import HuggfaceGenerativeLLM
@@ -103,4 +103,4 @@ if __name__ == "__main__":
     # Save the responses to a file
     output_dir = f"./outputs/JailbreakBenchResponseCLFDataset/{args.dataset_split}/{args.model_name}"
     os.makedirs(output_dir, exist_ok=True)
-    save_model_answers(responses, f"{output_dir}/response.jsonl")
+    save_responses(responses, f"{output_dir}/response.jsonl")

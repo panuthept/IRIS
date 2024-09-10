@@ -8,7 +8,7 @@ from iris.prompt_template import PromptTemplate
 from iris.data_types import Sample, ModelResponse
 from iris.datasets import PromptSourceDataset
 from iris.model_wrappers.generative_models import GenerativeLLM
-from iris.utilities.loaders import save_model_answers, load_model_answers
+from iris.utilities.loaders import save_responses, load_responses
 
 
 class PromptSourceBenchmark(Benchmark):
@@ -71,7 +71,7 @@ class PromptSourceBenchmark(Benchmark):
                     responses: List[ModelResponse] = model.complete_batch(samples)
                     # Save the responses
                     os.makedirs(output_path, exist_ok=True)
-                    save_model_answers(responses, f"{output_path}/response.jsonl")
+                    save_responses(responses, f"{output_path}/response.jsonl")
             else:    
                 output_path = f"{self.save_path}/{task}/{model_name}"
                 if os.path.exists(f"{output_path}/response.jsonl"):
@@ -86,7 +86,7 @@ class PromptSourceBenchmark(Benchmark):
                 responses: List[ModelResponse] = model.complete_batch(samples)
                 # Save the responses
                 os.makedirs(output_path, exist_ok=True)
-                save_model_answers(responses, f"{output_path}/response.jsonl")
+                save_responses(responses, f"{output_path}/response.jsonl")
 
         # Evaluate the responses
         benchmark_results = {}
@@ -95,7 +95,7 @@ class PromptSourceBenchmark(Benchmark):
                 for sub_task in sub_tasks:
                     output_path = f"{self.save_path}/{task}/{sub_task}/{model_name}"
                     # Load responses
-                    responses: List[ModelResponse] = load_model_answers(f"{output_path}/response.jsonl")
+                    responses: List[ModelResponse] = load_responses(f"{output_path}/response.jsonl")
 
                     # Evaluate responses
                     task_results = {}
@@ -106,7 +106,7 @@ class PromptSourceBenchmark(Benchmark):
             else:    
                 output_path = f"{self.save_path}/{task}/{model_name}"
                 # Load responses
-                responses: List[ModelResponse] = load_model_answers(f"{output_path}/response.jsonl")
+                responses: List[ModelResponse] = load_responses(f"{output_path}/response.jsonl")
 
                 # Evaluate responses
                 task_results = {}

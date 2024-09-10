@@ -40,6 +40,7 @@ if __name__ == "__main__":
                 }
             },
             cache_path="./cache",
+            post_processing=lambda x: "Benign" if x.strip().capitalize() == "Safe" else "Harmful",
         )
         print(f"Device: {model.device}")
 

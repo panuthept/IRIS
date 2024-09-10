@@ -1,7 +1,7 @@
 import os
 from tqdm import tqdm
-from abc import ABC, abstractmethod
 from typing import List, Dict, Any
+from abc import ABC, abstractmethod
 from iris.datasets import JailbreakDataset
 from iris.data_types import SummarizedResult
 from iris.prompt_template import PromptTemplate
@@ -9,9 +9,9 @@ from iris.data_types import Sample, ModelResponse
 from llama_index.llms.together import TogetherLLM
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
-from iris.utilities.loaders import save_model_answers, load_model_answers
 from iris.model_wrappers.generative_models import GenerativeLLM, APIGenerativeLLM
 from iris.metrics import RefusalRateMetric, SafeResponseRateMetric, ExactMatchMetric, Metric
+from iris.utilities.loaders import save_samples, save_responses, load_samples, load_responses
 
 
 class Benchmark(ABC):
@@ -100,7 +100,7 @@ class JailbreakBenchmark(Benchmark):
             responses: List[ModelResponse] = model.complete_batch(samples)
             # Save the responses
             os.makedirs(output_path, exist_ok=True)
-            save_model_answers(responses, f"{output_path}/response.jsonl")
+            save_responses(responses, f"{output_path}/response.jsonl")
 
         if inference_only:
             return
@@ -110,7 +110,7 @@ class JailbreakBenchmark(Benchmark):
         for setting in tqdm(evaluation_settings, desc="Evaluation"):
             output_path = f"{self.save_path}/{setting['save_name']}/{model_name}"
             # Load responses
-            responses: List[ModelResponse] = load_model_answers(f"{output_path}/response.jsonl")
+            responses: List[ModelResponse] = load_responses(f"{output_path}/response.jsonl")
 
             # Evaluate responses
             results = {}
@@ -149,7 +149,7 @@ class JailbreakPromptCLFBenchmark(JailbreakBenchmark):
         evaluation_settings = self.get_evaluation_settings()
         for setting in tqdm(evaluation_settings, desc="Inference"):
             output_path = f"{self.save_path}/{setting['save_name']}/{model_name}"
-            if os.path.exists(f"{output_path}/response.jsonl"):
+            if os.path.exists(f"{output_path}/sample.jsonl"):
                 continue
             # Load the dataset
             dataset = self.get_dataset(
@@ -162,7 +162,7 @@ class JailbreakPromptCLFBenchmark(JailbreakBenchmark):
             samples: List[Sample] = model.prompt_classify_batch(samples)
             # Save the responses
             os.makedirs(output_path, exist_ok=True)
-            save_model_answers(samples, f"{output_path}/response.jsonl")
+            save_samples(samples, f"{output_path}/sample.jsonl")
 
         if inference_only:
             return
@@ -172,7 +172,7 @@ class JailbreakPromptCLFBenchmark(JailbreakBenchmark):
         for setting in tqdm(evaluation_settings, desc="Evaluation"):
             output_path = f"{self.save_path}/{setting['save_name']}/{model_name}"
             # Load samples
-            samples: List[Sample] = load_model_answers(f"{output_path}/response.jsonl")
+            samples: List[Sample] = load_samples(f"{output_path}/sample.jsonl")
 
             # Evaluate samples
             results = {}
