@@ -1,7 +1,7 @@
 import numpy as np
+from abc import ABC
 from tqdm import tqdm
 from deprecated import deprecated
-from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import List, Dict, Tuple
 from iris.data_types import Sample, ModelResponse, EvaluationResult, SummarizedResult
