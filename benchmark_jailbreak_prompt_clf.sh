@@ -19,12 +19,12 @@ if [ "$SLURM_JOBTMP" != "" ]; then
     export XDG_RUNTIME_DIR=$SLURM_JOBTMP
 fi
 
-echo "Evaluating meta-llama/Llama-Guard-3-8B on JailbreakBench:"
+echo "Evaluating meta-llama/LlamaGuard-7b on JailbreakBench:"
 CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreak_prompt_clf.py \
-    --model_name meta-llama/Llama-Guard-3-8B \
+    --model_name meta-llama/LlamaGuard-7b \
     --benchmark_name jailbreak_bench
 
-echo "Evaluating meta-llama/Llama-Guard-3-8B on WildGuardMix:"
+echo "Evaluating meta-llama/LlamaGuard-7b on WildGuardMix:"
 CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreak_prompt_clf.py \
-    --model_name meta-llama/Llama-Guard-3-8B \
+    --model_name meta-llama/LlamaGuard-7b \
     --benchmark_name wildguardmix
