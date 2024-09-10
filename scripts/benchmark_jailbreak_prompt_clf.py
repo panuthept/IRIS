@@ -61,5 +61,5 @@ if __name__ == "__main__":
         for task, task_results in benchmark_results.items():
             print(f"{task}:")
             print(f"Accuracy: {round(task_results['exact_match']['mean_all'], 2)}")
-            print(f"Supports: {task_results['exact_match']['supports_all'], 2}")
+            print(f"Supports: {task_results['exact_match']['supports_all']}")
             print("-" * 100)
