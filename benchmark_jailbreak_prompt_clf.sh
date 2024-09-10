@@ -24,7 +24,17 @@ CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreak
     --model_name meta-llama/LlamaGuard-7b \
     --benchmark_name jailbreak_bench
 
+echo "Evaluating meta-llama/LlamaGuard-7b on JailbreaKV28k:"
+CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreak_prompt_clf.py \
+    --model_name meta-llama/LlamaGuard-7b \
+    --benchmark_name jailbreakv_28k
+
 echo "Evaluating meta-llama/LlamaGuard-7b on WildGuardMix:"
 CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreak_prompt_clf.py \
     --model_name meta-llama/LlamaGuard-7b \
     --benchmark_name wildguardmix
+
+echo "Evaluating meta-llama/LlamaGuard-7b on XSTest:"
+CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/benchmark_jailbreak_prompt_clf.py \
+    --model_name meta-llama/LlamaGuard-7b \
+    --benchmark_name xstest
