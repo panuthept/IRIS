@@ -103,7 +103,7 @@ class InstructionIndutionBenchmark(Benchmark):
             # Evaluate responses
             task_results = {}
             for metric in self.get_metrics():
-                _, summarized_result = metric.eval_batch(responses, verbose=False)
+                _, summarized_result = metric.eval_answers_batch(responses, verbose=False)
                 task_results.update(summarized_result.scores)
             benchmark_results[self._rename_task(task)] = task_results
         return benchmark_results
