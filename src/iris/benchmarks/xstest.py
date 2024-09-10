@@ -16,10 +16,10 @@ class XSTestBenchmark(JailbreakBenchmark):
         )
 
     def get_evaluation_settings(self) -> List[Tuple[str, str, str, str, str]]:
-        # Return a list of [(intention, category, attack_engine, save_name, setting_name), ...]
+        # Return a list of [{"intention": string, "category": string, "attack_engine": string, "save_name": string, "setting_name": string}, ...]
         return [
-            ("benign", None, None, "benign", "Benign (Original)"),
-            ("harmful", None, None, "harmful", "Harmful (Original)"),
+            {"intention": "benign", "save_name": "benign", "setting_name": "Benign (Original)"},
+            {"intention": "harmful", "save_name": "harmful", "setting_name": "Harmful (Original)"},
         ]
 
     def get_dataset(self, intention: str, category: str, attack_engine: str) -> XSTestDataset:
@@ -42,10 +42,10 @@ class XSTestPromptCLFBenchmark(JailbreakPromptCLFBenchmark):
         )
 
     def get_evaluation_settings(self) -> List[Tuple[str, str, str, str, str]]:
-        # Return a list of [(intention, category, attack_engine, save_name, setting_name), ...]
+        # Return a list of [{"intention": string, "category": string, "attack_engine": string, "save_name": string, "setting_name": string}, ...]
         return [
-            ("benign", None, None, "benign", "Benign (Original)"),
-            ("harmful", None, None, "harmful", "Harmful (Original)"),
+            {"intention": "benign", "save_name": "benign", "setting_name": "Benign (Original)"},
+            {"intention": "harmful", "save_name": "harmful", "setting_name": "Harmful (Original)"},
         ]
 
     def get_dataset(self, intention: str, category: str, attack_engine: str) -> XSTestDataset:
