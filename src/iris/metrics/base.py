@@ -40,10 +40,8 @@ class Metric(ABC):
             scores = self._compute_prompt_clf_scores(instructions_pred_label, instructions_true_label)
         elif answers_true_label:
             scores = self._compute_response_clf_scores(query, instructions, answers_pred_label, answers_true_label)
-        elif reference_answers:
-            scores = self._compute_answers_scores(query, instructions, answers, reference_answers)
         else:
-            raise ValueError("Invalid input")
+            scores = self._compute_answers_scores(query, instructions, answers, reference_answers)
 
         mean_scores = defaultdict(lambda: defaultdict(list))
         for metric_name, scores in scores.items():
