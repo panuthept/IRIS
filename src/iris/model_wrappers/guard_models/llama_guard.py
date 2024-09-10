@@ -78,7 +78,7 @@ class LlamaGuard(GuardLLM):
             huggingface_model_name_or_path: str = "meta-llama/Llama-Guard-3-8B", 
             api_key: str = None,
             api_base: str = None,
-            max_tokens: int = 10,
+            max_tokens: int = 512,
             pipeline_kwargs: dict = None,
             post_processing: Callable = None, 
             use_cache: bool = True,
