@@ -8,16 +8,13 @@ from iris.data_types import Sample, ModelResponse, EvaluationResult, SummarizedR
 
 
 class Metric(ABC):       
-    @abstractmethod 
-    def _compute_prompt_clf_scores(self, instructions_pred_label, instructions_true_label) -> Dict:
+    def _compute_prompt_clf_scores(self, instructions_pred_label, instructions_true_label) -> Dict[str, List]:
         raise NotImplementedError
     
-    @abstractmethod 
-    def _compute_response_clf_scores(self, query, instructions, answers_pred_label, answers_true_label) -> Dict:
+    def _compute_response_clf_scores(self, query, instructions, answers_pred_label, answers_true_label) -> Dict[str, List]:
         raise NotImplementedError
     
-    @abstractmethod 
-    def _compute_answers_scores(self, query, instructions, answers, reference_answers) -> Dict:
+    def _compute_answers_scores(self, query, instructions, answers, reference_answers) -> Dict[str, List]:
         raise NotImplementedError
     
     def compute_scores(
