@@ -56,21 +56,21 @@ class XSTestDataset(JailbreakDataset):
         for idx in range(len(dataset)):
             sample = dataset.iloc[idx]
             category = sample["type"]
-            is_benign = category.startswith("contrast_")
-            categories = self.category_mapper[category] if is_benign else [category]
+            is_harmful = category.startswith("contrast_")
+            categories = self.category_mapper[category] if is_harmful else [category]
 
             if self.category and self.category not in categories:
                 continue
 
-            if is_benign:
+            if is_harmful:
                 test_data["benign"].append({
                     "instructions": [sample["prompt"]],
-                    "instructions_true_label": ["Benign"],
+                    "instructions_true_label": ["Harmful"],
                 })
             else:
                 test_data["harmful"].append({
                     "instructions": [sample["prompt"]],
-                    "instructions_true_label": ["Harmful"],
+                    "instructions_true_label": ["Benign"],
                 })
         # Formalize the data
         if self.intention:
