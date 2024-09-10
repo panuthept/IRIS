@@ -1,6 +1,6 @@
 from typing import List, Tuple
+from iris.datasets import WildGuardMixDataset
 from iris.prompt_template import PromptTemplate
-from iris.datasets import WildGuardMixDataset, WildGuardMixPromptCLFDataset
 from iris.benchmarks.base import JailbreakBenchmark, JailbreakPromptCLFBenchmark
 
 
@@ -53,8 +53,8 @@ class WildGuardMixPromptCLFBenchmark(JailbreakPromptCLFBenchmark):
             {"intention": "harmful", "attack_engine": "adversarial", "save_name": "harmful_adversarial", "setting_name": "Harmful (Adversarial)"},
         ]
 
-    def get_dataset(self, intention: str, category: str, attack_engine: str) -> WildGuardMixPromptCLFDataset:
-        return WildGuardMixPromptCLFDataset(
+    def get_dataset(self, intention: str, category: str, attack_engine: str) -> WildGuardMixDataset:
+        return WildGuardMixDataset(
             intention=intention,
             category=category,
             attack_engine=attack_engine,

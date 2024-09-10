@@ -1,7 +1,7 @@
 from typing import List, Tuple
 from iris.datasets import XSTestDataset
 from iris.prompt_template import PromptTemplate
-from iris.benchmarks.base import JailbreakBenchmark
+from iris.benchmarks.base import JailbreakBenchmark, JailbreakPromptCLFBenchmark
 
 
 class XSTestBenchmark(JailbreakBenchmark):
@@ -9,6 +9,32 @@ class XSTestBenchmark(JailbreakBenchmark):
         self, 
         prompt_template: PromptTemplate = None,
         save_path: str = f"./outputs/XSTestBenchmark",
+    ):
+        super().__init__(
+            prompt_template=prompt_template, 
+            save_path=save_path
+        )
+
+    def get_evaluation_settings(self) -> List[Tuple[str, str, str, str, str]]:
+        # Return a list of [(intention, category, attack_engine, save_name, setting_name), ...]
+        return [
+            ("benign", None, None, "benign", "Benign (Original)"),
+            ("harmful", None, None, "harmful", "Harmful (Original)"),
+        ]
+
+    def get_dataset(self, intention: str, category: str, attack_engine: str) -> XSTestDataset:
+        return XSTestDataset(
+            intention=intention,
+            category=category,
+            attack_engine=attack_engine,
+        )
+    
+
+class XSTestPromptCLFBenchmark(JailbreakPromptCLFBenchmark):
+    def __init__(
+        self, 
+        prompt_template: PromptTemplate = None,
+        save_path: str = f"./outputs/XSTestPromptCLFBenchmark",
     ):
         super().__init__(
             prompt_template=prompt_template, 

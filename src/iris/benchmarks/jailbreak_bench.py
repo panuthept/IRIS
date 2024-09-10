@@ -1,6 +1,6 @@
 from typing import List, Tuple
 from iris.prompt_template import PromptTemplate
-from iris.datasets import JailbreakBenchDataset, JailbreakBenchPromptCLFDataset
+from iris.datasets import JailbreakBenchDataset
 from iris.benchmarks.base import JailbreakBenchmark, JailbreakPromptCLFBenchmark
 
 
@@ -57,8 +57,8 @@ class JailbreakBenchPromptCLFBenchmark(JailbreakPromptCLFBenchmark):
             {"intention": "harmful", "attack_engine": "prompt_with_random_search", "save_name": "harmful_prompt_with_random_search", "setting_name": "Harmful (Prompt with Random Search)"},
         ]
 
-    def get_dataset(self, intention: str, category: str, attack_engine: str) -> JailbreakBenchPromptCLFDataset:
-        return JailbreakBenchPromptCLFDataset(
+    def get_dataset(self, intention: str, category: str, attack_engine: str) -> JailbreakBenchDataset:
+        return JailbreakBenchDataset(
             intention=intention,
             category=category,
             attack_engine=attack_engine,

@@ -63,9 +63,15 @@ class XSTestDataset(JailbreakDataset):
                 continue
 
             if is_benign:
-                test_data["benign"].append({"instructions": [sample["prompt"]]})
+                test_data["benign"].append({
+                    "instructions": [sample["prompt"]],
+                    "instructions_true_label": ["Benign"],
+                })
             else:
-                test_data["harmful"].append({"instructions": [sample["prompt"]]})
+                test_data["harmful"].append({
+                    "instructions": [sample["prompt"]],
+                    "instructions_true_label": ["Harmful"],
+                })
         # Formalize the data
         if self.intention:
             return {"test": test_data[self.intention]}

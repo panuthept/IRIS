@@ -2,7 +2,12 @@ import os
 import torch
 import argparse
 from iris.model_wrappers.guard_models.llama_guard import LlamaGuard
-from iris.benchmarks import JailbreakBenchPromptCLFBenchmark, WildGuardMixPromptCLFBenchmark
+from iris.benchmarks import (
+    JailbreakBenchPromptCLFBenchmark, 
+    JailbreaKV28kPromptCLFBenchmark, 
+    WildGuardMixPromptCLFBenchmark,
+    XSTestPromptCLFBenchmark,
+)
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -17,11 +22,16 @@ if __name__ == "__main__":
     parser.add_argument("--api_base", type=str, default=None)
     args = parser.parse_args()
 
-    assert args.benchmark_name in ["jailbreak_bench", "wildguardmix"]
+    assert args.benchmark_name in ["jailbreak_bench", "jailbreakv_28k", "wildguardmix", "xstest"]
+
     if args.benchmark_name == "jailbreak_bench":
         benchmark = JailbreakBenchPromptCLFBenchmark()
-    else:
+    elif args.benchmark_name == "jailbreakv_28k":
+        benchmark = JailbreaKV28kPromptCLFBenchmark()
+    elif args.benchmark_name == "wildguardmix":
         benchmark = WildGuardMixPromptCLFBenchmark()
+    else:
+        benchmark = XSTestPromptCLFBenchmark()
     print(f"Running benchmark: {args.benchmark_name}")
 
     # Get model
@@ -51,4 +61,5 @@ if __name__ == "__main__":
         for task, task_results in benchmark_results.items():
             print(f"{task}:")
             print(f"Accuracy: {round(task_results['exact_match']['mean_all'], 2)}")
+            print(f"Supports: {task_results['exact_match']['supports_all'], 2}")
             print("-" * 100)

@@ -57,13 +57,15 @@ class JailbreakBenchDataset(JailbreakDataset):
         for sample in dataset["benign"]:
             test_data["benign"][sample["Index"]] = {
                 "instructions": [sample["Goal"]],
-                "reference_answers": [sample["Target"]]
+                "reference_answers": [sample["Target"]],
+                "instructions_true_label": ["Benign"],
             }
         for sample in dataset["harmful"]:
             test_data["harmful"][sample["Index"]] = {
                 "instructions": [] if self.attack_engine else [sample["Goal"]],
                 "reference_instruction": sample["Goal"] if self.attack_engine else None,
-                "reference_answers": [sample["Target"]]
+                "reference_answers": [sample["Target"]],
+                "instructions_true_label": ["Harmful"],
             }
         # Get jailbreak prompts
         if self.attack_engine:
@@ -75,45 +77,7 @@ class JailbreakBenchDataset(JailbreakDataset):
                             if sample["prompt"] is not None:
                                 if sample["prompt"] not in test_data["harmful"][sample["index"]]["instructions"]:
                                     test_data["harmful"][sample["index"]]["instructions"].append(sample["prompt"])
-        # Formalize the data
-        test_data = {
-            "harmful": [sample for sample in test_data["harmful"].values() if len(sample["instructions"]) > 0],
-            "benign": [sample for sample in test_data["benign"].values() if len(sample["instructions"]) > 0],
-        }
-        if self.intention:
-            return {"test": test_data[self.intention]}
-        else:
-            return {"test": test_data["harmful"] + test_data["benign"]}
-
-
-class JailbreakBenchPromptCLFDataset(JailbreakBenchDataset):
-    def _load_dataset(self, path: str) -> Dict[str, List]:
-        # Load dataset
-        dataset = load_dataset("JailbreakBench/JBB-Behaviors", "behaviors", cache_dir=self.cache_dir)
-        # Read dataset (original prompt and reference answer)
-        test_data: Dict[str, Dict] = defaultdict(dict)
-        for sample in dataset["benign"]:
-            test_data["benign"][sample["Index"]] = {
-                "instructions": [sample["Goal"]],
-                "reference_instruction": sample["Goal"],
-                "instructions_true_label": ["Benign"]
-            }
-        for sample in dataset["harmful"]:
-            test_data["harmful"][sample["Index"]] = {
-                "instructions": [] if self.attack_engine else [sample["Goal"]],
-                "reference_instruction": sample["Goal"],
-                "instructions_true_label": ["Harmful"]
-            }
-        # Get jailbreak prompts
-        if self.attack_engine:
-            for instruction_path in self.instruction_paths:
-                if instruction_path.startswith(self.attack_engine):
-                    with open(f"{path}/{instruction_path}", "r") as f:
-                        loaded_data = json.load(f)
-                        for sample in loaded_data["jailbreaks"]:
-                            if sample["prompt"] is not None:
-                                if sample["prompt"] not in test_data["harmful"][sample["index"]]["instructions"]:
-                                    test_data["harmful"][sample["index"]]["instructions"].append(sample["prompt"])
+                                    test_data["harmful"][sample["index"]]["instructions_true_label"].append("Harmful")
         # Formalize the data
         test_data = {
             "harmful": [sample for sample in test_data["harmful"].values() if len(sample["instructions"]) > 0],
@@ -176,17 +140,6 @@ if __name__ == "__main__":
     print(f"{samples[0].get_prompts()[0]}\n{samples[0].reference_answers[0]}")
     print("-" * 100)
     dataset = JailbreakBenchDataset(intention="benign")
-    samples = dataset.as_samples()
-    print(f"{samples[0].get_prompts()[0]}\n{samples[0].reference_answers[0]}")
-    print("-" * 100)
-    print("=" * 100)
-
-    dataset = JailbreakBenchPromptCLFDataset(intention="harmful")
-    samples = dataset.as_samples()
-    print("JailbreakBenchPromptCLFDataset:")
-    print(f"{samples[0].get_prompts()[0]}\n{samples[0].reference_answers[0]}")
-    print("-" * 100)
-    dataset = JailbreakBenchPromptCLFDataset(intention="benign")
     samples = dataset.as_samples()
     print(f"{samples[0].get_prompts()[0]}\n{samples[0].reference_answers[0]}")
     print("-" * 100)
