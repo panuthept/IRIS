@@ -11,5 +11,6 @@ if os.path.exists("./datasets/jailbreak_bench") is False:
     load_dataset("JailbreakBench/JBB-Behaviors", "judge_comparison", cache_dir="./datasets/jailbreak_bench")
 
 if os.path.exists("./datasets/wildguardmix") is False:
+    os.mkdir("./datasets/wildguardmix")
     load_dataset("allenai/wildguardmix", "wildguardtrain", cache_dir="./datasets/wildguardmix")
     load_dataset("allenai/wildguardmix", "wildguardtest", cache_dir="./datasets/wildguardmix")
