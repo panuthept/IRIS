@@ -18,6 +18,12 @@ class PromptTemplate:
     def as_dict(self) -> Dict[str, str]:
         return asdict(self)
     
+    @classmethod
+    def from_dict(cls, data: Dict[str, str]) -> 'PromptTemplate':
+        # Filter out None values and unknown keys
+        data = {k: v for k, v in data.items() if v is not None and k in cls.__annotations__}
+        return cls(**data)
+    
     def get_example_prompt(self, examples: List[Tuple[str, str]] = None) -> str:
         prompts = []
         for query, answer in examples:
