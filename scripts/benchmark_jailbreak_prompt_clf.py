@@ -1,7 +1,7 @@
 import os
 import torch
 import argparse
-from iris.models.llama_guard import LlamaGuard
+from iris.model_wrappers.guard_models.llama_guard import LlamaGuard
 from iris.benchmarks import JailbreakBenchPromptCLFBenchmark, WildGuardMixPromptCLFBenchmark
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -30,6 +30,8 @@ if __name__ == "__main__":
         print(f"CUDA available: {torch.cuda.is_available()}")
         model = LlamaGuard(
             huggingface_model_name_or_path=args.model_name,
+            api_key=args.api_key,
+            api_base=args.api_base,
             pipeline_kwargs={
                 "torch_dtype": torch.bfloat16,
                 "model_kwargs": {
