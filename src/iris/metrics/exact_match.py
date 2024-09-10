@@ -7,13 +7,13 @@ class ExactMatchMetric(Metric):
     def _compute_score(self, text: str, references: List[str]) -> float:
         return max([float(text == ref) for ref in references])
     
-    def _compute_prompt_clf_scores(self, instructions_pred_label, instructions_true_label) -> Dict:
+    def _compute_prompt_clf_scores(self, instructions_pred_label, instructions_true_label) -> Dict[str, List]:
         return {"exact_match": [self._compute_score(pred_label, [true_label]) for pred_label, true_label in zip(instructions_pred_label, instructions_true_label)]}
     
-    def _compute_response_clf_scores(self, query, instructions, answers_pred_label, answers_true_label) -> Dict:
+    def _compute_response_clf_scores(self, query, instructions, answers_pred_label, answers_true_label) -> Dict[str, List]:
         return {"exact_match": [self._compute_score(pred_label, [true_label]) for pred_label, true_label in zip(answers_pred_label, answers_true_label)]}
     
-    def _compute_answers_scores(self, query, instructions, answers, reference_answers) -> Dict:
+    def _compute_answers_scores(self, query, instructions, answers, reference_answers) -> Dict[str, List]:
         return {"exact_match": [self._compute_score(answer, reference_answers) for answer in answers]}
 
 
