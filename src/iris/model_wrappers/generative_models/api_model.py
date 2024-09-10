@@ -28,5 +28,5 @@ class APIGenerativeLLM(GenerativeLLM):
         else:
             if self.system_prompt:
                 prompt = f"{self.system_prompt}\n\n{prompt}"
-            answer = self.llm.complete(prompt, **kwargs)
+            answer = self.llm.complete(prompt, **kwargs).text
         return answer
