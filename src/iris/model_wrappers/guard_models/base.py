@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from typing import List
 from copy import deepcopy
 from abc import abstractmethod
@@ -24,8 +25,8 @@ class GuardLLM(LLM):
         response.answers_pred_label = [self._response_classify(inst, ans) for inst, ans in zip(response.instructions, response.answers)]
         return response
     
-    def prompt_classify_batch(self, samples: List[Sample]) -> List[Sample]:
-        return [self.prompt_classify(sample) for sample in samples]
+    def prompt_classify_batch(self, samples: List[Sample], verbose: bool = True) -> List[Sample]:
+        return [self.prompt_classify(sample) for sample in tqdm(samples, disable=not verbose)]
     
-    def response_classify_batch(self, responses: List[ModelResponse]) -> List[ModelResponse]:
-        return [self.response_classify(response) for response in responses]
+    def response_classify_batch(self, responses: List[ModelResponse], verbose: bool = True) -> List[ModelResponse]:
+        return [self.response_classify(response) for response in tqdm(responses, disable=not verbose)]

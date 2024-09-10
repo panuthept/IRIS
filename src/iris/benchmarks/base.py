@@ -139,7 +139,8 @@ class JailbreakPromptCLFBenchmark(JailbreakBenchmark):
         self, 
         model: GuardLLM = None, 
         model_name: str = None,
-        inference_only: bool = False
+        inference_only: bool = False,
+        verbose: int = 2,
     ) -> Dict[str, SummarizedResult]:
         if model is None:
             assert model_name is not None, "Either model or model_name must be provided"
@@ -147,7 +148,7 @@ class JailbreakPromptCLFBenchmark(JailbreakBenchmark):
 
         # Inference for each task
         evaluation_settings = self.get_evaluation_settings()
-        for setting in tqdm(evaluation_settings, desc="Inference"):
+        for setting in tqdm(evaluation_settings, desc="Inference", disable=verbose == 0):
             output_path = f"{self.save_path}/{setting['save_name']}/{model_name}"
             if os.path.exists(f"{output_path}/sample.jsonl"):
                 continue
@@ -159,7 +160,7 @@ class JailbreakPromptCLFBenchmark(JailbreakBenchmark):
             )
             samples: List[Sample] = dataset.as_samples(split="test", prompt_template=self.prompt_template)
             # Get the classified samples
-            samples: List[Sample] = model.prompt_classify_batch(samples)
+            samples: List[Sample] = model.prompt_classify_batch(samples, verbose=verbose == 2)
             # Save the responses
             os.makedirs(output_path, exist_ok=True)
             save_samples(samples, f"{output_path}/sample.jsonl")
@@ -169,7 +170,7 @@ class JailbreakPromptCLFBenchmark(JailbreakBenchmark):
 
         # Evaluate the responses
         benchmark_results = {}
-        for setting in tqdm(evaluation_settings, desc="Evaluation"):
+        for setting in tqdm(evaluation_settings, desc="Evaluation", disable=verbose == 0):
             output_path = f"{self.save_path}/{setting['save_name']}/{model_name}"
             # Load samples
             samples: List[Sample] = load_samples(f"{output_path}/sample.jsonl")
@@ -177,7 +178,7 @@ class JailbreakPromptCLFBenchmark(JailbreakBenchmark):
             # Evaluate samples
             results = {}
             for metric in self.get_metrics():
-                _, summarized_result = metric.eval_prompt_clf_batch(samples, verbose=False)
+                _, summarized_result = metric.eval_prompt_clf_batch(samples, verbose=verbose == 2)
                 results.update(summarized_result.scores)
             benchmark_results[setting["setting_name"]] = results
         return benchmark_results
