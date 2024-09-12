@@ -1,6 +1,8 @@
 # IRIS
 **I**mproving **R**obustness of LLMs on Input Variations by Mitigating Spurious **I**ntermediate **S**tates.
 
+**Disclaimer: This is still a developing work, there is no useful artifact yet.**
+
 # Setup
 ```bash
 conda create -n iris python==3.11.4
