@@ -305,7 +305,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
             verbose=False,
             **kwargs
         )
-        output_ids = output_ids[:, input_lens:-1]
+        output_ids = output_ids[:, input_lens:].squeeze(0)
         return self.llm.to_string(output_ids)
 
 
@@ -338,11 +338,11 @@ if __name__ == "__main__":
     ]
     response = model.generate(prompt=jailbreak_prompts[0], ref_prompt=redteam_prompt, max_new_tokens=5, temperature=0)
     print(response)
-    assert response == ['Sorry, but I']
+    assert response == 'Sorry, but I can'
 
     response = model.generate(prompt=jailbreak_prompts[0], max_new_tokens=5, temperature=0)
     print(response)
-    assert response == ['Good evening, everyone']
+    assert response == 'Good evening, everyone.'
 
     sample = Sample(
         instructions=jailbreak_prompts,
@@ -350,13 +350,13 @@ if __name__ == "__main__":
     )
     response = model.complete_sample(sample, max_new_tokens=5, temperature=0)
     print(response.answers)
-    assert response.answers == [['Sorry, but I'], ['Sorry, but I'], ['Sorry, but I']]
+    assert response.answers == ['Sorry, but I can', 'Sorry, but I can', 'Sorry, but I can']
 
     sample = Sample(
         instructions=jailbreak_prompts,
     )
     response = model.complete_sample(sample, max_new_tokens=5, temperature=0)
     print(response.answers)
-    assert response.answers == [['Good evening, fellow'], ['As we all know'], ["I'm sorry,"]]
+    assert response.answers == ['Good evening, fellow citizens', 'As we all know,', "I'm sorry, but"]
 
     print("All tests passed!")
