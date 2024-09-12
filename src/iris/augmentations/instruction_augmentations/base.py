@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from typing import List
 from copy import deepcopy
 from iris.data_types import Sample
@@ -20,5 +21,5 @@ class InstructionAugmentation(ABC):
         sample.reference_instruction = original_instruction
         return sample
 
-    def augment_batch(self, samples: List[Sample]) -> List[Sample]:
-        return [self.augment_sample(sample) for sample in samples]
+    def augment_batch(self, samples: List[Sample], verbose: bool = True) -> List[Sample]:
+        return [self.augment_sample(sample) for sample in tqdm(samples, disable=not verbose)]

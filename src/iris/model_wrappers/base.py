@@ -1,9 +1,10 @@
 from typing import Callable
 from abc import ABC, abstractmethod
 from iris.cache import CacheStorage
+from easyjailbreak.models import ModelBase
 
 
-class LLM(ABC):
+class LLM(ModelBase):
     def __init__(
             self, 
             system_prompt: str = None, 
