@@ -19,3 +19,7 @@ class LLM(ABC):
     @abstractmethod
     def get_model_name(self) -> str:
         raise NotImplementedError
+    
+    @abstractmethod
+    def generate(self, *args, **kwargs):
+        raise NotImplementedError
