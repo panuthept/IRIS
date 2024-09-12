@@ -8,11 +8,11 @@ from iris.data_types import Sample, ModelResponse
 
 class GuardLLM(LLM):
     @abstractmethod
-    def _prompt_classify(self, prompt: str) -> str:
+    def _prompt_classify(self, prompt: str, **kwargs) -> str:
         raise NotImplementedError
     
     @abstractmethod
-    def _response_classify(self, prompt: str, response: str) -> str:
+    def _response_classify(self, prompt: str, response: str, **kwargs) -> str:
         raise NotImplementedError
 
     def prompt_classify(self, sample: Sample) -> Sample:
@@ -30,3 +30,6 @@ class GuardLLM(LLM):
     
     def response_classify_batch(self, responses: List[ModelResponse], verbose: bool = True) -> List[ModelResponse]:
         return [self.response_classify(response) for response in tqdm(responses, disable=not verbose)]
+    
+    def generate(self, *args, **kwargs):
+        return self._prompt_classify(*args, **kwargs)

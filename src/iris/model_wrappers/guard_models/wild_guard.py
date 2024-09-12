@@ -55,10 +55,10 @@ class WildGuard(GuardLLM):
     def get_model_name(self) -> str:
         return self.model_name
 
-    def _prompt_classify(self, prompt: str) -> str:
+    def _prompt_classify(self, prompt: str, **kwargs) -> str:
         prompt = self.prompt_template.format(instruction=prompt, response="")
-        return self.model.complete(prompt, apply_chat_template=False)
+        return self.model.complete(prompt, apply_chat_template=False, **kwargs)
 
-    def _response_classify(self, prompt: str, response: str) -> str:
+    def _response_classify(self, prompt: str, response: str, **kwargs) -> str:
         prompt = self.prompt_template.format(instruction=prompt, response=response)
-        return self.model.complete(prompt, apply_chat_template=False)
+        return self.model.complete(prompt, apply_chat_template=False, **kwargs)

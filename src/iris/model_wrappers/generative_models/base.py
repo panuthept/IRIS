@@ -69,3 +69,6 @@ class GenerativeLLM(LLM):
             apply_chat_template=apply_chat_template, 
             **kwargs
         ) for sample in tqdm(samples, disable=not verbose)]
+    
+    def generate(self, *args, **kwargs):
+        return self.complete(*args, **kwargs)

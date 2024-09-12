@@ -10,6 +10,7 @@ class LLM(ABC):
             post_processing: Callable = None, 
             use_cache: bool = True,
             cache_path: str = None,
+            **kwargs,
     ):
         self.system_prompt = system_prompt
         self.post_processing = post_processing
@@ -18,4 +19,8 @@ class LLM(ABC):
 
     @abstractmethod
     def get_model_name(self) -> str:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def generate(self, *args, **kwargs):
         raise NotImplementedError
