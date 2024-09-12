@@ -6,7 +6,6 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
     def __init__(
             self, 
             huggingface_model_name_or_path: str,  
-            max_tokens: int = None,
             pipeline_kwargs: dict = None,
             **kwargs,
     ):
@@ -18,7 +17,6 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             **pipeline_kwargs
         )
         self.model_name = huggingface_model_name_or_path
-        self.max_tokens = max_tokens
         super().__init__(**kwargs)
 
     def get_model_name(self) -> str:
@@ -53,7 +51,6 @@ if __name__ == "__main__":
 
     model = HuggfaceGenerativeLLM(
         "Qwen/Qwen2-0.5B-Instruct", 
-        max_tokens=512,
         pipeline_kwargs={
             "torch_dtype": torch.bfloat16,
             "model_kwargs": {

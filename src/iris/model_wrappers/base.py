@@ -10,6 +10,7 @@ class LLM(ABC):
             post_processing: Callable = None, 
             use_cache: bool = True,
             cache_path: str = None,
+            **kwargs,
     ):
         self.system_prompt = system_prompt
         self.post_processing = post_processing
