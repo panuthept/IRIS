@@ -96,9 +96,6 @@ if __name__ == "__main__":
     from iris.datasets import JailbreakBenchDataset
     from iris.model_wrappers.guard_models import WildGuard
 
-    harmful_dataset = JailbreakBenchDataset(intention="harmful")
-    harmful_samples = harmful_dataset.as_samples()
-
     target_model = WildGuard(
         huggingface_model_name_or_path="allenai/wildguard",
         api_key="EMPTY",
@@ -110,15 +107,18 @@ if __name__ == "__main__":
     def evaluator(text: str) -> bool:
         return text.strip().capitalize() == "Benign"
     
+    harmful_dataset = JailbreakBenchDataset(intention="harmful")
+    harmful_samples = harmful_dataset.as_samples()
+    
     # Test without jailbreak_template
     augmentation = MultiLingualJailbreaking(
         target_model=target_model, 
         evaluator=evaluator,
         apply_jailbreak_template=False,
     )
+
     jailbreaked_samples = augmentation.augment_batch(harmful_samples)
-    print(jailbreaked_samples[0].instructions)
-    print(augmentation.attack_success_rate)
+    print(f"ASR on Harmful prompts with MultiLingualJailbreaking: {augmentation.attack_success_rate}")
 
     # Test without jailbreak_template
     augmentation = MultiLingualJailbreaking(
@@ -127,5 +127,26 @@ if __name__ == "__main__":
         apply_jailbreak_template=True,
     )
     jailbreaked_samples = augmentation.augment_batch(harmful_samples)
-    print(jailbreaked_samples[0].instructions)
-    print(augmentation.attack_success_rate)
+    print(f"ASR on Harmful prompts with MultiLingualJailbreaking + jailbreak template: {augmentation.attack_success_rate}")
+
+    harmful_dataset = JailbreakBenchDataset(intention="benign")
+    harmful_samples = harmful_dataset.as_samples()
+    
+    # Test without jailbreak_template
+    augmentation = MultiLingualJailbreaking(
+        target_model=target_model, 
+        evaluator=evaluator,
+        apply_jailbreak_template=False,
+    )
+
+    jailbreaked_samples = augmentation.augment_batch(harmful_samples)
+    print(f"ASR on Benign prompts with MultiLingualJailbreaking: {augmentation.attack_success_rate}")
+
+    # Test without jailbreak_template
+    augmentation = MultiLingualJailbreaking(
+        target_model=target_model, 
+        evaluator=evaluator,
+        apply_jailbreak_template=True,
+    )
+    jailbreaked_samples = augmentation.augment_batch(harmful_samples)
+    print(f"ASR on Benign prompts with MultiLingualJailbreaking + jailbreak template: {augmentation.attack_success_rate}")
