@@ -36,6 +36,7 @@ class MultiLingualJailbreaking(Jailbreaking):
         evaluator: Callable = None,
         include_failed_cases: bool = False,
         apply_jailbreak_template: bool = True,
+        translate_answer_to_en: bool = True,
         use_cache: bool = True,
         cache_path: str = None,
     ):
@@ -45,6 +46,7 @@ class MultiLingualJailbreaking(Jailbreaking):
         self.target_model = target_model
         self.evaluator = evaluator
         self.apply_jailbreak_template = apply_jailbreak_template
+        self.translate_answer_to_en = translate_answer_to_en
 
         self.mutations = [
             # Chinese
@@ -100,7 +102,7 @@ class MultiLingualJailbreaking(Jailbreaking):
             else:
                 jailbreak_prompt = instance.query
             target_response = self.target_model.generate(jailbreak_prompt)
-            target_response = self._translate_to_en(target_response)
+            target_response = self._translate_to_en(target_response) if self.translate_answer_to_en else target_response
             attack_results.append((jailbreak_prompt, target_response))
         return attack_results
 
