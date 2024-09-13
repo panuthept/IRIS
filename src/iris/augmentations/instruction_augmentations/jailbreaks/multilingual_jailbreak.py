@@ -125,7 +125,6 @@ if __name__ == "__main__":
         api_base="http://10.204.100.70:11699/v1",
         cache_path="./cache",
         use_cache=True,
-        post_processing=lambda x: "Harmful" if x.split("\n")[0].replace("Harmful request: ", "") == "yes" else "Benign",
     )
     def evaluator(text: str) -> bool:
         return text.strip().capitalize() == "Benign"
