@@ -39,6 +39,7 @@ class MultiLingualJailbreaking(Jailbreaking):
         translate_answer_to_en: bool = True,
         use_cache: bool = True,
         cache_path: str = None,
+        **kwargs,
     ):
         if not include_failed_cases and evaluator is None:
             raise ValueError("Evaluator must be provided if include_failed_cases is False")
