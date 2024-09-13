@@ -41,11 +41,6 @@ class MultiLingualJailbreaking(Jailbreaking):
         cache_path: str = None,
         **kwargs,
     ):
-        if not include_failed_cases and evaluator is None:
-            raise ValueError("Evaluator must be provided if include_failed_cases is False")
-        
-        self.target_model = target_model
-        self.evaluator = evaluator
         self.apply_jailbreak_template = apply_jailbreak_template
         self.translate_answer_to_en = translate_answer_to_en
 
@@ -69,7 +64,11 @@ class MultiLingualJailbreaking(Jailbreaking):
             # Javanese
             CacheableTranslate(language='jv', use_cache=use_cache, cache_path=cache_path),
         ]
-        super().__init__(include_failed_cases=include_failed_cases)
+        super().__init__(
+            target_model=target_model,
+            evaluator=evaluator,
+            include_failed_cases=include_failed_cases
+        )
 
     @staticmethod
     def _translate_to_en(text, src_lang='auto'):
@@ -106,14 +105,6 @@ class MultiLingualJailbreaking(Jailbreaking):
             target_response = self._translate_to_en(target_response) if self.translate_answer_to_en else target_response
             attack_results.append((jailbreak_prompt, target_response))
         return attack_results
-
-    def augment(self, instruction: str, reference_answers: List[str] = None) -> List[str]:
-        attack_results = self._single_attack(instruction=instruction, reference_answers=reference_answers)
-        if not self.include_failed_cases:
-            jailbreak_prompts = [jailbreak_prompt for jailbreak_prompt, response in attack_results if self.evaluator(response)]
-        else:
-            jailbreak_prompts = [jailbreak_prompt for jailbreak_prompt, _ in attack_results]
-        return jailbreak_prompts
 
 
 if __name__ == "__main__":
