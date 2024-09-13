@@ -82,7 +82,7 @@ class MultiLingualJailbreaking(Jailbreaking):
         res = ''.join([s[0] for s in data[0]])
         return res
 
-    def _single_attack(self, instruction: str, reference_answers: List[str] = None) -> List[Tuple[str, str]]:
+    def _attack(self, instruction: str, reference_answers: List[str] = None) -> List[Tuple[str, str]]:
         """
         Perform a Multilingual single attack on the target model.
         Credit: https://github.com/EasyJailbreak/EasyJailbreak/blob/master/easyjailbreak/attacker/Multilingual_Deng_2023.py

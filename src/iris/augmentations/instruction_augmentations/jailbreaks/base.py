@@ -19,14 +19,14 @@ class Jailbreaking(InstructionAugmentation):
         self.include_failed_cases = include_failed_cases
         self.attack_success_rate = None
 
-    def _single_attack(self, instruction: str, reference_answers: List[str] = None) -> List[Tuple[str, str]]:
+    def _attack(self, instruction: str, reference_answers: List[str] = None) -> List[Tuple[str, str]]:
         """
         Return a list of tuples, each containing the jailbreak instruction and the target response.
         """
         raise NotImplementedError
 
     def augment(self, instruction: str, reference_answers: List[str] = None) -> List[str]:
-        attack_results = self._single_attack(instruction=instruction, reference_answers=reference_answers)
+        attack_results = self._attack(instruction=instruction, reference_answers=reference_answers)
         if not self.include_failed_cases:
             jailbreak_prompts = [jailbreak_prompt for jailbreak_prompt, response in attack_results if self.evaluator(response)]
         else:
@@ -57,7 +57,7 @@ class DummyJailbreaking(Jailbreaking):
             include_failed_cases=include_failed_cases
         )
 
-    def _single_attack(self, instruction: str, reference_answers: List[str] = None) -> List[Tuple[str, str]]:
+    def _attack(self, instruction: str, reference_answers: List[str] = None) -> List[Tuple[str, str]]:
         """
         Return a list of tuples, each containing the dummy jailbreak instruction (original instruction) and the target response.
         """
