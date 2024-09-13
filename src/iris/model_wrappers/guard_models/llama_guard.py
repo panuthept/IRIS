@@ -80,7 +80,6 @@ class LlamaGuard(GuardLLM):
             api_base: str = None,
             max_tokens: int = 4000,
             pipeline_kwargs: dict = None,
-            post_processing: Callable = None, 
             use_cache: bool = True,
             cache_path: str = "./cache",
     ):
@@ -93,7 +92,6 @@ class LlamaGuard(GuardLLM):
                     api_key=api_key,
                     api_base=api_base,
                 ),
-                post_processing=post_processing,
                 cache_path=cache_path,
                 use_cache=use_cache,
             )
@@ -102,7 +100,6 @@ class LlamaGuard(GuardLLM):
                 huggingface_model_name_or_path,
                 max_tokens=max_tokens,
                 pipeline_kwargs=pipeline_kwargs,
-                post_processing=post_processing,
                 cache_path=cache_path,
                 use_cache=use_cache,
             )
@@ -139,8 +136,12 @@ class LlamaGuard(GuardLLM):
 
     def _prompt_classify(self, prompt: str, **kwargs) -> str:
         prompt = self.sample_clf_prompt_template.format(instruction=prompt)
-        return self.model.complete(prompt, apply_chat_template=False, **kwargs)
+        response = self.model.complete(prompt, apply_chat_template=False, **kwargs)
+        response = "Benign" if response.strip().capitalize() == "Safe" else "Harmful"
+        return response
 
     def _response_classify(self, prompt: str, response: str, **kwargs) -> str:
         prompt = self.response_clf_prompt_template.format(instruction=prompt, response=response)
-        return self.model.complete(prompt, apply_chat_template=False, **kwargs)
+        response = self.model.complete(prompt, apply_chat_template=False, **kwargs)
+        response = "Benign" if response.strip().capitalize() == "Safe" else "Harmful"
+        return response
