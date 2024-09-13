@@ -66,7 +66,6 @@ if __name__ == "__main__":
                     }
                 },
                 cache_path="./cache",
-                post_processing=lambda x: "Harmful" if x.split("\n")[0].replace("Harmful request: ", "") == "yes" else "Benign",
             )
         else:
             raise ValueError(f"Model {args.model_name} not supported.")
