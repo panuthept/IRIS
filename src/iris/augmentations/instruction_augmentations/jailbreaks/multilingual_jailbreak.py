@@ -121,7 +121,7 @@ if __name__ == "__main__":
     from iris.model_wrappers.guard_models import WildGuard
 
     target_model = WildGuard(
-        huggingface_model_name_or_path="allenai/wildguard",
+        model_name_or_path="allenai/wildguard",
         api_key="EMPTY",
         api_base="http://10.204.100.70:11699/v1",
         cache_path="./cache",

@@ -1,4 +1,3 @@
-from typing import Callable
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
@@ -75,7 +74,7 @@ class LlamaGuard(GuardLLM):
 
     def __init__(
             self, 
-            huggingface_model_name_or_path: str = "meta-llama/Llama-Guard-3-8B", 
+            model_name_or_path: str = "meta-llama/Llama-Guard-3-8B", 
             api_key: str = None,
             api_base: str = None,
             max_tokens: int = 4000,
@@ -83,12 +82,12 @@ class LlamaGuard(GuardLLM):
             use_cache: bool = True,
             cache_path: str = "./cache",
     ):
-        self.model_name = huggingface_model_name_or_path
+        self.model_name = model_name_or_path
         self.device = None
         if api_key:
             self.model = APIGenerativeLLM(
                 llm=OpenAILike(
-                    model=huggingface_model_name_or_path,
+                    model=model_name_or_path,
                     api_key=api_key,
                     api_base=api_base,
                 ),
@@ -97,7 +96,7 @@ class LlamaGuard(GuardLLM):
             )
         else:
             self.model = HuggfaceGenerativeLLM(
-                huggingface_model_name_or_path,
+                model_name_or_path,
                 max_tokens=max_tokens,
                 pipeline_kwargs=pipeline_kwargs,
                 cache_path=cache_path,

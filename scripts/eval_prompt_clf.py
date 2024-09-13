@@ -42,7 +42,7 @@ if __name__ == "__main__":
     print(f"CUDA available: {torch.cuda.is_available()}")
     if args.model_name.startswith("meta-llama"):
         target_model = LlamaGuard(
-            huggingface_model_name_or_path=args.model_name,
+            model_name_or_path=args.model_name,
             api_key=args.api_key,
             api_base=args.api_base,
             pipeline_kwargs={
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         )
     elif args.model_name == "allenai/wildguard":
         target_model = WildGuard(
-            huggingface_model_name_or_path=args.model_name,
+            model_name_or_path=args.model_name,
             api_key=args.api_key,
             api_base=args.api_base,
             pipeline_kwargs={

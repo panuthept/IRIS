@@ -7,7 +7,7 @@ from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGene
 class WildGuard(GuardLLM):
     def __init__(
             self, 
-            huggingface_model_name_or_path: str = "allenai/wildguard", 
+            model_name_or_path: str = "allenai/wildguard", 
             api_key: str = None,
             api_base: str = None,
             max_tokens: int = 4000,
@@ -15,12 +15,12 @@ class WildGuard(GuardLLM):
             use_cache: bool = True,
             cache_path: str = "./cache",
     ):
-        self.model_name = huggingface_model_name_or_path
+        self.model_name = model_name_or_path
         self.device = None
         if api_key:
             self.model = APIGenerativeLLM(
                 llm=OpenAILike(
-                    model=huggingface_model_name_or_path,
+                    model=model_name_or_path,
                     api_key=api_key,
                     api_base=api_base,
                 ),
@@ -29,7 +29,7 @@ class WildGuard(GuardLLM):
             )
         else:
             self.model = HuggfaceGenerativeLLM(
-                huggingface_model_name_or_path,
+                model_name_or_path,
                 max_tokens=max_tokens,
                 pipeline_kwargs=pipeline_kwargs,
                 cache_path=cache_path,
@@ -66,7 +66,7 @@ class WildGuard(GuardLLM):
 
 if __name__ == "__main__":
     target_model = WildGuard(
-        huggingface_model_name_or_path="allenai/wildguard",
+        model_name_or_path="allenai/wildguard",
         api_key="EMPTY",
         api_base="http://10.204.100.70:11699/v1",
         cache_path="./cache",
