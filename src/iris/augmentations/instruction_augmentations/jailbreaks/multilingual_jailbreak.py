@@ -1,5 +1,6 @@
 import logging
 import requests
+from iris.cache import CacheStorage
 from typing import List, Tuple, Callable
 from easyjailbreak.models import ModelBase
 from easyjailbreak.mutation.rule import Translate
@@ -10,6 +11,24 @@ logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
 
 
+class CacheableTranslate(Translate):
+    def __init__(self, attr_name='query', language='en', use_cache: bool = True, cache_path: str = None):
+        self.use_cache = use_cache
+        self.cache_storage = CacheStorage(f"easyjailbreak/mutation/translate_{language}", cache_path)
+        super().__init__(
+            attr_name=attr_name, 
+            language=language
+        )
+
+    def translate(self, text, src_lang='auto'):
+        if self.use_cache:
+            translation = self.cache_storage.retrieve(text)
+        if translation is None:
+            translation = super().translate(text, src_lang)
+            self.cache_storage.cache(translation, text)
+        return translation
+
+
 class MultiLingualJailbreaking(Jailbreaking):
     def __init__(
         self, 
@@ -17,6 +36,8 @@ class MultiLingualJailbreaking(Jailbreaking):
         evaluator: Callable = None,
         include_failed_cases: bool = False,
         apply_jailbreak_template: bool = True,
+        use_cache: bool = True,
+        cache_path: str = None,
     ):
         if not include_failed_cases and evaluator is None:
             raise ValueError("Evaluator must be provided if include_failed_cases is False")
@@ -27,23 +48,23 @@ class MultiLingualJailbreaking(Jailbreaking):
 
         self.mutations = [
             # Chinese
-            Translate(language='zh-CN'),
+            CacheableTranslate(language='zh-CN', use_cache=use_cache, cache_path=cache_path),
             # Italian
-            Translate(language='it'),
+            CacheableTranslate(language='it', use_cache=use_cache, cache_path=cache_path),
             # Vietnamese
-            Translate(language='vi'),
+            CacheableTranslate(language='vi', use_cache=use_cache, cache_path=cache_path),
             # Arabic
-            Translate(language='ar'),
+            CacheableTranslate(language='ar', use_cache=use_cache, cache_path=cache_path),
             # Korean
-            Translate(language='ko'),
+            CacheableTranslate(language='ko', use_cache=use_cache, cache_path=cache_path),
             # Thai
-            Translate(language='th'),
+            CacheableTranslate(language='th', use_cache=use_cache, cache_path=cache_path),
             # Bengali
-            Translate(language='bn'),
+            CacheableTranslate(language='bn', use_cache=use_cache, cache_path=cache_path),
             # Swahili
-            Translate(language='sw'),
+            CacheableTranslate(language='sw', use_cache=use_cache, cache_path=cache_path),
             # Javanese
-            Translate(language='jv'),
+            CacheableTranslate(language='jv', use_cache=use_cache, cache_path=cache_path),
         ]
         super().__init__(include_failed_cases=include_failed_cases)
 
@@ -115,6 +136,7 @@ if __name__ == "__main__":
         target_model=target_model, 
         evaluator=evaluator,
         apply_jailbreak_template=False,
+        cache_path="./cache",
     )
 
     jailbreaked_samples = augmentation.augment_batch(harmful_samples)
@@ -125,6 +147,7 @@ if __name__ == "__main__":
         target_model=target_model, 
         evaluator=evaluator,
         apply_jailbreak_template=True,
+        cache_path="./cache",
     )
     jailbreaked_samples = augmentation.augment_batch(harmful_samples)
     print(f"ASR on Harmful prompts with MultiLingualJailbreaking + jailbreak template: {augmentation.attack_success_rate}")
@@ -137,6 +160,7 @@ if __name__ == "__main__":
         target_model=target_model, 
         evaluator=evaluator,
         apply_jailbreak_template=False,
+        cache_path="./cache",
     )
 
     jailbreaked_samples = augmentation.augment_batch(harmful_samples)
@@ -147,6 +171,7 @@ if __name__ == "__main__":
         target_model=target_model, 
         evaluator=evaluator,
         apply_jailbreak_template=True,
+        cache_path="./cache",
     )
     jailbreaked_samples = augmentation.augment_batch(harmful_samples)
     print(f"ASR on Benign prompts with MultiLingualJailbreaking + jailbreak template: {augmentation.attack_success_rate}")
