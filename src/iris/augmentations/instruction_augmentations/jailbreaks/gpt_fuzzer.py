@@ -3,7 +3,6 @@ import logging
 import pandas as pd
 from tqdm import tqdm
 from iris.data_types import Sample
-from collections import defaultdict
 from typing import List, Dict, Callable
 from easyjailbreak.models import ModelBase
 from iris.augmentations.instruction_augmentations.jailbreaks import Jailbreaking
@@ -106,7 +105,7 @@ class GPTFuzzerJailbreaking(Jailbreaking):
         for prompt_node in prompt_nodes:
             prompt_node.results = []
             prompt_node.responses = []
-            for idx, instruction in tqdm(enumerate(instructions), disable=not verbose):
+            for idx, instruction in enumerate(instructions):
                 message = synthesis_message(instruction, prompt_node.prompt)
                 if message is None:  # The prompt is not valid
                     prompt_node.responses = []
@@ -118,6 +117,12 @@ class GPTFuzzerJailbreaking(Jailbreaking):
                 prompt_node.results.append(result)
 
                 if not self.include_failed_cases and result == 1:
+                    # if verbose:
+                    #     # Show results only for jailbroken cases
+                    #     print(f"Instruction:\n{instruction}")
+                    #     print("-" * 100)
+                    #     print(f"Jailbreak prompt:\n{message}")
+                    #     print("=" * 100)
                     attack_results[idx].append(message)
 
     def update(
@@ -152,7 +157,8 @@ class GPTFuzzerJailbreaking(Jailbreaking):
                 self.evaluate(instructions, mutated_results, attack_results, verbose=verbose)
                 self.update(instructions, mutated_results)
                 # print(self.current_jailbreak, self.current_query, self.current_reject)
-                print(f"query: {self.current_query}, jailbreak: {self.current_jailbreak}, asr: {sum(len(attack_results[idx]) > 0 for idx in attack_results) / len(attack_results)}\n")
+                if verbose:
+                    print(f"query: {self.current_query}/{self.max_query}, jailbreak: {self.current_jailbreak}, asr: {sum(len(attack_results[idx]) > 0 for idx in attack_results) / len(attack_results)}\n")
                 if self.is_stop(attack_results):
                     break
         except KeyboardInterrupt:
@@ -188,10 +194,15 @@ class GPTFuzzerJailbreaking(Jailbreaking):
 if __name__ == "__main__":
     import os
     import json
+    import random
+    import numpy as np
+    from llama_index.llms.openai import OpenAI
     from iris.datasets import JailbreakBenchDataset
-    from llama_index.llms.openai_like import OpenAILike
     from iris.model_wrappers.guard_models import WildGuard, LlamaGuard
     from iris.model_wrappers.generative_models import APIGenerativeLLM
+
+    random.seed(42)
+    np.random.seed(42)
 
     # target_model = WildGuard(
     #     model_name_or_path="allenai/wildguard",
@@ -209,8 +220,8 @@ if __name__ == "__main__":
     )
 
     attack_model=APIGenerativeLLM(
-        llm=OpenAILike(
-            model="gpt-3.5-turbo-instruct",
+        llm=OpenAI(
+            model="gpt-4o",
             api_key=os.environ.get("OPENAI_API_KEY"),
         ),
         cache_path="./cache",
@@ -230,9 +241,9 @@ if __name__ == "__main__":
     jailbreaked_samples = attacker.augment_batch(harmful_samples)
     print(f"ASR (Harmful): {attacker.attack_success_rate}")
     # Save samples
-    with open(f"./jailbreaked_sample.jsonl", "w") as f:
+    with open(f"./jailbreaked_harmful_sample.jsonl", "w") as f:
         for sample in jailbreaked_samples:
-            f.write(json.dumps(sample.to_dict()) + "\n")
+            f.write(json.dumps(sample.as_dict()) + "\n")
 
     benign_dataset = JailbreakBenchDataset(intention="benign")
     benign_samples = benign_dataset.as_samples()
@@ -240,6 +251,6 @@ if __name__ == "__main__":
     jailbreaked_samples = attacker.augment_batch(benign_samples)
     print(f"ASR (Benign): {attacker.attack_success_rate}")
     # Save samples
-    with open(f"./jailbreaked_sample.jsonl", "w") as f:
+    with open(f"./jailbreaked_benign_sample.jsonl", "w") as f:
         for sample in jailbreaked_samples:
-            f.write(json.dumps(sample.to_dict()) + "\n")
+            f.write(json.dumps(sample.as_dict()) + "\n")
