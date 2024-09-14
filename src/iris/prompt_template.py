@@ -99,7 +99,9 @@ class PromptTemplate:
                         template = self.instruction_template
                         prompt = template.format(instruction=instruction)
             else:
-                raise ValueError("No query or instruction provided")
+                name = "instruction_template"
+                template = self.instruction_template
+                prompt = template.format(instruction="")
         return name, template, prompt
     
     def as_partial_dict(
