@@ -1,7 +1,10 @@
+import math
 import logging
 import pandas as pd
 from tqdm import tqdm
-from typing import List, Tuple, Callable
+from iris.data_types import Sample
+from collections import defaultdict
+from typing import List, Dict, Callable
 from easyjailbreak.models import ModelBase
 from iris.augmentations.instruction_augmentations.jailbreaks import Jailbreaking
 from iris.augmentations.instruction_augmentations.jailbreaks.utils.gpt_fuzzer.core import PromptNode
@@ -22,10 +25,10 @@ class GPTFuzzerJailbreaking(Jailbreaking):
         target_model: ModelBase, 
         attack_model: ModelBase = None,
         evaluator: Callable = None, # A function that takes a string and returns 1 if the string is jailbroken, 0 otherwise
-        max_query: int = -1,
-        max_jailbreak: int = 1,
+        max_query: int = 50000,
+        max_jailbreak: int = -1,
         max_reject: int = -1,
-        max_iteration: int = 10,
+        max_iteration: int = -1,
         energy: int = 1,
         include_failed_cases: bool = False,
         **kwargs,
@@ -53,12 +56,14 @@ class GPTFuzzerJailbreaking(Jailbreaking):
         for i, prompt_node in enumerate(self.prompt_nodes):
             prompt_node.index = i
         # Prepare mutate policy
-        self.mutate_policy = MutateRandomSinglePolicy([
-            OpenAIMutatorCrossOver(attack_model, temperature=0.0),  # for reproduction only, if you want better performance, use temperature>0
-            OpenAIMutatorExpand(attack_model, temperature=0.0),
-            OpenAIMutatorGenerateSimilar(attack_model, temperature=0.0),
-            OpenAIMutatorRephrase(attack_model, temperature=0.0),
-            OpenAIMutatorShorten(attack_model, temperature=0.0)],
+        self.mutate_policy = MutateRandomSinglePolicy(
+            mutators=[
+                OpenAIMutatorCrossOver(attack_model, temperature=0.0),  # for reproduction only, if you want better performance, use temperature>0
+                OpenAIMutatorExpand(attack_model, temperature=0.0),
+                OpenAIMutatorGenerateSimilar(attack_model, temperature=0.0),
+                OpenAIMutatorRephrase(attack_model, temperature=0.0),
+                OpenAIMutatorShorten(attack_model, temperature=0.0)
+            ],
             concatentate=True,
         )
         # Prepare select policy
@@ -72,7 +77,17 @@ class GPTFuzzerJailbreaking(Jailbreaking):
         self.mutate_policy.fuzzer = self
         self.select_policy.fuzzer = self
 
-    def is_stop(self):
+    def reset(self):
+        self.current_query: int = 0
+        self.current_jailbreak: int = 0
+        self.current_reject: int = 0
+        self.current_iteration: int = 0
+
+    def is_stop(self, attack_results: Dict[int, List[str]]) -> bool:
+        # Check if the attack_results has at least one jailbreak per question, then stop
+        if all(len(attack_results[idx]) > 0 for idx in attack_results):
+            return True
+
         checks = [
             ('max_query', 'current_query'),
             ('max_jailbreak', 'current_jailbreak'),
@@ -81,26 +96,35 @@ class GPTFuzzerJailbreaking(Jailbreaking):
         ]
         return any(getattr(self, max_attr) != -1 and getattr(self, curr_attr) >= getattr(self, max_attr) for max_attr, curr_attr in checks)
     
-    def evaluate(self, instruction: str, prompt_nodes: List[PromptNode], attack_results: List[Tuple[str, str]]):
+    def evaluate(
+        self, 
+        instructions: List[str], 
+        prompt_nodes: List[PromptNode], 
+        attack_results: Dict[int, List[str]], 
+        verbose: bool = True
+    ):
         for prompt_node in prompt_nodes:
-            message = synthesis_message(instruction, prompt_node.prompt)
-            if message is None:  # The prompt is not valid
-                prompt_node.responses = []
-                prompt_node.results = []
-                break
-            print("-" * 100)
-            print(message)
-            print("-" * 100)
-            response = self.target_model.generate(message)
-            print(response)
-            eval_result = self.evaluator(response)
-            print(eval_result)
-            print("*" * 100)
-            prompt_node.responses = [response]
-            prompt_node.results = [eval_result]
-            attack_results.append((message, response))
+            prompt_node.results = []
+            prompt_node.responses = []
+            for idx, instruction in tqdm(enumerate(instructions), disable=not verbose):
+                message = synthesis_message(instruction, prompt_node.prompt)
+                if message is None:  # The prompt is not valid
+                    prompt_node.responses = []
+                    prompt_node.results = []
+                    break
+                response = self.target_model.generate(message)
+                result = self.evaluator(response)
+                prompt_node.responses.append(response)
+                prompt_node.results.append(result)
 
-    def update(self, instruction: str, prompt_nodes: List[PromptNode]):
+                if not self.include_failed_cases and result == 1:
+                    attack_results[idx].append(message)
+
+    def update(
+        self, 
+        instructions: List[str], 
+        prompt_nodes: List[PromptNode]
+    ):
         self.current_iteration += 1
         for prompt_node in prompt_nodes:
             if prompt_node.num_jailbreak > 0:
@@ -109,26 +133,61 @@ class GPTFuzzerJailbreaking(Jailbreaking):
             self.current_jailbreak += prompt_node.num_jailbreak
             self.current_query += prompt_node.num_query
             self.current_reject += prompt_node.num_reject
-        self.select_policy.update([instruction], prompt_nodes)
+        self.select_policy.update(instructions, prompt_nodes)
 
-    def _attack(self, instruction: str, reference_answers: List[str] = None) -> List[Tuple[str, str]]:
-        attack_results = []
+    def _attack(
+        self, 
+        instructions: List[str], 
+        reference_answers: List[str] = None, 
+        verbose: bool = True
+    ) -> Dict[int, List[str]]:
+        self.reset()
+        if self.max_iteration == -1:
+            self.max_iteration = math.ceil(self.max_query / len(instructions))
+        attack_results: Dict[int, List[str]] = {idx: [] for idx in range(len(instructions))}
         try:
-            for _ in tqdm(range(self.max_iteration)):
+            for _ in tqdm(range(self.max_iteration), disable=not verbose):
                 seed = self.select_policy.select()
                 mutated_results = self.mutate_policy.mutate_single(seed)
-                self.evaluate(instruction, mutated_results, attack_results)
-                self.update(instruction, mutated_results)
-                print(self.current_jailbreak, self.current_query, self.current_reject)
-                if self.is_stop():
+                self.evaluate(instructions, mutated_results, attack_results, verbose=verbose)
+                self.update(instructions, mutated_results)
+                # print(self.current_jailbreak, self.current_query, self.current_reject)
+                print(f"query: {self.current_query}, jailbreak: {self.current_jailbreak}, asr: {sum(len(attack_results[idx]) > 0 for idx in attack_results) / len(attack_results)}\n")
+                if self.is_stop(attack_results):
                     break
         except KeyboardInterrupt:
             print("Fuzzing interrupted by user!")
         return attack_results
+    
+    def augment(self, instruction: str, reference_answers: List[str] = None) -> List[str]:
+        return self._attack([instruction])[0]
+    
+    def augment_sample(self, sample: Sample) -> Sample:
+        original_instructions = [sample.instructions[0]]
+        attack_results = self._attack(original_instructions)
+
+        sample.instructions = attack_results[0]
+        sample.reference_instruction = original_instructions[0]
+        return sample
+
+    def augment_batch(self, samples: List[Sample], verbose: bool = True) -> List[Sample]:
+        original_instructions = [sample.instructions[0] for sample in samples]
+        attack_results = self._attack(original_instructions, verbose=verbose)
+
+        for idx, sample in enumerate(samples):
+            sample.instructions = attack_results[idx]
+            sample.reference_instruction = original_instructions[idx]
+
+        attack_success_count = 0
+        for sample in samples:
+            attack_success_count += int(len(sample.instructions) > 0)
+        self.attack_success_rate = attack_success_count / len(samples)
+        return samples
 
 
 if __name__ == "__main__":
     import os
+    import json
     from iris.datasets import JailbreakBenchDataset
     from llama_index.llms.openai_like import OpenAILike
     from iris.model_wrappers.guard_models import WildGuard, LlamaGuard
@@ -155,25 +214,32 @@ if __name__ == "__main__":
             api_key=os.environ.get("OPENAI_API_KEY"),
         ),
         cache_path="./cache",
-        use_cache=False,
+        use_cache=True,
     )
 
     attacker = GPTFuzzerJailbreaking(
         target_model=target_model,
         attack_model=attack_model,
         evaluator=lambda x: int(x.strip().capitalize() == "Benign"),
+        max_query=50000,
     )
 
     harmful_dataset = JailbreakBenchDataset(intention="harmful")
     harmful_samples = harmful_dataset.as_samples()
 
-    # jailbreaked_samples = attacker.augment_batch(harmful_samples)
-    jailbreaked_sample = attacker.augment_sample(harmful_samples[0])
-    print(jailbreaked_sample)
+    jailbreaked_samples = attacker.augment_batch(harmful_samples)
+    print(f"ASR (Harmful): {attacker.attack_success_rate}")
+    # Save samples
+    with open(f"./jailbreaked_sample.jsonl", "w") as f:
+        for sample in jailbreaked_samples:
+            f.write(json.dumps(sample.to_dict()) + "\n")
 
     benign_dataset = JailbreakBenchDataset(intention="benign")
     benign_samples = benign_dataset.as_samples()
 
-    # jailbreaked_samples = attacker.augment_batch(harmful_samples)
-    jailbreaked_sample = attacker.augment_sample(benign_samples[0])
-    print(jailbreaked_sample)
+    jailbreaked_samples = attacker.augment_batch(benign_samples)
+    print(f"ASR (Benign): {attacker.attack_success_rate}")
+    # Save samples
+    with open(f"./jailbreaked_sample.jsonl", "w") as f:
+        for sample in jailbreaked_samples:
+            f.write(json.dumps(sample.to_dict()) + "\n")
