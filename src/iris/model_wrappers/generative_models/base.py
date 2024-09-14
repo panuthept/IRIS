@@ -1,3 +1,4 @@
+import time
 from tqdm import tqdm
 from typing import List
 from abc import abstractmethod
@@ -15,6 +16,8 @@ class GenerativeLLM(LLM):
             prompt: str, 
             ref_prompt: str = None,   # reference prompt for TransformerLens
             apply_chat_template: bool = True,
+            max_trials: int = 1,
+            failure_sleep_time: int = 1,
             **kwargs
     ) -> str:
         # Get the answer from cache if available
@@ -22,12 +25,18 @@ class GenerativeLLM(LLM):
         if self.use_cache:
             answer = self.cache_storage.retrieve(prompt, system_prompt=self.system_prompt)
         if answer is None:
-            answer = self._complete(
-                prompt, 
-                ref_prompt=ref_prompt, 
-                apply_chat_template=apply_chat_template, 
-                **kwargs
-            )
+            for _ in range(max_trials):
+                try:                
+                    answer = self._complete(
+                        prompt, 
+                        ref_prompt=ref_prompt, 
+                        apply_chat_template=apply_chat_template, 
+                        **kwargs
+                    )
+                    break
+                except Exception as e:
+                    print(f"Failed to generate response: {e}")
+                    time.sleep(failure_sleep_time)
             # Cache the answer
             self.cache_storage.cache(answer, prompt, system_prompt=self.system_prompt)
         # Post process the answer
