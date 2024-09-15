@@ -30,6 +30,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
             activation_name: str = "mlp_post",
             activation_layers: List[int] = [23],
             from_pretrained_kwargs: dict = None,
+            do_cma = False,
             use_cache=False,
             **kwargs,
     ):
@@ -52,6 +53,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
         self.max_tokens = max_tokens
         self.activation_name = activation_name
         self.activation_layers = activation_layers
+        self.do_cma = do_cma
         super().__init__(use_cache=use_cache, **kwargs)
 
     def get_model_name(self) -> str:
@@ -140,6 +142,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
             batch_size, ctx_length = tokens.shape
             device = devices.get_device_for_block_index(0, self.cfg)
             tokens = tokens.to(device)
+            comp_score = None
 
             ref_tokens = None
             if ref_input is not None:
@@ -188,26 +191,36 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
                 # While generating, we keep generating logits, throw away all but the final logits,
                 # and then use those logits to sample from the distribution We keep adding the
                 # sampled tokens to the end of tokens.
-
                 if ref_tokens is not None:
                     ref_logits, ref_cache = self.llm.run_with_cache(ref_tokens)
+                    null_logits = self.llm(tokens)
                     
                     fwd_hooks = []
                     for activation_layer in self.activation_layers:
                         act_name = utils.get_act_name(self.activation_name, activation_layer)
                         fwd_hooks.append((act_name, partial(mlp_ablation_hook, new_value=ref_cache[act_name])))
-
+                    # intervention
                     logits = self.llm.run_with_hooks(
                         tokens,
                         fwd_hooks=fwd_hooks,
                     )
-
+                    
+                    if self.do_cma:
+                        selected_token = torch.argmax( torch.softmax(ref_logits[:, -1, :], dim=-1), dim=-1)
+                        ref_prob = torch.softmax(ref_logits[:, -1, :], dim=-1)[:,selected_token]
+                        null_prob = torch.softmax(null_logits[:, -1, :], dim=-1)[:,selected_token]
+                        intervention_prob = torch.softmax(logits[:, -1, :], dim=-1)[:,selected_token]
+                        
+                        comp_score = (intervention_prob - null_prob) / (ref_prob - null_prob)
                 else:
                     # We input the entire sequence, as a [batch, pos] tensor, since we aren't using
                     # the cache.
                     logits = self.llm(tokens)
-                final_logits = logits[:, -1, :]
-
+                
+                final_logits = logits[:, -1, :] 
+                 
+                # Compute metrics:
+                # select token to consider
                 if do_sample:
                     sampled_tokens = utils.sample_logits(
                         final_logits,
@@ -240,7 +253,8 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
 
                 if stop_at_eos and finished_sequences.all():
                     break
-            return tokens
+            
+            return (tokens, comp_score) if self.do_cma else (tokens, None)
 
     def _complete_messages(
             self, 
@@ -265,7 +279,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
                 return_tensors="pt",
             )["input_ids"]
 
-        output_ids = self._generate(
+        output_ids, comp_score = self._generate(
             input=input_ids, 
             ref_input=ref_input_ids,
             max_new_tokens=self.max_tokens, 
@@ -273,8 +287,9 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
             verbose=False,
             **kwargs
         )
+        
         output_ids = output_ids[:, input_lens:-1]
-        return self.llm.to_string(output_ids)
+        return self.llm.to_string(output_ids), comp_score
 
     def _complete(self, promt: str, ref_prompt: str = None, **kwargs) -> str:
         if self.system_prompt:
@@ -289,8 +304,9 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
         else:
             messages = [{"role": "user", "content": promt}]
             ref_messages = [{"role": "user", "content": ref_prompt}] if ref_prompt else None
-        answer = self._complete_messages(messages, ref_messages=ref_messages, **kwargs)
-        return answer
+        
+        answer, comp_score = self._complete_messages(messages, ref_messages=ref_messages, **kwargs)
+        return answer, comp_score
 
 
 if __name__ == "__main__":
@@ -302,7 +318,8 @@ if __name__ == "__main__":
 
     model = TransformerLensGenerativeLLM(
         "Qwen/Qwen2-0.5B-Instruct", 
-        max_tokens=512,
+        max_tokens=1,
+        do_cma=True,
         from_pretrained_kwargs={
             "torch_dtype": torch.bfloat16,
             "cache_dir": "./data/models",
@@ -325,10 +342,12 @@ if __name__ == "__main__":
         reference_instruction=redteam_prompt,
     )
     response = model.complete_sample(sample)
+    print(f'redteam_prompt:')
     print(response.answers)
 
     sample = Sample(
         instructions=jailbreak_prompts,
     )
     response = model.complete_sample(sample)
+    print(f'jailbreak_prompts:')
     print(response.answers)

@@ -93,9 +93,12 @@ class JailbreakBenchmark(Benchmark):
                 category=setting.get("category", None),
                 attack_engine=setting.get("attack_engine", None),
             )
+            
             samples: List[Sample] = dataset.as_samples(split="test", prompt_template=self.prompt_template)
+            
             # Get the responses
             responses: List[ModelResponse] = model.complete_batch(samples)
+            
             # Save the responses
             os.makedirs(output_path, exist_ok=True)
             save_model_answers(responses, f"{output_path}/response.jsonl")
@@ -114,3 +117,35 @@ class JailbreakBenchmark(Benchmark):
                 results.update(summarized_result.scores)
             benchmark_results[setting["setting_name"]] = results
         return benchmark_results
+
+    def cma(
+        self, 
+        model: GenerativeLLM = None, 
+        model_name: str = None,
+        activation_name: str = None,
+        intervention_layers: List = None,
+    ) -> Dict[str, SummarizedResult]:
+        
+        # Inference for each task
+        evaluation_settings = self.get_evaluation_settings()
+
+        for setting in tqdm(evaluation_settings, desc="Inference"):
+            if setting.get("setting_name", None) in ['Benign (Original)', 'Harmful (Original)']: continue
+            output_path = f"{self.save_path}/{setting['save_name']}/{model_name}"
+            
+            # Load the dataset
+            dataset = self.get_dataset(
+                intention=setting.get("intention", None),
+                category=setting.get("category", None),
+                attack_engine=setting.get("attack_engine", None),
+            )
+            
+            samples: List[Sample] = dataset.as_samples(split="test", prompt_template=self.prompt_template)
+
+            # Get the responses
+            responses: List[ModelResponse] = model.complete_batch(samples)
+            
+            # # Save the responses
+            os.makedirs(output_path, exist_ok=True)
+            save_model_answers(responses, f"{output_path}/{activation_name}_{intervention_layers}_response.jsonl")
+            breakpoint()

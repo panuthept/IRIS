@@ -66,6 +66,7 @@ class Sample:
 class ModelResponse(Sample):
     contexts: List[str] = field(default_factory=list)
     answers: List[str] = field(default_factory=list)    # Number of answers is equal to the number of instructions
+    component_scores: List[str] = field(default_factory=list)    # Number of component_scores is equal to the number of instructions
     answer_model: str = None
 
     def as_dict(self) -> Dict[str, Any]:

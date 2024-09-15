@@ -37,13 +37,14 @@ class GenerativeLLM(ABC):
         if self.use_cache:
             answer = self.cache_storage.retrieve(prompt, system_prompt=self.system_prompt)
         if answer is None:
-            answer = self._complete(prompt, ref_prompt=ref_prompt, **kwargs)
+            answer, comp_score = self._complete(prompt, ref_prompt=ref_prompt, **kwargs)
             # Cache the answer
             self.cache_storage.cache(answer, prompt, system_prompt=self.system_prompt)
         # Post process the answer
         if self.post_processing:
             answer = self.post_processing(answer)
-        return answer
+        
+        return answer, comp_score
     
     def complete_sample(
             self, 
@@ -55,8 +56,9 @@ class GenerativeLLM(ABC):
         # Get the answers
         for prompt in sample.get_prompts():
             ref_prompt = sample.get_ref_prompt()
-            answer = self.complete(prompt, ref_prompt=ref_prompt, **kwargs)
+            answer, comp_score = self.complete(prompt, ref_prompt=ref_prompt, **kwargs)
             response.answers.append(answer)
+            response.component_scores.append(float(comp_score))
         # Set the answer model name
         response.answer_model = self.get_model_name()
         return response
