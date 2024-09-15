@@ -2,10 +2,10 @@ import os
 import torch
 import argparse
 from typing import List
+from iris.utilities.loaders import save_responses
 from iris.data_types import Sample, ModelResponse
 from llama_index.llms.openai_like import OpenAILike
 from iris.datasets import InstructionIndutionDataset
-from iris.utilities.loaders import save_model_answers
 from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
 from iris.model_wrappers.generative_models.huggingface_model import HuggfaceGenerativeLLM
 
@@ -64,4 +64,4 @@ if __name__ == "__main__":
     # Save the responses to a file
     output_dir = f"./outputs/InstructionIndutionDataset/{args.task_name}/{args.model_name}"
     os.makedirs(output_dir, exist_ok=True)
-    save_model_answers(responses, f"{output_dir}/response.jsonl")
+    save_responses(responses, f"{output_dir}/response.jsonl")

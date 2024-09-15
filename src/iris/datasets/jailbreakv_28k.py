@@ -76,6 +76,7 @@ class JailbreaKV28kDataset(JailbreakDataset):
         test_data = [{
             "instructions": list(jailbreak_queries) if self.attack_engine else [redteam_query],
             "reference_instruction": redteam_query if self.attack_engine else None,
+            "instructions_true_label": ["Harmful"] * len(jailbreak_queries) if self.attack_engine else ["Harmful"],
         } for redteam_query, jailbreak_queries in test_data.items()]
         return {"test": [sample for sample in test_data if len(sample["instructions"]) > 0]}
 

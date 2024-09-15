@@ -1,17 +1,28 @@
 import numpy as np
-from copy import deepcopy
+from collections import ChainMap
 from dataclasses import dataclass, field
 from typing import Tuple, List, Dict, Any
 from iris.prompt_template import PromptTemplate
+
+
+def all_annotations(cls) -> ChainMap:
+    """
+    Returns a dictionary-like ChainMap that includes annotations for all 
+    attributes defined in cls or inherited from superclasses.
+    Credit: https://stackoverflow.com/questions/63903901/how-can-i-access-to-annotations-of-parent-class
+    """
+    return ChainMap(*(c.__annotations__ for c in cls.__mro__ if '__annotations__' in c.__dict__) )
 
 
 @dataclass
 class Sample:
     query: str = None
     instructions: List[str] = field(default_factory=list)
-    reference_instruction: str = None   # reference instruction is used for consistency checking
+    instructions_pred_label: List[str] = field(default_factory=list)   # 'harmful' or 'benign'
+    instructions_true_label: List[str] = field(default_factory=list)   # 'harmful' or 'benign'
+    reference_instruction: str = None                             # Reference instruction is used for consistency checking
     reference_contexts: List[str] = field(default_factory=list)
-    reference_answers: List[str] = field(default_factory=list)
+    reference_answers: List[str] = field(default_factory=list)    # Reference answers can be used for evaluation both answers and classsified_instructions
     reference_answers_model: str = None
     examples: List[Tuple[str, str]] = field(default_factory=list)
     example_template: str = "Input: {query}\nOutput: {answer}"
@@ -35,6 +46,15 @@ class Sample:
                         continue
                 data[key] = value
         return data
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Sample':
+        # Filter out None values and unknown keys
+        data = {k: v for k, v in data.items() if v is not None and k in all_annotations(cls)}
+        # If prompt_template is present, convert it to PromptTemplate object
+        if "prompt_template" in data:
+            data["prompt_template"] = PromptTemplate.from_dict(data["prompt_template"])
+        return cls(**data)
     
     def get_ref_prompt(self) -> str:
         return self.prompt_template.get_prompt(
@@ -66,27 +86,9 @@ class Sample:
 class ModelResponse(Sample):
     contexts: List[str] = field(default_factory=list)
     answers: List[str] = field(default_factory=list)    # Number of answers is equal to the number of instructions
+    answers_pred_label: List[str] = field(default_factory=list)
+    answers_true_label: List[str] = field(default_factory=list)
     answer_model: str = None
-
-    def as_dict(self) -> Dict[str, Any]:
-        data = super().as_dict()
-        for key, value in self.__dict__.items():
-            if key == "prompt_template":
-                data[key].update(self.prompt_template.as_partial_dict(
-                    query=self.query, 
-                    instruction=self.instructions[0] if len(self.instructions) > 0 else None, 
-                    examples=self.examples if len(self.examples) > 0 else None,
-                    answer=self.answers[0] if len(self.answers) > 0 else None,
-                ))
-            else:
-                if isinstance(value, list) or isinstance(value, dict):
-                    if len(value) == 0:
-                        continue
-                else:
-                    if value is None:
-                        continue
-                data[key] = value
-        return data
 
     def get_prompts(self) -> List[str]:
         prompts = []
@@ -112,17 +114,9 @@ class ModelResponse(Sample):
     def from_sample(
         cls, 
         sample: Sample, 
-    ):
-        return cls(
-            query=sample.query,
-            instructions=deepcopy(sample.instructions),
-            reference_contexts=deepcopy(sample.reference_contexts),
-            reference_answers=deepcopy(sample.reference_answers),
-            reference_answers_model=sample.reference_answers_model,
-            examples=deepcopy(sample.examples),
-            example_template=sample.example_template,
-            prompt_template=sample.prompt_template,
-        )
+    ) -> 'ModelResponse':
+        data = sample.as_dict()
+        return cls.from_dict(data)
     
 
 @dataclass
@@ -130,20 +124,12 @@ class EvaluationResult(ModelResponse):
     scores: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_response(cls, response: ModelResponse):
-        return cls(
-            query=response.query,
-            instructions=deepcopy(response.instructions),
-            reference_contexts=deepcopy(response.reference_contexts),
-            reference_answers=deepcopy(response.reference_answers),
-            reference_answers_model=response.reference_answers_model,
-            examples=deepcopy(response.examples),
-            example_template=response.example_template,
-            prompt_template=response.prompt_template,
-            contexts=deepcopy(response.contexts),
-            answers=deepcopy(response.answers),
-            answer_model=response.answer_model,
-        )
+    def from_response(
+        cls, 
+        response: ModelResponse, 
+    ) -> 'EvaluationResult':
+        data = response.as_dict()
+        return cls.from_dict(data)
     
 
 @dataclass
@@ -151,7 +137,7 @@ class SummarizedResult:
     scores: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_results(cls, results: List[EvaluationResult]):
+    def from_results(cls, results: List[EvaluationResult]) -> 'SummarizedResult':
         summarized_result = cls()
 
         all_scores = {}

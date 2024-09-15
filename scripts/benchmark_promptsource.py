@@ -13,9 +13,6 @@ if __name__ == "__main__":
     parser = parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="Qwen/Qwen2-0.5B-Instruct")
     parser.add_argument("--eval_only", action="store_true")
-    parser.add_argument("--tasks", type=str, default=None)
-    parser.add_argument("--sub_tasks", type=str, default=None)
-    parser.add_argument("--prompt_name", type=str, default=None)
     parser.add_argument("--api_key", type=str, default=None)
     parser.add_argument("--api_base", type=str, default=None)
     parser.add_argument("--max_tokens", type=int, default=512)
@@ -51,10 +48,7 @@ if __name__ == "__main__":
             )
             print(f"Device: {model.llm.device}")
 
-    benchmark_results = benchmark.evaluate(model=model,
-                                        model_name=args.model_name,
-                                        tasks=[args.tasks],
-                                        prompt_name=args.prompt_name)
+    benchmark_results = benchmark.evaluate(model=model, model_name=args.model_name)
     for task, task_results in benchmark_results.items():
         print(f"Task: {task}")
         print(task_results)

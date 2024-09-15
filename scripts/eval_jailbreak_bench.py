@@ -1,9 +1,9 @@
 import argparse
 from typing import List
 from iris.data_types import ModelResponse
+from iris.utilities.loaders import load_responses
 from llama_index.llms.together import TogetherLLM
 from llama_index.llms.openai_like import OpenAILike
-from iris.utilities.loaders import load_model_answers
 from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
 from iris.metrics.jailbreaking import RefusalRateMetric, SafeResponseRateMetric
 
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     ]
 
     for output_path in output_paths:
-        responses: List[ModelResponse] = load_model_answers(output_path)
+        responses: List[ModelResponse] = load_responses(output_path)
         print(f"Loaded {len(responses)} responses from {output_path}")
 
         metric = RefusalRateMetric(

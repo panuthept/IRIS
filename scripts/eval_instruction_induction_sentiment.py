@@ -1,7 +1,7 @@
 import argparse
 from typing import List
 from iris.data_types import ModelResponse
-from iris.utilities.loaders import load_model_answers
+from iris.utilities.loaders import load_responses
 from iris.metrics.exact_match import ExactMatchMetric
 
 
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     metric = ExactMatchMetric()
 
     for output_path in output_paths:
-        responses: List[ModelResponse] = load_model_answers(output_path)
+        responses: List[ModelResponse] = load_responses(output_path)
         print(f"Loaded {len(responses)} responses from {output_path}")
 
         results = []

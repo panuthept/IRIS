@@ -8,7 +8,7 @@ from iris.prompt_template import PromptTemplate
 from iris.data_types import Sample, ModelResponse
 from iris.datasets import InstructionIndutionDataset
 from iris.model_wrappers.generative_models import GenerativeLLM
-from iris.utilities.loaders import save_model_answers, load_model_answers
+from iris.utilities.loaders import save_responses, load_responses
 
 
 class InstructionIndutionBenchmark(Benchmark):
@@ -91,19 +91,19 @@ class InstructionIndutionBenchmark(Benchmark):
             responses: List[ModelResponse] = model.complete_batch(samples)
             # Save the responses
             os.makedirs(output_path, exist_ok=True)
-            save_model_answers(responses, f"{output_path}/response.jsonl")
+            save_responses(responses, f"{output_path}/response.jsonl")
 
         # Evaluate the responses
         benchmark_results = {}
         for task in tqdm(tasks, desc="Evaluation"):
             output_path = f"{self.save_path}/{task}/{self.in_context_examples_num}/{self.in_context_seed}/{model_name}"
             # Load responses
-            responses: List[ModelResponse] = load_model_answers(f"{output_path}/response.jsonl")
+            responses: List[ModelResponse] = load_responses(f"{output_path}/response.jsonl")
 
             # Evaluate responses
             task_results = {}
             for metric in self.get_metrics():
-                _, summarized_result = metric.eval_batch(responses, verbose=False)
+                _, summarized_result = metric.eval_answers_batch(responses, verbose=False)
                 task_results.update(summarized_result.scores)
             benchmark_results[self._rename_task(task)] = task_results
         return benchmark_results
