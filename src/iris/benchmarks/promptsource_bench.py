@@ -22,7 +22,17 @@ class PromptSourceBenchmark(Benchmark):
             save_path=save_path, 
         )
         self.task_name_map = {
-            "ag_news" :"AGNews",
+            "anli_r1": "ANLI R1",
+            "anli_r2": "ANLI R2",
+            "anli_r3": "ANLI R3",
+            "cb": "CB",
+            "rte": "RTE",
+            "copa" :"COPA",
+            "hellaswag": "HellaSwag",
+            # "story_cloze": "Story Cloze",
+            "wsc": "WSC",
+            "winogrande": "Winogrande",
+            "wic": "WiC",
         }
 
     def get_metrics(self) -> List[Metric]:
@@ -34,16 +44,12 @@ class PromptSourceBenchmark(Benchmark):
     def task_available(self) -> List[str]:
         return PromptSourceDataset.task_available()
 
-    def sub_task_available(self, task_name: str) -> List[str]:
-        return PromptSourceDataset.sub_task_available(task_name)
-
     def evaluate(
         self, 
         model: GenerativeLLM = None, 
         model_name: str = None,
         tasks: List[str] = None,
-        sub_tasks: List[str] = None,
-        prompt_name: List[str] = None
+        prompt_name: List[str] = None,
     ) -> Dict[str, SummarizedResult]:
         if model is None:
             assert model_name is not None, "Either model or model_name must be provided"
@@ -54,66 +60,32 @@ class PromptSourceBenchmark(Benchmark):
         tasks = [task for task in tasks if task in self.task_name_map]
         
         # Inference for each task
-        for task in tqdm(tasks, desc="Inference"):
-            if sub_tasks is not None:
-                for sub_task in sub_tasks:
-                    output_path = f"{self.save_path}/{task}/{sub_task}/{model_name}"
-                    if os.path.exists(f"{output_path}/response.jsonl"):
-                        continue
-                    # Load the dataset
-                    dataset = PromptSourceDataset(
-                        task_name=task,
-                        sub_task_name=sub_tasks,
-                        prompt_name=prompt_name,
-                    )
-                    samples: List[Sample] = dataset.as_samples(split="test", prompt_template=self.prompt_template)
-                    # Get the responses
-                    responses: List[ModelResponse] = model.complete_batch(samples)
-                    # Save the responses
-                    os.makedirs(output_path, exist_ok=True)
-                    save_responses(responses, f"{output_path}/response.jsonl")
-            else:    
-                output_path = f"{self.save_path}/{task}/{model_name}"
-                if os.path.exists(f"{output_path}/response.jsonl"):
-                    continue
-                # Load the dataset
-                dataset = PromptSourceDataset(
-                    task_name=task,
-                    prompt_name=prompt_name,
-                )
-                samples: List[Sample] = dataset.as_samples(split="test", prompt_template=self.prompt_template)
-                # Get the responses
-                responses: List[ModelResponse] = model.complete_batch(samples)
-                # Save the responses
-                os.makedirs(output_path, exist_ok=True)
-                save_responses(responses, f"{output_path}/response.jsonl")
-
+        for task in tqdm(tasks, desc="Inference"): 
+            output_path = f"{self.save_path}/{task}/{model_name}"
+            if os.path.exists(f"{output_path}/response.jsonl"):
+                continue
+            # Load the dataset
+            dataset = PromptSourceDataset(task_name=task)
+            samples: List[Sample] = dataset.as_samples(split="test", prompt_template=self.prompt_template)
+            # Get the responses
+            responses: List[ModelResponse] = model.complete_batch(samples)
+            # Save the responses
+            os.makedirs(output_path, exist_ok=True)
+            save_responses(responses, f"{output_path}/response.jsonl")
+          
         # Evaluate the responses
         benchmark_results = {}
-        for task in tqdm(tasks, desc="Evaluation"):
-            if sub_tasks is not None:
-                for sub_task in sub_tasks:
-                    output_path = f"{self.save_path}/{task}/{sub_task}/{model_name}"
-                    # Load responses
-                    responses: List[ModelResponse] = load_responses(f"{output_path}/response.jsonl")
+        for task in tqdm(tasks, desc="Evaluation"):   
+            output_path = f"{self.save_path}/{task}/{model_name}"
+            # Load responses
+            responses: List[ModelResponse] = load_responses(f"{output_path}/response.jsonl")
 
-                    # Evaluate responses
-                    task_results = {}
-                    for metric in self.get_metrics():
-                        _, summarized_result = metric.eval_batch(responses, verbose=False)
-                        task_results.update(summarized_result.scores)
-                    benchmark_results[self._rename_task(task)] = task_results
-            else:    
-                output_path = f"{self.save_path}/{task}/{model_name}"
-                # Load responses
-                responses: List[ModelResponse] = load_responses(f"{output_path}/response.jsonl")
-
-                # Evaluate responses
-                task_results = {}
-                for metric in self.get_metrics():
-                    _, summarized_result = metric.eval_batch(responses, verbose=False)
-                    task_results.update(summarized_result.scores)
-                benchmark_results[self._rename_task(task)] = task_results
+            # Evaluate responses
+            task_results = {}
+            for metric in self.get_metrics():
+                _, summarized_result = metric.eval_batch(responses, verbose=False)
+                task_results.update(summarized_result.scores)
+            benchmark_results[self._rename_task(task)] = task_results
         return benchmark_results
 
 
@@ -138,7 +110,5 @@ if __name__ == "__main__":
     )
     print(f"Device: {model.llm.device}")
 
-    results = benchmark.evaluate(model,
-                tasks=["ag_news"],
-                prompt_name="classify_question_first")
+    results = benchmark.evaluate(model)
     print(results)
