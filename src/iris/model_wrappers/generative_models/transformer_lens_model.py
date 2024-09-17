@@ -12,7 +12,6 @@ from transformer_lens.hook_points import HookPoint
 from transformer_lens.utils import USE_DEFAULT_VALUE
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 
-
 def mlp_ablation_hook(
     value: Float[torch.Tensor, "batch pos d_mlp"],
     new_value: Float[torch.Tensor, "batch pos d_mlp"],
@@ -21,6 +20,25 @@ def mlp_ablation_hook(
     value[:, -1, :] = new_value[:, -1, :]
     return value
 
+def patch_head_vector(
+    corrupted_head_vector: Float[torch.Tensor, "batch pos head_index d_head"],
+    hook,
+    head_index,
+    clean_cache,
+) -> Float[torch.Tensor, "batch pos head_index d_head"]:
+    corrupted_head_vector[:, -1, head_index, :] = clean_cache[hook.name][
+        :, -1, head_index, :
+    ]
+    return corrupted_head_vector
+
+# "attn_out", "resid_pre", "mlp_out"
+def patch_residual_component(
+    corrupted_residual_component: Float[torch.Tensor, "batch pos d_model"],
+    hook,
+    clean_cache,
+) -> Float[torch.Tensor, "batch pos d_model"]:
+    corrupted_residual_component[:, -1, :] = clean_cache[hook.name][:, -1, :]
+    return corrupted_residual_component
 
 class TransformerLensGenerativeLLM(GenerativeLLM):
     def __init__(
