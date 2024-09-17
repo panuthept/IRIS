@@ -47,6 +47,11 @@ system_prompts = {
     "gpt-4": {
         "original": "You are a helpful assistant.",
     },
+
+    "gpt-4o": {
+        "original": "You are a helpful assistant.",
+    },
+
     "open-instruct": {
         "original": "<|user|>\n{instruction}\n<|assistant|>\n",
     }

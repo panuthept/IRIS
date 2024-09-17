@@ -5,12 +5,15 @@ The Attacker class is used to generate attacks for a given behavior.
 import os
 import sys
 import ray
+import json
+import random
 from transformers import AutoTokenizer
 
 sys.path.append(os.getcwd())
-from src.language_models import *
-from data.prompts.system_prompts import system_prompts
-from src.my_utils import *
+
+from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.my_utils import read_json
+from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.language_models import GPT, VLLM
+from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.system_prompts import system_prompts
 
 
 class Attacker:
