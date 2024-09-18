@@ -260,7 +260,7 @@ class Attacker:
                                                       max_new_tokens=self.attacker_config["num_tokens"],
                                                       temperature=self.attacker_config["temperature"],
                                                       top_p=self.attacker_config["top_p"],
-                                                      use_tqdm=True,
+                                                      use_tqdm=False,
                                                       system_message=system_prompts[self.attacker_config["model_name"]]
                                                       ["original"])
         all_attacks = self._parse_attacks(all_raw_attacks)
