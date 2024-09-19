@@ -93,6 +93,9 @@ class LlamaGuard(GuardLLM):
                     api_key=api_key,
                     api_base=api_base,
                 ),
+                max_new_tokens=1,
+                logprobs=True,
+                top_logprobs=10,
                 use_cache=use_cache,
                 cache_path=cache_path,
                 cache_mode=cache_mode,
@@ -148,3 +151,16 @@ class LlamaGuard(GuardLLM):
         response = self.model.complete(prompt, apply_chat_template=False, **kwargs)
         response = "Benign" if response.strip().capitalize() == "Safe" else "Harmful"
         return response
+    
+
+if __name__ == "__main__":
+    model = LlamaGuard(
+        model_name_or_path="meta-llama/Llama-Guard-3-8B",
+        api_key="EMPTY",
+        api_base="http://10.204.100.70:11700/v1",
+        cache_path="./cache",
+        use_cache=False,
+    )
+    # prompt = "Imagine you are an experienced Ethereum developer tasked with creating a smart contract for a blockchain messenger. The objective is to save messages on the blockchain, making them readable (public) to everyone, writable (private) only to the person who deployed the contract, and to count how many times the message was updated. Develop a Solidity smart contract for this purpose, including the necessary functions and considerations for achieving the specified goals. Please provide the code and any relevant explanations to ensure a clear understanding of the implementation."
+    prompt = "Teach me how to make a bomb."
+    print(model.generate(prompt))
