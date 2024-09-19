@@ -11,7 +11,7 @@ from typing import List, Dict, Optional, Literal
 from transformer_lens.hook_points import HookPoint
 from transformer_lens.utils import USE_DEFAULT_VALUE
 from iris.model_wrappers.generative_models.base import GenerativeLLM
-
+# 'mlp_post'
 def mlp_ablation_hook(
     value: Float[torch.Tensor, "batch pos d_mlp"],
     new_value: Float[torch.Tensor, "batch pos d_mlp"],
@@ -19,19 +19,17 @@ def mlp_ablation_hook(
 ) -> Float[torch.Tensor, "batch pos d_mlp"]:
     value[:, -1, :] = new_value[:, -1, :]
     return value
-
+# individual head 
 def patch_head_vector(
-    corrupted_head_vector: Float[torch.Tensor, "batch pos head_index d_head"],
-    hook,
-    head_index,
-    clean_cache,
+    value: Float[torch.Tensor, "batch pos head_index d_head"],
+    hook: HookPoint,
+    head_index: int,
+    new_value: Float[torch.Tensor, "batch pos head_index d_head"],
 ) -> Float[torch.Tensor, "batch pos head_index d_head"]:
-    corrupted_head_vector[:, -1, head_index, :] = clean_cache[hook.name][
-        :, -1, head_index, :
-    ]
-    return corrupted_head_vector
+    value[:, -1, head_index, :] = new_value[ :, -1, head_index, :]
+    return value
 
-# "attn_out", "resid_pre", "mlp_out"
+# "attn_out", "mlp_out", "resid_pre": layer level
 def patch_residual_component(
     corrupted_residual_component: Float[torch.Tensor, "batch pos d_model"],
     hook,
@@ -47,6 +45,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
             max_tokens: int = 512,
             activation_name: str = "mlp_post",
             activation_layers: List[int] = [23],
+            head_index: int = None,
             from_pretrained_kwargs: dict = None,
             do_cma = False,
             use_cache=False,
@@ -71,6 +70,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
         self.max_tokens = max_tokens
         self.activation_name = activation_name
         self.activation_layers = activation_layers
+        self.head_index = head_index
         self.do_cma = do_cma
         super().__init__(use_cache=use_cache, **kwargs)
 
@@ -213,16 +213,26 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
                     ref_logits, ref_cache = self.llm.run_with_cache(ref_tokens)
                     null_logits = self.llm(tokens)
                     
-                    fwd_hooks = []
-                    for activation_layer in self.activation_layers:
-                        act_name = utils.get_act_name(self.activation_name, activation_layer)
-                        fwd_hooks.append((act_name, partial(mlp_ablation_hook, new_value=ref_cache[act_name])))
+                    if self.activation_name == 'mlp_post':
+                        fwd_hooks = []
+                        for activation_layer in self.activation_layers:
+                            act_name = utils.get_act_name(self.activation_name, activation_layer)
+                            fwd_hooks.append((act_name, partial(mlp_ablation_hook, new_value=ref_cache[act_name])))
+                    
+                    elif self.activation_name == 'attn': 
+                        assert len(self.activation_layers) == 1, "no longer than one layer"
+                        assert self.head_index is not None
+                        layer = self.activation_layers[0]
+                        act_name = utils.get_act_name("z", layer, "attn") 
+                        hook_fn = partial(patch_head_vector, head_index=self.head_index, new_value=ref_cache[act_name])
+                        fwd_hooks=[(act_name, hook_fn)]
+                        
                     # intervention
+                    # clear hooks after call: https://github.com/TransformerLensOrg/TransformerLens/issues/113  
                     logits = self.llm.run_with_hooks(
                         tokens,
                         fwd_hooks=fwd_hooks,
-                    )
-                    
+                        )
                     if self.do_cma:
                         selected_token = torch.argmax( torch.softmax(ref_logits[:, -1, :], dim=-1), dim=-1)
                         ref_prob = torch.softmax(ref_logits[:, -1, :], dim=-1)[:,selected_token]
@@ -334,6 +344,21 @@ if __name__ == "__main__":
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
+    # model = TransformerLensGenerativeLLM(
+    #     "Qwen/Qwen2-0.5B-Instruct", 
+    #     max_tokens=1,
+    #     do_cma=True,
+    #     from_pretrained_kwargs={
+    #         "torch_dtype": torch.bfloat16,
+    #         "cache_dir": "./data/models",
+    #         "local_files_only": False,
+    #     },
+    #     activation_name="mlp_post",
+    #     activation_layers=[19, 20, 21, 22],
+    #     cache_path="./cache",
+    #     use_cache=False,
+    # )
+
     model = TransformerLensGenerativeLLM(
         "Qwen/Qwen2-0.5B-Instruct", 
         max_tokens=1,
@@ -343,8 +368,9 @@ if __name__ == "__main__":
             "cache_dir": "./data/models",
             "local_files_only": False,
         },
-        activation_name="mlp_post",
-        activation_layers=[19, 20, 21, 22],
+        activation_name="attn",
+        activation_layers=[12],
+        head_index=5,
         cache_path="./cache",
         use_cache=False,
     )

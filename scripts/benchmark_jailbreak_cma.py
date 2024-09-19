@@ -18,6 +18,7 @@ if __name__ == "__main__":
     parser.add_argument("--eval_only", action="store_true")
     parser.add_argument("--intervention", action="store_true")
     parser.add_argument('--intervention_layers', nargs='+', type=int, default=[19, 20, 21, 22])
+    parser.add_argument('--head_index', nargs='+', type=int, default=None)
     parser.add_argument("--api_key", type=str, default=None)
     parser.add_argument("--api_base", type=str, default=None)
     parser.add_argument("--max_tokens", type=int, default=512)
@@ -50,6 +51,8 @@ if __name__ == "__main__":
                     args.model_name,
                     max_tokens=args.max_tokens,
                     activation_layers=args.intervention_layers,
+                    activation_name=args.activation_name,
+                    head_index=args.head_index,
                     do_cma= args.do_cma,
                     from_pretrained_kwargs={
                         "torch_dtype": torch.bfloat16,
@@ -76,7 +79,6 @@ if __name__ == "__main__":
                 )
                 print(f"Device: {model.llm.device}")
 
-        
     benchmark_results = benchmark.cma(model=model, 
                                       model_name=args.model_name, 
                                       activation_name=args.activation_name, 
