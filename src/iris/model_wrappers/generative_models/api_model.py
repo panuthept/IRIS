@@ -12,7 +12,7 @@ class APIGenerativeLLM(GenerativeLLM):
     ):
         self.llm = llm
         super().__init__(**kwargs)
-        self.llm.max_tokens = self.max_tokens
+        self.llm.max_tokens = self.max_new_tokens
         self.llm.logprobs = self.logprobs
         self.llm.top_logprobs = self.top_logprobs
 

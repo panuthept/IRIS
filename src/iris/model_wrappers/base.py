@@ -9,7 +9,7 @@ class LLM(ModelBase):
             self, 
             system_prompt: str = None, 
             post_processing: Callable = None, 
-            max_tokens: int = 1024,
+            max_new_tokens: int = 1024,
             logprobs: bool = True,
             top_logprobs: int = 10,
             use_cache: bool = True,
@@ -19,7 +19,7 @@ class LLM(ModelBase):
     ):
         self.system_prompt = system_prompt
         self.post_processing = post_processing
-        self.max_tokens = max_tokens
+        self.max_new_tokens = max_new_tokens
         self.logprobs = logprobs
         self.top_logprobs = top_logprobs
         self.use_cache = use_cache

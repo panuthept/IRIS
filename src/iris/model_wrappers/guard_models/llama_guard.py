@@ -93,7 +93,7 @@ class LlamaGuard(GuardLLM):
                     api_key=api_key,
                     api_base=api_base,
                 ),
-                max_tokens=1,
+                max_new_tokens=1,
                 logprobs=True,
                 top_logprobs=10,
                 use_cache=use_cache,
