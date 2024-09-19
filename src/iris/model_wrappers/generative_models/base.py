@@ -58,7 +58,7 @@ class GenerativeLLM(ABC):
             ref_prompt = sample.get_ref_prompt()
             answer, comp_score = self.complete(prompt, ref_prompt=ref_prompt, **kwargs)
             response.answers.append(answer)
-            response.component_scores.append(float(comp_score))
+            if ref_prompt is not None: response.component_scores.append(float(comp_score))
         # Set the answer model name
         response.answer_model = self.get_model_name()
         return response
