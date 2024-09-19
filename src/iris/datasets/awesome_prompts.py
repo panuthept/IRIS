@@ -1,17 +1,16 @@
 import pandas as pd
 from typing import List, Dict
-from datasets import load_dataset
 from collections import defaultdict
 from iris.datasets.base import JailbreakDataset
 
 
-class AwesomeChatgptPromptsDataset(JailbreakDataset):
+class AwesomePromptsDataset(JailbreakDataset):
     def __init__(
             self, 
             category: str = None,
             intention: str = None,
             attack_engine: str = None,
-            path: str = "./data/datasets/awesome_chatgpt_prompts",
+            path: str = "./data/datasets/awesome_prompts",
             cache_dir: str = None,
     ):
         self.cache_dir = cache_dir
@@ -43,9 +42,9 @@ class AwesomeChatgptPromptsDataset(JailbreakDataset):
 
 
 if __name__ == "__main__":
-    dataset = AwesomeChatgptPromptsDataset(
+    dataset = AwesomePromptsDataset(
         intention="benign",
-        cache_dir="./data/datasets/awesome_chatgpt_prompts",
+        cache_dir="./data/datasets/awesome_prompts",
     )
     samples = dataset.as_samples(split="test")
     print(len(samples))

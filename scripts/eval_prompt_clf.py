@@ -4,7 +4,7 @@ import argparse
 from iris.model_wrappers.guard_models import LlamaGuard, WildGuard
 from iris.augmentations.instruction_augmentations.jailbreaks import MultiLingualJailbreaking
 from iris.datasets import (
-    AwesomeChatgptPromptsDataset,
+    AwesomePromptsDataset,
     JailbreakBenchDataset,
     JailbreaKV28kDataset,
     WildGuardMixDataset,
@@ -25,12 +25,12 @@ if __name__ == "__main__":
     parser.add_argument("--api_base", type=str, default=None)
     args = parser.parse_args()
 
-    assert args.dataset_name in ["awesome_chatgpt", "jailbreak_bench", "jailbreakv_28k", "wildguardmix", "xstest"]
+    assert args.dataset_name in ["awesome_prompts", "jailbreak_bench", "jailbreakv_28k", "wildguardmix", "xstest"]
     if args.jailbreak_name:
         assert args.jailbreak_name in ["multilingual", "multilingual+"]
 
-    if args.dataset_name == "awesome_chatgpt":
-        dataset = AwesomeChatgptPromptsDataset(intention=args.intention)
+    if args.dataset_name == "awesome_prompts":
+        dataset = AwesomePromptsDataset(intention=args.intention)
     elif args.dataset_name == "jailbreak_bench":
         dataset = JailbreakBenchDataset(intention=args.intention)
     elif args.dataset_name == "jailbreakv_28k":
