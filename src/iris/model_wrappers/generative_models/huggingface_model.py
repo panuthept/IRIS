@@ -1,4 +1,5 @@
 import transformers
+from typing import List, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 
 
@@ -23,7 +24,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         # TODO: Add a better way to get the model name. the current way is not reliable as the huggingface_model_name_or_path can be a path
         return self.model_name
 
-    def _complete(self, prompt: str, ref_prompt: str = None, apply_chat_template: bool = True, **kwargs) -> str:
+    def _complete(self, prompt: str, ref_prompt: str = None, apply_chat_template: bool = True, **kwargs) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         if apply_chat_template:
             if self.system_prompt:
                 messages = [
@@ -38,7 +39,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 prompt = f"{self.system_prompt}\n\n{prompt}"
             completed_text = self.llm(prompt, **kwargs)[0]["generated_text"]
             answer = completed_text[len(prompt):]
-        return answer
+        return answer, None
     
 
 if __name__ == "__main__":

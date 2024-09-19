@@ -5,6 +5,7 @@ import transformer_lens.utils as utils
 from tqdm import tqdm
 from functools import partial
 from jaxtyping import Int, Float
+from typing import Tuple, List, Optional
 from transformer_lens import HookedTransformer
 from transformer_lens.utilities import devices
 from typing import List, Dict, Optional, Literal
@@ -242,7 +243,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
                     break
             return tokens
 
-    def _complete(self, promt: str, ref_prompt: str = None, apply_chat_template: bool = True, **kwargs) -> str:
+    def _complete(self, promt: str, ref_prompt: str = None, apply_chat_template: bool = True, **kwargs) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         if apply_chat_template:
             if self.system_prompt:
                 messages = [
@@ -306,7 +307,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
             **kwargs
         )
         output_ids = output_ids[:, input_lens:].squeeze(0)
-        return self.llm.to_string(output_ids)
+        return self.llm.to_string(output_ids), None
 
 
 if __name__ == "__main__":
