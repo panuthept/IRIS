@@ -49,7 +49,7 @@ class CacheStorage:
 
     @classmethod
     def mode_available(cls) -> List[str]:
-        return [mode.name for mode in CacheMode]
+        return [mode for mode in CacheMode]
 
     def _load_storage(self):
         if os.path.exists(os.path.join(self.cache_path, self.name, self.cache_file_name)):
@@ -60,6 +60,13 @@ class CacheStorage:
 
     def _init_session_memory(self):
         return {system_prompt: {prompt: {"seen_content": set()} for prompt in self.storage[system_prompt]} for system_prompt in self.storage}
+    
+    def _update_session_memory(self, system_prompt: str, prompt: str, response: str):
+        if system_prompt not in self.session_memory:
+            self.session_memory[system_prompt] = {}
+        if prompt not in self.session_memory[system_prompt]:
+            self.session_memory[system_prompt][prompt] = {"seen_content": set()}
+        self.session_memory[system_prompt][prompt]["seen_content"].add(response)
         
     def _save_storage(self):
         # Create the cache directory if it does not exist
@@ -105,7 +112,7 @@ class CacheStorage:
 
         if retrieved_content is not None:
             # Update session memory
-            self.session_memory[system_prompt][prompt]["seen_content"].add(retrieved_content)
+            self._update_session_memory(system_prompt, prompt, retrieved_content)
         return retrieved_content
 
     def cache(self, response: str, prompt: str, system_prompt: str = None):
@@ -129,5 +136,5 @@ class CacheStorage:
             self.storage[system_prompt][prompt]["content"].append(response)
             self.storage[system_prompt][prompt]["timestamp"].append(str(datetime.now()))
             # Update session memory
-            self.session_memory[system_prompt][prompt]["seen_content"].add(response)
+            self._update_session_memory(system_prompt, prompt, response)
         self._save_storage()
