@@ -33,7 +33,6 @@ class GenerativeLLM(LLM):
                         apply_chat_template=apply_chat_template, 
                         **kwargs
                     )
-                    print(logprobs)
                     break
                 except Exception as e:
                     print(f"Failed to generate response: {e}")
