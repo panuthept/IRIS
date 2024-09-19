@@ -1,6 +1,10 @@
+import os
 import logging
-from typing import List, Callable
 from easyjailbreak.models import ModelBase
+from typing import List, Callable, Optional
+from llama_index.llms.together import TogetherLLM
+from llama_index.llms.openai_like import OpenAILike
+from iris.model_wrappers.generative_models import APIGenerativeLLM
 from iris.augmentations.instruction_augmentations.jailbreaks import Jailbreaking
 from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.eval_utils import get_pruner
 
@@ -13,6 +17,7 @@ class WildTeamingJailbreaking(Jailbreaking):
         self, 
         target_model: ModelBase, 
         evaluator: Callable,    # A function that takes a string and returns 1 if the string is jailbroken, 0 otherwise
+        attack_model: Optional[ModelBase] = None, 
         attacker_type: str = "fix_lead_seed_sentence",
         num_tactics_per_attack: int = 3,
         max_iteration: int = 50,
@@ -20,8 +25,17 @@ class WildTeamingJailbreaking(Jailbreaking):
         include_failed_cases: bool = False, # Include failed cases in the final results?
         **kwargs,
     ):  
+        if attack_model is None:
+            attack_model = APIGenerativeLLM(
+                llm=TogetherLLM(
+                    model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+                    api_key=os.environ.get("TOGETHERAI_API_KEY"),
+                ),
+                cache_path="./cache",
+                use_cache=False,
+            )
+        self.attack_model = attack_model
         attacker_config = {
-            "model_name": "gpt-4o",
             "attacker_type": attacker_type,
             "num_tokens": 1024,
             "temperature": 1,
@@ -30,7 +44,7 @@ class WildTeamingJailbreaking(Jailbreaking):
             "num_excerpts_per_tactic": 0,
             "tactics_selection_method": "random_common_prioritized",
         }
-        self.attacker = Attacker(attacker_config=attacker_config)
+        self.attacker = Attacker(attacker_config=attacker_config, model=self.attack_model)
         self.attacker_type = attacker_type
         self.num_tactics_per_attack = num_tactics_per_attack
         self.max_iteration = max_iteration
@@ -46,8 +60,17 @@ class WildTeamingJailbreaking(Jailbreaking):
     def _attack(self, instruction: str, num_attacks: int, reference_answers: List[str] = None) -> List[str]:
         if reference_answers is not None:
             reference_answer = reference_answers[0]
-        batch_behavior_attacks = self.attacker.get_attacks(instruction, num_attacks, reference_answer)[1]
-        return batch_behavior_attacks
+        # batch_behavior_attacks = self.attacker.get_attacks(instruction, num_attacks, reference_answer)[1]
+        all_attacks_gen_prompts, all_tactics = self.attacker._format_all_attacks_gen_prompts(instruction, num_attacks, reference_answer)
+        responses = [self.attack_model.generate(
+            prompt=all_attacks_gen_prompt,
+            temperature=1.0,
+            max_tokens=1024,
+            top_p=0.9, 
+            ) for all_attacks_gen_prompt in all_attacks_gen_prompts
+        ]
+        all_attacks = self.attacker._parse_attacks(responses)
+        return all_attacks
 
     def _evaluate(self, instruction: str, response: str, reference_answers: List[str] = None) -> bool:
         off_topics_prune_label = self.off_topics_pruner.prune_off_topics(instruction, [response])[0][0]
@@ -87,25 +110,25 @@ if __name__ == "__main__":
     random.seed(42)
     np.random.seed(42)
 
-    target_model = WildGuard(
-        model_name_or_path="allenai/wildguard",
-        api_key="EMPTY",
-        api_base="http://10.204.100.70:11699/v1",
-        cache_path="./cache",
-        use_cache=True,
-    )
-    # target_model = LlamaGuard(
-    #     model_name_or_path="meta-llama/Llama-Guard-3-8B",
+    # target_model = WildGuard(
+    #     model_name_or_path="allenai/wildguard",
     #     api_key="EMPTY",
-    #     api_base="http://10.204.100.70:11700/v1",
+    #     api_base="http://10.204.100.70:11699/v1",
     #     cache_path="./cache",
     #     use_cache=True,
     # )
+    target_model = LlamaGuard(
+        model_name_or_path="meta-llama/Llama-Guard-3-8B",
+        api_key="EMPTY",
+        api_base="http://10.204.100.70:11700/v1",
+        cache_path="./cache",
+        use_cache=True,
+    )
 
     attacker = WildTeamingJailbreaking(
         target_model=target_model,
         evaluator=lambda x: int(x.strip().capitalize() == "Benign"),
-        max_iteration=5,
+        max_iteration=1,
         max_jailbreak=1,
     )
 
