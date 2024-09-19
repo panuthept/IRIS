@@ -27,12 +27,13 @@ class GenerativeLLM(LLM):
         if answer is None:
             for _ in range(max_trials):
                 try:                
-                    answer = self._complete(
+                    answer, logprobs = self._complete(
                         prompt, 
                         ref_prompt=ref_prompt, 
                         apply_chat_template=apply_chat_template, 
                         **kwargs
                     )
+                    print(logprobs)
                     break
                 except Exception as e:
                     print(f"Failed to generate response: {e}")

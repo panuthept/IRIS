@@ -1,3 +1,4 @@
+from typing import Tuple, List, Optional
 from llama_index.llms.openai import OpenAI
 from llama_index.core.llms import ChatMessage
 from iris.model_wrappers.generative_models.base import GenerativeLLM
@@ -11,11 +12,14 @@ class APIGenerativeLLM(GenerativeLLM):
     ):
         self.llm = llm
         super().__init__(**kwargs)
+        self.llm.max_tokens = self.max_tokens
+        self.llm.logprobs = self.logprobs
+        self.llm.top_logprobs = self.top_logprobs
 
     def get_model_name(self) -> str:
         return self.llm.model
 
-    def _complete(self, prompt: str, ref_prompt: str = None, apply_chat_template: bool = True, **kwargs) -> str:
+    def _complete(self, prompt: str, ref_prompt: str = None, apply_chat_template: bool = True, **kwargs) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         if apply_chat_template:
             if self.system_prompt:
                 messages = [
@@ -24,12 +28,16 @@ class APIGenerativeLLM(GenerativeLLM):
                 ]
             else:
                 messages = [ChatMessage(role="user", content=prompt)]
-            answer = self.llm.chat(messages, **kwargs).message.content
+            response = self.llm.chat(messages, **kwargs)
+            answer = response.message.content
         else:
             if self.system_prompt:
                 prompt = f"{self.system_prompt}\n\n{prompt}"
-            answer = self.llm.complete(prompt, **kwargs).text
-        return answer
+            response = self.llm.complete(prompt, **kwargs)
+            answer = response.text
+        # Get logprobs
+        logprobs = [[(cand_logprob.token, cand_logprob.logprob) for cand_logprob in token_logprob] for token_logprob in response.logprobs] if response.logprobs else None
+        return answer, logprobs
     
 
 if __name__ == "__main__":
