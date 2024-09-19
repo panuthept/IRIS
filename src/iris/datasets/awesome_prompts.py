@@ -5,6 +5,9 @@ from iris.datasets.base import JailbreakDataset
 
 
 class AwesomePromptsDataset(JailbreakDataset):
+    """
+    Download link: https://github.com/f/awesome-chatgpt-prompts
+    """
     def __init__(
             self, 
             category: str = None,
