@@ -4,6 +4,7 @@ import argparse
 from iris.model_wrappers.guard_models import LlamaGuard, WildGuard
 from iris.augmentations.instruction_augmentations.jailbreaks import MultiLingualJailbreaking
 from iris.datasets import (
+    AwesomeChatgptPromptsDataset,
     JailbreakBenchDataset,
     JailbreaKV28kDataset,
     WildGuardMixDataset,
@@ -17,17 +18,20 @@ if __name__ == "__main__":
     parser = parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="meta-llama/Llama-Guard-3-8B")
     parser.add_argument("--dataset_name", type=str, default="jailbreak_bench")
-    parser.add_argument("--jailbreak_name", type=str, default="multilingual")
+    parser.add_argument("--jailbreak_name", type=str, default=None)
     parser.add_argument("--intention", type=str, default="harmful")
     parser.add_argument("--use_cache", action="store_true")
     parser.add_argument("--api_key", type=str, default=None)
     parser.add_argument("--api_base", type=str, default=None)
     args = parser.parse_args()
 
-    assert args.dataset_name in ["jailbreak_bench", "jailbreakv_28k", "wildguardmix", "xstest"]
-    assert args.jailbreak_name in ["multilingual", "multilingual+"]
+    assert args.dataset_name in ["awesome_chatgpt", "jailbreak_bench", "jailbreakv_28k", "wildguardmix", "xstest"]
+    if args.jailbreak_name:
+        assert args.jailbreak_name in ["multilingual", "multilingual+"]
 
-    if args.dataset_name == "jailbreak_bench":
+    if args.dataset_name == "awesome_chatgpt":
+        dataset = AwesomeChatgptPromptsDataset(intention=args.intention)
+    elif args.dataset_name == "jailbreak_bench":
         dataset = JailbreakBenchDataset(intention=args.intention)
     elif args.dataset_name == "jailbreakv_28k":
         dataset = JailbreaKV28kDataset(intention=args.intention)
@@ -74,28 +78,33 @@ if __name__ == "__main__":
         raise ValueError(f"Model {args.model_name} not supported.")
     print(f"Device: {target_model.device}")
 
-    # Get jailbreak
-    if args.jailbreak_name == "multilingual":
-        augmentation = MultiLingualJailbreaking(
-            target_model=target_model, 
-            evaluator=lambda x: x.strip().capitalize() == "Benign",
-            apply_jailbreak_template=False,
-            translate_answer_to_en=False,
-            use_cache=args.use_cache,
-            cache_path="./cache",
-        )
-    elif args.jailbreak_name == "multilingual+":
-        augmentation = MultiLingualJailbreaking(
-            target_model=target_model, 
-            evaluator=lambda x: x.strip().capitalize() == "Benign",
-            apply_jailbreak_template=True,
-            translate_answer_to_en=False,
-            use_cache=args.use_cache,
-            cache_path="./cache",
-        )
-    else:
-        raise ValueError(f"Jailbreak {args.jailbreak_name} not supported.")
-    
-    augmentation.augment_batch(samples)
-    print(f"ASR: {augmentation.attack_success_rate}")
-    print(f"Supports: {len(samples)}")
+    samples = target_model.prompt_classify_batch(samples)
+    acc = sum([1 for sample in samples if sample.instructions_pred_label[0] == sample.instructions_true_label[0]]) / len(samples)
+    print(f"Accuracy: {acc}")
+
+    if args.jailbreak_name:
+        # Get jailbreak
+        if args.jailbreak_name == "multilingual":
+            augmentation = MultiLingualJailbreaking(
+                target_model=target_model, 
+                evaluator=lambda x: x.strip().capitalize() == "Benign",
+                apply_jailbreak_template=False,
+                translate_answer_to_en=False,
+                use_cache=args.use_cache,
+                cache_path="./cache",
+            )
+        elif args.jailbreak_name == "multilingual+":
+            augmentation = MultiLingualJailbreaking(
+                target_model=target_model, 
+                evaluator=lambda x: x.strip().capitalize() == "Benign",
+                apply_jailbreak_template=True,
+                translate_answer_to_en=False,
+                use_cache=args.use_cache,
+                cache_path="./cache",
+            )
+        else:
+            raise ValueError(f"Jailbreak {args.jailbreak_name} not supported.")
+        
+        augmentation.augment_batch(samples)
+        print(f"ASR: {augmentation.attack_success_rate}")
+        print(f"Supports: {len(samples)}")
