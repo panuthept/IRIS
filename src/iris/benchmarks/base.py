@@ -124,6 +124,7 @@ class JailbreakBenchmark(Benchmark):
         model_name: str = None,
         activation_name: str = None,
         intervention_layers: List = None,
+        head_index: int = None,
     ) -> Dict[str, SummarizedResult]:
         
         # Inference for each task
@@ -142,10 +143,18 @@ class JailbreakBenchmark(Benchmark):
             
             samples: List[Sample] = dataset.as_samples(split="test", prompt_template=self.prompt_template)
 
+            # if activation_name == 'attn':
+            # elif activation_name == 'mlp_post':
+            # many_at_one
+
+
             # Get the responses
             responses: List[ModelResponse] = model.complete_batch(samples)
             
             # # Save the responses
             os.makedirs(output_path, exist_ok=True)
-            save_model_answers(responses, f"{output_path}/{activation_name}_{intervention_layers}_response.jsonl")
-            breakpoint()
+
+            if head_index is None:
+                save_model_answers(responses, f"{output_path}/{activation_name}_{intervention_layers}_response.jsonl")
+            else:
+                save_model_answers(responses, f"{output_path}/{activation_name}_{head_index}_{intervention_layers}_response.jsonl")
