@@ -1,5 +1,6 @@
 import os
 import logging
+from iris.cache import CacheMode
 from easyjailbreak.models import ModelBase
 from typing import List, Callable, Optional
 from llama_index.llms.together import TogetherLLM
@@ -32,7 +33,8 @@ class WildTeamingJailbreaking(Jailbreaking):
                     api_key=os.environ.get("TOGETHERAI_API_KEY"),
                 ),
                 cache_path="./cache",
-                use_cache=False,
+                use_cache=True,
+                cache_mode=CacheMode.NO_DUPLICATE,
             )
         self.attack_model = attack_model
         attacker_config = {
