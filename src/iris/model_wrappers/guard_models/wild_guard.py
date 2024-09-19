@@ -1,4 +1,4 @@
-from typing import Callable
+from iris.cache import CacheMode
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
@@ -14,6 +14,7 @@ class WildGuard(GuardLLM):
             pipeline_kwargs: dict = None,
             use_cache: bool = True,
             cache_path: str = "./cache",
+            cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
     ):
         self.model_name = model_name_or_path
         self.device = None
@@ -24,16 +25,18 @@ class WildGuard(GuardLLM):
                     api_key=api_key,
                     api_base=api_base,
                 ),
-                cache_path=cache_path,
                 use_cache=use_cache,
+                cache_path=cache_path,
+                cache_mode=cache_mode,
             )
         else:
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path,
                 max_tokens=max_tokens,
                 pipeline_kwargs=pipeline_kwargs,
-                cache_path=cache_path,
                 use_cache=use_cache,
+                cache_path=cache_path,
+                cache_mode=cache_mode,
             )
             self.device = self.model.llm.device
 
