@@ -91,6 +91,7 @@ class CacheStorage:
         prompt: str, 
         apply_chat_template: Optional[bool] = None,
         max_new_tokens: Optional[int] = None,
+        suffix_prompt: Optional[str] = None,
     ) -> str:
         if apply_chat_template is None and max_new_tokens is None:
             # NOTE: This is for backward compatibility
@@ -99,8 +100,10 @@ class CacheStorage:
         key = f"prompt: {prompt}"
         if apply_chat_template is not None:
             key = f"apply_chat_template: {apply_chat_template}, {key}"
-        if apply_chat_template is not None:
+        if max_new_tokens is not None:
             key = f"max_new_tokens: {max_new_tokens}, {key}"
+        if suffix_prompt is not None:
+            key = f"suffix_prompt: {suffix_prompt}, {key}"
         return key
 
     def retrieve(
@@ -110,6 +113,7 @@ class CacheStorage:
         apply_chat_template: Optional[bool] = None,
         max_new_tokens: Optional[int] = None,
         top_logprobs: Optional[int] = None,
+        suffix_prompt: Optional[str] = None,
         return_logprobs: bool = False,
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         if system_prompt is None:
@@ -118,6 +122,7 @@ class CacheStorage:
             prompt, 
             apply_chat_template=apply_chat_template,
             max_new_tokens=max_new_tokens,
+            suffix_prompt=suffix_prompt,
         )
 
         logprobs = None
@@ -166,6 +171,7 @@ class CacheStorage:
         apply_chat_template: Optional[bool] = None,
         max_new_tokens: Optional[int] = None,
         logprobs: Optional[List[List[Tuple[str, float]]]] = None,
+        suffix_prompt: Optional[str] = None,
     ):
         if system_prompt is None:
             system_prompt = ""
@@ -173,6 +179,7 @@ class CacheStorage:
             prompt, 
             apply_chat_template=apply_chat_template,
             max_new_tokens=max_new_tokens,
+            suffix_prompt=suffix_prompt,
         )
 
         if system_prompt not in self.storage:
