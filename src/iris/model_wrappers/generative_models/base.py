@@ -27,6 +27,7 @@ class GenerativeLLM(LLM):
                 prompt, 
                 system_prompt=self.system_prompt,
                 apply_chat_template=apply_chat_template,
+                max_new_tokens=self.max_new_tokens,
             )
         if answer is None:
             for _ in range(max_trials):
@@ -47,6 +48,7 @@ class GenerativeLLM(LLM):
                 prompt, 
                 system_prompt=self.system_prompt,
                 apply_chat_template=apply_chat_template,
+                max_new_tokens=self.max_new_tokens,
             )
         # Post process the answer
         if self.post_processing:

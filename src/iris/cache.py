@@ -2,8 +2,8 @@ import os
 import json
 import random
 from enum import Enum
-from typing import List
 from datetime import datetime
+from typing import List, Optional
 from collections import defaultdict
 from iris.consts.default_paths import CACHE_STORAGE_DEFAULT_PATH
 
@@ -85,14 +85,41 @@ class CacheStorage:
         if os.path.exists(os.path.join(self.cache_path, self.name, self.temp_file_name)):
             os.remove(os.path.join(self.cache_path, self.name, self.temp_file_name))
 
-    def retrieve(self, prompt: str, system_prompt: str = None, apply_chat_template: bool = None) -> str:
+    @staticmethod
+    def _get_key(
+        prompt: str, 
+        apply_chat_template: Optional[bool] = None,
+        max_new_tokens: Optional[int] = None,
+    ) -> str:
+        if apply_chat_template is None and max_new_tokens is None:
+            # NOTE: This is for backward compatibility
+            return prompt
+        
+        key = f"prompt: {prompt}"
+        if apply_chat_template is not None:
+            key = f"apply_chat_template: {apply_chat_template}, {key}"
+        if apply_chat_template is not None:
+            key = f"max_new_tokens: {max_new_tokens}, {key}"
+        return key
+
+    def retrieve(
+        self, 
+        prompt: str, 
+        system_prompt: Optional[str] = None, 
+        apply_chat_template: Optional[bool] = None,
+        max_new_tokens: Optional[int] = None,
+    ) -> str:
         if system_prompt is None:
             system_prompt = ""
-        prompt = f"apply_chat_template: {apply_chat_template}, prompt: {prompt}" if apply_chat_template is not None else prompt
+        key = self._get_key(
+            prompt, 
+            apply_chat_template=apply_chat_template,
+            max_new_tokens=max_new_tokens,
+        )
 
         retrieved_content = None
         if system_prompt in self.storage:
-            data = self.storage[system_prompt].get(prompt, None)
+            data = self.storage[system_prompt].get(key, None)
             if data:
                 # Check if data is stored in old format and convert to new format
                 if isinstance(data["content"], str):
@@ -103,7 +130,7 @@ class CacheStorage:
                 if self.cache_mode == CacheMode.ALLOW_DUPLICATE:
                     available_contents = data["content"]
                 elif self.cache_mode == CacheMode.NO_DUPLICATE:
-                    available_contents = list(set(data["content"]) - self.session_memory[system_prompt][prompt]["seen_content"])
+                    available_contents = list(set(data["content"]) - self.session_memory[system_prompt][key]["seen_content"])
                 else:
                     raise ValueError(f"Invalid cache_mode: {self.cache_mode}")
 
@@ -113,30 +140,41 @@ class CacheStorage:
 
         if retrieved_content is not None:
             # Update session memory
-            self._update_session_memory(system_prompt, prompt, retrieved_content)
+            self._update_session_memory(system_prompt, key, retrieved_content)
         return retrieved_content
 
-    def cache(self, response: str, prompt: str, system_prompt: str = None, apply_chat_template: bool = None):
+    def cache(
+        self, 
+        response: str, 
+        prompt: str, 
+        system_prompt: Optional[str] = None, 
+        apply_chat_template: Optional[bool] = None,
+        max_new_tokens: Optional[int] = None,
+    ):
         if system_prompt is None:
             system_prompt = ""
-        prompt = f"apply_chat_template: {apply_chat_template}, prompt: {prompt}" if apply_chat_template is not None else prompt
+        key = self._get_key(
+            prompt, 
+            apply_chat_template=apply_chat_template,
+            max_new_tokens=max_new_tokens,
+        )
 
         if system_prompt not in self.storage:
             self.storage[system_prompt] = {}
             
-        if prompt not in self.storage[system_prompt]:
-            self.storage[system_prompt][prompt] = {"content": [], "timestamp": []}
+        if key not in self.storage[system_prompt]:
+            self.storage[system_prompt][key] = {"content": [], "timestamp": []}
 
         # Check if data is stored in old format and convert to new format
-        if isinstance(self.storage[system_prompt][prompt]["content"], str):
-            self.storage[system_prompt][prompt]["content"] = [self.storage[system_prompt][prompt]["content"]]
-        if isinstance(self.storage[system_prompt][prompt]["timestamp"], str):
-            self.storage[system_prompt][prompt]["timestamp"] = [self.storage[system_prompt][prompt]["timestamp"]]
+        if isinstance(self.storage[system_prompt][key]["content"], str):
+            self.storage[system_prompt][key]["content"] = [self.storage[system_prompt][key]["content"]]
+        if isinstance(self.storage[system_prompt][key]["timestamp"], str):
+            self.storage[system_prompt][key]["timestamp"] = [self.storage[system_prompt][key]["timestamp"]]
 
-        if response not in self.storage[system_prompt][prompt]["content"]:
+        if response not in self.storage[system_prompt][key]["content"]:
             # Add to storage
-            self.storage[system_prompt][prompt]["content"].append(response)
-            self.storage[system_prompt][prompt]["timestamp"].append(str(datetime.now()))
+            self.storage[system_prompt][key]["content"].append(response)
+            self.storage[system_prompt][key]["timestamp"].append(str(datetime.now()))
             # Update session memory
-            self._update_session_memory(system_prompt, prompt, response)
+            self._update_session_memory(system_prompt, key, response)
         self._save_storage()
