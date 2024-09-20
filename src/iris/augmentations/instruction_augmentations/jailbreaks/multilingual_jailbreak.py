@@ -22,7 +22,7 @@ class CacheableTranslate(Translate):
 
     def translate(self, text, src_lang='auto'):
         if self.use_cache:
-            translation = self.cache_storage.retrieve(text)
+            translation, _ = self.cache_storage.retrieve(text)
         if translation is None:
             translation = super().translate(text, src_lang)
             self.cache_storage.cache(translation, text)
