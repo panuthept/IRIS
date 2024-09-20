@@ -25,10 +25,15 @@ class CFIGuard(GuardLLM):
     def _prompt_classify(self, prompt: str, return_probs: bool = False, oracle_probs: Optional[List[Tuple[str, float]]] = None, **kwargs) -> Union[str, List[Tuple[str, float]]]:
         target_probs = self.target_model._prompt_classify(prompt, return_probs=True, **kwargs)
 
-        debiased_probs = {label: prob for label, prob in target_probs}
         if oracle_probs is not None:
-            for label, prob in oracle_probs:
-                debiased_probs[label] = debiased_probs[label] - self.alpha * prob
+            bias_probs = oracle_probs
+        else:
+            bias_probs = self.bias_model._prompt_classify(prompt, return_probs=True, **kwargs)
+
+        debiased_probs = {label: prob for label, prob in target_probs}
+        for label, prob in bias_probs:
+            debiased_probs[label] = debiased_probs[label] - self.alpha * prob
+            
         debiased_probs = [(label, prob) for label, prob in debiased_probs.items()]
         labels = [label for label, _ in debiased_probs]
         scores = [prob for _, prob in debiased_probs]
