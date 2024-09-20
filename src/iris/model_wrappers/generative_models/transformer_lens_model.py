@@ -243,8 +243,16 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
                     break
             return tokens
 
-    def _complete(self, promt: str, ref_prompt: str = None, apply_chat_template: bool = True, **kwargs) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
+    def _complete(
+        self, promt: str, 
+        ref_prompt: Optional[str] = None, 
+        suffix_prompt: Optional[str] = None, 
+        apply_chat_template: bool = True, 
+        **kwargs
+    ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         if apply_chat_template:
+            if suffix_prompt:
+                print("[WARNING] suffix_prompt is not supported with apply_chat_template=True. Ignoring the suffix_prompt.")
             if self.system_prompt:
                 messages = [
                     {"role": "system", "content": self.system_prompt},
@@ -282,6 +290,9 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
             if self.system_prompt:
                 prompt = f"{self.system_prompt}\n\n{promt}"
                 ref_prompt = f"{self.system_prompt}\n\n{ref_prompt}" if ref_prompt else None
+            if suffix_prompt:
+                prompt = f"{prompt}{suffix_prompt}"
+                ref_prompt = f"{ref_prompt}{suffix_prompt}" if ref_prompt else None
             
             input_ids = self.tokenizer(
                 prompt,
