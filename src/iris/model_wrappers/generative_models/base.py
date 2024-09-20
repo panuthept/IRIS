@@ -23,7 +23,11 @@ class GenerativeLLM(LLM):
         # Get the answer from cache if available
         answer = None
         if self.use_cache:
-            answer = self.cache_storage.retrieve(prompt, system_prompt=self.system_prompt)
+            answer = self.cache_storage.retrieve(
+                prompt, 
+                system_prompt=self.system_prompt,
+                apply_chat_template=apply_chat_template,
+            )
         if answer is None:
             for _ in range(max_trials):
                 try:                
@@ -38,7 +42,12 @@ class GenerativeLLM(LLM):
                     print(f"Failed to generate response: {e}")
                     time.sleep(failure_sleep_time)
             # Cache the answer
-            self.cache_storage.cache(answer, prompt, system_prompt=self.system_prompt)
+            self.cache_storage.cache(
+                answer, 
+                prompt, 
+                system_prompt=self.system_prompt,
+                apply_chat_template=apply_chat_template,
+            )
         # Post process the answer
         if self.post_processing:
             answer = self.post_processing(answer)

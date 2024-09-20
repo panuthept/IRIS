@@ -85,9 +85,10 @@ class CacheStorage:
         if os.path.exists(os.path.join(self.cache_path, self.name, self.temp_file_name)):
             os.remove(os.path.join(self.cache_path, self.name, self.temp_file_name))
 
-    def retrieve(self, prompt: str, system_prompt: str = None) -> str:
+    def retrieve(self, prompt: str, system_prompt: str = None, apply_chat_template: bool = None) -> str:
         if system_prompt is None:
             system_prompt = ""
+        prompt = f"apply_chat_template: {apply_chat_template}, prompt: {prompt}" if apply_chat_template is not None else prompt
 
         retrieved_content = None
         if system_prompt in self.storage:
@@ -115,9 +116,10 @@ class CacheStorage:
             self._update_session_memory(system_prompt, prompt, retrieved_content)
         return retrieved_content
 
-    def cache(self, response: str, prompt: str, system_prompt: str = None):
+    def cache(self, response: str, prompt: str, system_prompt: str = None, apply_chat_template: bool = None):
         if system_prompt is None:
             system_prompt = ""
+        prompt = f"apply_chat_template: {apply_chat_template}, prompt: {prompt}" if apply_chat_template is not None else prompt
 
         if system_prompt not in self.storage:
             self.storage[system_prompt] = {}
