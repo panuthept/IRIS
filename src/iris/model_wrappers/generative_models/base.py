@@ -26,6 +26,7 @@ class GenerativeLLM(LLM):
         apply_chat_template: bool = True,
         max_trials: int = 1,
         failure_sleep_time: int = 1,
+        return_logprobs: bool = False,
         **kwargs
     ) -> str:
         # Get the answer from cache if available
@@ -68,6 +69,9 @@ class GenerativeLLM(LLM):
         # Post process the answer
         if self.post_processing:
             answer = self.post_processing(answer)
+
+        if return_logprobs:
+            return answer, logprobs
         return answer
     
     def complete_sample(
