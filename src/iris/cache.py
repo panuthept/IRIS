@@ -3,8 +3,8 @@ import json
 import random
 from enum import Enum
 from datetime import datetime
-from typing import List, Optional
 from collections import defaultdict
+from typing import List, Tuple, Optional
 from iris.consts.default_paths import CACHE_STORAGE_DEFAULT_PATH
 
 
@@ -29,6 +29,7 @@ class CacheStorage:
                 String: {
                     "content": String|List[String],     # String is deprecated but retained for backward compatibility
                     "timestamp": String|List[String],   # String is deprecated but retained for backward compatibility
+                    "logprobs": List[List[Tuple[String, float]]],
                 }
             }
         }
@@ -108,7 +109,9 @@ class CacheStorage:
         system_prompt: Optional[str] = None, 
         apply_chat_template: Optional[bool] = None,
         max_new_tokens: Optional[int] = None,
-    ) -> str:
+        top_logprobs: Optional[int] = None,
+        return_logprobs: bool = False,
+    ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         if system_prompt is None:
             system_prompt = ""
         key = self._get_key(
@@ -117,10 +120,12 @@ class CacheStorage:
             max_new_tokens=max_new_tokens,
         )
 
+        logprobs = None
         retrieved_content = None
         if system_prompt in self.storage:
             data = self.storage[system_prompt].get(key, None)
             if data:
+                # NOTE: This is for backward compatibility
                 # Check if data is stored in old format and convert to new format
                 if isinstance(data["content"], str):
                     data["content"] = [data["content"]]
@@ -138,10 +143,20 @@ class CacheStorage:
                 if len(available_contents) > 0:
                     retrieved_content = random.choice(available_contents)
 
+                # Get logprobs
+                if return_logprobs:
+                    logprobs = data.get("logprobs", None)
+                    # Verify logprobs
+                    if logprobs is not None:
+                        if top_logprobs is not None:
+                            logprobs = [logprob[:top_logprobs] for logprob in logprobs]
+                            if not all([len(logprob) >= top_logprobs for logprob in logprobs]):
+                                logprobs = None
+
         if retrieved_content is not None:
             # Update session memory
             self._update_session_memory(system_prompt, key, retrieved_content)
-        return retrieved_content
+        return retrieved_content, logprobs
 
     def cache(
         self, 
@@ -150,6 +165,7 @@ class CacheStorage:
         system_prompt: Optional[str] = None, 
         apply_chat_template: Optional[bool] = None,
         max_new_tokens: Optional[int] = None,
+        logprobs: Optional[List[List[Tuple[str, float]]]] = None,
     ):
         if system_prompt is None:
             system_prompt = ""
@@ -163,13 +179,16 @@ class CacheStorage:
             self.storage[system_prompt] = {}
             
         if key not in self.storage[system_prompt]:
-            self.storage[system_prompt][key] = {"content": [], "timestamp": []}
+            self.storage[system_prompt][key] = {"content": [], "timestamp": [], "logprobs": None}
 
+        # NOTE: This is for backward compatibility
         # Check if data is stored in old format and convert to new format
         if isinstance(self.storage[system_prompt][key]["content"], str):
             self.storage[system_prompt][key]["content"] = [self.storage[system_prompt][key]["content"]]
         if isinstance(self.storage[system_prompt][key]["timestamp"], str):
             self.storage[system_prompt][key]["timestamp"] = [self.storage[system_prompt][key]["timestamp"]]
+        if "logprobs" not in self.storage[system_prompt][key]:
+            self.storage[system_prompt][key]["logprobs"] = None
 
         if response not in self.storage[system_prompt][key]["content"]:
             # Add to storage
@@ -177,4 +196,7 @@ class CacheStorage:
             self.storage[system_prompt][key]["timestamp"].append(str(datetime.now()))
             # Update session memory
             self._update_session_memory(system_prompt, key, response)
+            
+        if logprobs is not None:
+            self.storage[system_prompt][key]["logprobs"] = logprobs
         self._save_storage()

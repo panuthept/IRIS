@@ -22,14 +22,17 @@ class GenerativeLLM(LLM):
     ) -> str:
         # Get the answer from cache if available
         answer = None
+        logprobs = None
         if self.use_cache:
-            answer = self.cache_storage.retrieve(
+            answer, logprobs = self.cache_storage.retrieve(
                 prompt, 
                 system_prompt=self.system_prompt,
                 apply_chat_template=apply_chat_template,
                 max_new_tokens=self.max_new_tokens,
+                return_logprobs=self.logprobs,
+                top_logprobs=self.top_logprobs,
             )
-        if answer is None:
+        if answer is None or (self.logprobs and logprobs is None):
             for _ in range(max_trials):
                 try:                
                     answer, logprobs = self._complete(
@@ -49,6 +52,7 @@ class GenerativeLLM(LLM):
                 system_prompt=self.system_prompt,
                 apply_chat_template=apply_chat_template,
                 max_new_tokens=self.max_new_tokens,
+                logprobs=logprobs,
             )
         # Post process the answer
         if self.post_processing:
