@@ -19,8 +19,19 @@ class APIGenerativeLLM(GenerativeLLM):
     def get_model_name(self) -> str:
         return self.llm.model
 
-    def _complete(self, prompt: str, ref_prompt: str = None, apply_chat_template: bool = True, **kwargs) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
+    def _complete(
+        self, 
+        prompt: str, 
+        ref_prompt: Optional[str] = None, 
+        suffix_prompt: Optional[str] = None, 
+        apply_chat_template: bool = True, 
+        **kwargs
+    ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
+        if ref_prompt:
+            print("[WARNING] ref_prompt is not supported with APIGenerativeLLM. Ignoring the ref_prompt.")
         if apply_chat_template:
+            if suffix_prompt:
+                print("[WARNING] suffix_prompt is not supported with apply_chat_template=True. Ignoring the suffix_prompt.")
             if self.system_prompt:
                 messages = [
                     ChatMessage(role="system", content=self.system_prompt),
@@ -33,6 +44,8 @@ class APIGenerativeLLM(GenerativeLLM):
         else:
             if self.system_prompt:
                 prompt = f"{self.system_prompt}\n\n{prompt}"
+            if suffix_prompt:
+                prompt = f"{prompt}{suffix_prompt}"
             response = self.llm.complete(prompt, **kwargs)
             answer = response.text
         # Get logprobs

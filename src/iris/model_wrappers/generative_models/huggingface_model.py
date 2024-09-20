@@ -5,10 +5,10 @@ from iris.model_wrappers.generative_models.base import GenerativeLLM
 
 class HuggfaceGenerativeLLM(GenerativeLLM):
     def __init__(
-            self, 
-            huggingface_model_name_or_path: str,  
-            pipeline_kwargs: dict = None,
-            **kwargs,
+        self, 
+        huggingface_model_name_or_path: str,  
+        pipeline_kwargs: dict = None,
+        **kwargs,
     ):
         # TODO: transformers.pipeline does not allow batch generation. We need to find a way to generate multiple responses at once
         self.llm = transformers.pipeline(
@@ -24,8 +24,19 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         # TODO: Add a better way to get the model name. the current way is not reliable as the huggingface_model_name_or_path can be a path
         return self.model_name
 
-    def _complete(self, prompt: str, ref_prompt: str = None, apply_chat_template: bool = True, **kwargs) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
+    def _complete(
+        self, 
+        prompt: str, 
+        ref_prompt: Optional[str] = None, 
+        suffix_prompt: Optional[str] = None, 
+        apply_chat_template: bool = True, 
+        **kwargs
+    ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
+        if ref_prompt:
+            print("[WARNING] ref_prompt is not supported with APIGenerativeLLM. Ignoring the ref_prompt.")
         if apply_chat_template:
+            if suffix_prompt:
+                print("[WARNING] suffix_prompt is not supported with apply_chat_template=True. Ignoring the suffix_prompt.")
             if self.system_prompt:
                 messages = [
                     {"role": "system", "content": self.system_prompt},
@@ -37,6 +48,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         else:
             if self.system_prompt:
                 prompt = f"{self.system_prompt}\n\n{prompt}"
+            if suffix_prompt:
+                prompt = f"{prompt}{suffix_prompt}"
             answer = self.llm(prompt, max_new_tokens=self.max_new_tokens, return_full_text=False, **kwargs)[0]["generated_text"]
         return answer, None
     
