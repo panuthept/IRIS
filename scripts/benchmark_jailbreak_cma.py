@@ -25,6 +25,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     benchmark = JailbreakBenchBenchmark()
+    print(f'current args:')
+    print(args)
     
     # Get model
     model = None
@@ -82,4 +84,5 @@ if __name__ == "__main__":
     benchmark_results = benchmark.cma(model=model, 
                                       model_name=args.model_name, 
                                       activation_name=args.activation_name, 
-                                      intervention_layers=args.intervention_layers)
+                                      intervention_layers=args.intervention_layers,
+                                      head_index=args.head_index)
