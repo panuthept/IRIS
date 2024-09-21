@@ -1,2 +1,4 @@
 from iris.augmentations.instruction_augmentations.jailbreaks.base import Jailbreaking
+from iris.augmentations.instruction_augmentations.jailbreaks.gpt_fuzzer import GPTFuzzerJailbreaking
+from iris.augmentations.instruction_augmentations.jailbreaks.wildteaming import WildTeamingJailbreaking
 from iris.augmentations.instruction_augmentations.jailbreaks.multilingual_jailbreak import MultiLingualJailbreaking
