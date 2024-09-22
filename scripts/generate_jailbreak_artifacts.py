@@ -179,4 +179,4 @@ if __name__ == "__main__":
         # Generate jailbreak artifacts
         attacked_samples = attacker.augment_batch(batch, verbose=True)
         # Save jailbreak artifacts
-        save(args, attacked_samples, attacker)
+        save(args, attacked_samples)
