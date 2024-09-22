@@ -35,7 +35,7 @@ def get_model(target_model: str, api_key: str, api_base: str):
             api_key=api_key,
             api_base=api_base,
         )
-    elif "shield" in target_model:
+    elif "google" in target_model:
         return ShieldGemma(
             model_name_or_path=target_model,
             api_key=api_key,
