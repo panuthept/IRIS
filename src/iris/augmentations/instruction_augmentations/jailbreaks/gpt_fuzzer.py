@@ -1,3 +1,4 @@
+import os
 import math
 import logging
 import pandas as pd
@@ -5,6 +6,8 @@ from tqdm import tqdm
 from iris.data_types import Sample
 from typing import List, Dict, Callable
 from easyjailbreak.models import ModelBase
+from llama_index.llms.openai import OpenAI
+from iris.model_wrappers.generative_models import APIGenerativeLLM
 from iris.augmentations.instruction_augmentations.jailbreaks import Jailbreaking
 from iris.augmentations.instruction_augmentations.jailbreaks.utils.gpt_fuzzer.core import PromptNode
 from iris.augmentations.instruction_augmentations.jailbreaks.utils.gpt_fuzzer.template import synthesis_message
@@ -196,14 +199,11 @@ class GPTFuzzerJailbreaking(Jailbreaking):
 
 
 if __name__ == "__main__":
-    import os
     import json
     import random
     import numpy as np
-    from llama_index.llms.openai import OpenAI
     from iris.datasets import JailbreakBenchDataset
     from iris.model_wrappers.guard_models import WildGuard, LlamaGuard
-    from iris.model_wrappers.generative_models import APIGenerativeLLM
 
     random.seed(42)
     np.random.seed(42)
