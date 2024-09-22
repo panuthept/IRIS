@@ -142,7 +142,7 @@ def is_skip(args, sample, jailbreak_artifacts):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--save_dir", type=str, default="./data/jailbreak_artifacts")
+    parser.add_argument("--save_dir", type=str, default="./jailbreak_artifacts")
     parser.add_argument("--save_batch", type=int, default=10)
     parser.add_argument("--ignore_existing", action="store_true")
     parser.add_argument("--target_model", type=str, default="allenai/wildguard")
