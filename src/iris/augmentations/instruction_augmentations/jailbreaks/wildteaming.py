@@ -7,6 +7,7 @@ from llama_index.llms.together import TogetherLLM
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.generative_models import APIGenerativeLLM
 from iris.augmentations.instruction_augmentations.jailbreaks import Jailbreaking
+from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.Attacker import Attacker
 from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.eval_utils import get_pruner
 
 logger = logging.getLogger()
@@ -113,8 +114,6 @@ if __name__ == "__main__":
     from tqdm import tqdm
     from iris.datasets import JailbreakBenchDataset
     from iris.model_wrappers.guard_models import WildGuard, LlamaGuard
-    from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.Attacker import Attacker
-    from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.eval_utils import get_pruner
 
     random.seed(42)
     np.random.seed(42)

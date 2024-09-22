@@ -38,8 +38,12 @@ class GPTFuzzerJailbreaking(Jailbreaking):
             include_failed_cases=include_failed_cases
         )
         if attack_model is None:
-            # TODO: Add a default attack model
-            raise ValueError("attack_model must be provided.")
+            attack_model=APIGenerativeLLM(
+                llm=OpenAI(
+                    model="gpt-4o",
+                    api_key=os.environ.get("OPENAI_API_KEY"),
+                ),
+            )
         self.attack_model = attack_model
         self.max_query = max_query
         self.max_jailbreak = max_jailbreak
