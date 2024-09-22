@@ -124,6 +124,7 @@ def save(args, attacked_samples):
         jailbreak_artifacts["jailbreak_artifacts"][sample.reference_instruction][args.target_model][args.attack_model].extend(sample.instructions)
 
     # Save jailbreak artifacts
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
     with open(save_path, "w") as f:
         f.write(json.dumps(jailbreak_artifacts, indent=4))
 
