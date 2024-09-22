@@ -169,15 +169,21 @@ if __name__ == "__main__":
     # Load jailbreak artifacts, if exists
     jailbreak_artifacts = load(args)
 
-    # Process samples in batch
-    for i in range(0, len(samples), args.save_batch):
-        print(f"Processing batch {i} - {i+args.save_batch}")
-        batch = [sample for sample in samples[i:i+args.save_batch] if not is_skip(args, sample, jailbreak_artifacts)]
-        if len(batch) == 0:
-            # Skip if all samples are already processed
-            print("All samples are already processed. Skipping...")
-            continue
-        # Generate jailbreak artifacts
-        attacked_samples = attacker.augment_batch(batch, verbose=True)
+    if args.attacker_name == "gpt_fuzzer":
+        # GPTFUZZER is designed to process samples all at once
+        attacked_samples = attacker.augment_batch(samples, verbose=True)
         # Save jailbreak artifacts
         save(args, attacked_samples)
+    else:
+        # Process samples in batch
+        for i in range(0, len(samples), args.save_batch):
+            print(f"Processing batch {i} - {i+args.save_batch}")
+            batch = [sample for sample in samples[i:i+args.save_batch] if not is_skip(args, sample, jailbreak_artifacts)]
+            if len(batch) == 0:
+                # Skip if all samples are already processed
+                print("All samples are already processed. Skipping...")
+                continue
+            # Generate jailbreak artifacts
+            attacked_samples = attacker.augment_batch(batch, verbose=True)
+            # Save jailbreak artifacts
+            save(args, attacked_samples)
