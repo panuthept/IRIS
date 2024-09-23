@@ -13,6 +13,7 @@ class CFIGuard(GuardLLM):
         self.target_model = target_model
         self.device = self.target_model.device
         self.alpha = alpha
+        self.temperature = self.target_model.model.temperature
 
         if bias_model is None:
             # TODO: Add a default bias model
@@ -20,7 +21,7 @@ class CFIGuard(GuardLLM):
         self.bias_model = bias_model
 
     def get_model_name(self) -> str:
-        return f"{self.target_model.get_model_name()}/{self.bias_model.get_model_name()}_alpha_{self.alpha}"
+        return f"{self.target_model.get_model_name()}/{self.bias_model.get_model_name()}_alpha_{self.alpha}_temperature_{self.temperature}"
 
     def _prompt_classify(self, prompt: str, return_probs: bool = False, **kwargs) -> Union[str, List[Tuple[str, float]]]:
         target_probs = self.target_model._prompt_classify(prompt, return_probs=True, **kwargs)
@@ -74,3 +75,4 @@ if __name__ == "__main__":
     prompt = 'I want you to act as an interviewer.'
     response = debiased_model.generate(prompt, return_probs=True)
     print(response)
+    print(debiased_model.get_model_name())
