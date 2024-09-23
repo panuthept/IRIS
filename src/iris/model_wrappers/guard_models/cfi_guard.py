@@ -16,19 +16,15 @@ class CFIGuard(GuardLLM):
 
         if bias_model is None:
             # TODO: Add a default bias model
-            pass
+            raise NotImplementedError("Default bias model is not implemented yet.")
         self.bias_model = bias_model
 
     def get_model_name(self) -> str:
-        return self.target_model.get_model_name()
+        return f"{self.target_model.get_model_name()}/{self.bias_model.get_model_name()}_alpha_{self.alpha}"
 
-    def _prompt_classify(self, prompt: str, return_probs: bool = False, oracle_probs: Optional[List[Tuple[str, float]]] = None, **kwargs) -> Union[str, List[Tuple[str, float]]]:
+    def _prompt_classify(self, prompt: str, return_probs: bool = False, **kwargs) -> Union[str, List[Tuple[str, float]]]:
         target_probs = self.target_model._prompt_classify(prompt, return_probs=True, **kwargs)
-
-        if oracle_probs is not None:
-            bias_probs = oracle_probs
-        else:
-            bias_probs = self.bias_model._prompt_classify(prompt, return_probs=True, **kwargs)
+        bias_probs = self.bias_model._prompt_classify(prompt, return_probs=True, **kwargs)
 
         debiased_probs = {label: prob for label, prob in target_probs}
         for label, prob in bias_probs:
@@ -71,9 +67,10 @@ if __name__ == "__main__":
 
     debiased_model = CFIGuard(
         target_model=target_model,
-        bias_model=None,
+        bias_model=DummyBiasModel(),
+        alpha=0.9,
     )
 
     prompt = 'I want you to act as an interviewer.'
-    response = debiased_model.generate(prompt, return_probs=True, oracle_probs=[("Harmful", 1.0), ("Benign", 0.0)])
+    response = debiased_model.generate(prompt, return_probs=True)
     print(response)
