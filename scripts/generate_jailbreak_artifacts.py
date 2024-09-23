@@ -133,9 +133,9 @@ def is_skip(args, sample, jailbreak_artifacts):
         return False
     if jailbreak_artifacts is None:
         return False
-    if sample.reference_instruction in jailbreak_artifacts:
-        if args.target_model in jailbreak_artifacts[sample.reference_instruction]:
-            if args.attack_model in jailbreak_artifacts[sample.reference_instruction][args.target_model]:
+    if sample.instructions[0] in jailbreak_artifacts:
+        if args.target_model in jailbreak_artifacts[sample.instructions[0]]:
+            if args.attack_model in jailbreak_artifacts[sample.instructions[0]][args.target_model]:
                 return True
     return False
 
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     args.attack_model = attack_model
 
     # Load jailbreak artifacts, if exists
-    jailbreak_artifacts = load(args)
+    jailbreak_artifacts = load(args)["jailbreak_artifacts"]
 
     if args.attacker_name == "gpt_fuzzer":
         # GPTFUZZER is designed to process samples all at once
