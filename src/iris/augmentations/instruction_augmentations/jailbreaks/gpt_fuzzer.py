@@ -41,6 +41,9 @@ class GPTFuzzerJailbreaking(Jailbreaking):
             include_failed_cases=include_failed_cases
         )
         if attack_model is None:
+            # Check if OPENAI_API_KEY is set
+            if os.environ.get("OPENAI_API_KEY") is None:
+                raise ValueError("Please provide OPENAI_API_KEY in the environment variables.")
             attack_model=APIGenerativeLLM(
                 llm=OpenAI(
                     model="gpt-4o",
