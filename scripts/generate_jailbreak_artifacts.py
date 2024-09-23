@@ -64,6 +64,7 @@ def get_attacker(attacker_name: str, target_model: GuardLLM, max_iteration: int 
         attacker = MultiLingualJailbreaking(
             target_model=target_model,
             evaluator=evaluator,
+            apply_jailbreak_template=False,
         )
         attack_model = "google_translator_api"
     elif attacker_name == "multilingual+":
