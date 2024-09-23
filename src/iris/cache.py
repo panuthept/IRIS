@@ -29,7 +29,9 @@ class CacheStorage:
                 String: {
                     "content": String|List[String],     # String is deprecated but retained for backward compatibility
                     "timestamp": String|List[String],   # String is deprecated but retained for backward compatibility
-                    "logprobs": List[List[Tuple[String, float]]],
+                    "logprobs": {
+                        Float: List[List[Tuple[String, float]]],
+                    }
                 }
             }
         }
@@ -115,6 +117,7 @@ class CacheStorage:
         top_logprobs: Optional[int] = None,
         suffix_prompt: Optional[str] = None,
         return_logprobs: bool = False,
+        temperature: Optional[float] = None,
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         if system_prompt is None:
             system_prompt = ""
@@ -153,10 +156,13 @@ class CacheStorage:
                     logprobs = data.get("logprobs", None)
                     # Verify logprobs
                     if logprobs is not None:
-                        if top_logprobs is not None:
-                            logprobs = [logprob[:top_logprobs] for logprob in logprobs]
-                            if not all([len(logprob) >= top_logprobs for logprob in logprobs]):
-                                logprobs = None
+                        if isinstance(logprobs, dict):
+                            logprobs = logprobs.get(temperature, None)
+                        if logprobs is not None and isinstance(logprobs, list):
+                            if top_logprobs is not None:
+                                logprobs = [logprob[:top_logprobs] for logprob in logprobs]
+                                if not all([len(logprob) >= top_logprobs for logprob in logprobs]):
+                                    logprobs = None
 
         if retrieved_content is not None:
             # Update session memory
@@ -167,6 +173,7 @@ class CacheStorage:
         self, 
         response: str, 
         prompt: str, 
+        temperature: float,
         system_prompt: Optional[str] = None, 
         apply_chat_template: Optional[bool] = None,
         max_new_tokens: Optional[int] = None,
@@ -186,7 +193,7 @@ class CacheStorage:
             self.storage[system_prompt] = {}
             
         if key not in self.storage[system_prompt]:
-            self.storage[system_prompt][key] = {"content": [], "timestamp": [], "logprobs": None}
+            self.storage[system_prompt][key] = {"content": [], "timestamp": [], "logprobs": {temperature: None}}
 
         # NOTE: This is for backward compatibility
         # Check if data is stored in old format and convert to new format
@@ -195,7 +202,11 @@ class CacheStorage:
         if isinstance(self.storage[system_prompt][key]["timestamp"], str):
             self.storage[system_prompt][key]["timestamp"] = [self.storage[system_prompt][key]["timestamp"]]
         if "logprobs" not in self.storage[system_prompt][key]:
-            self.storage[system_prompt][key]["logprobs"] = None
+            self.storage[system_prompt][key]["logprobs"] = {temperature: None}
+        else:
+            existing_logprobs = self.storage[system_prompt][key]["logprobs"]
+            if isinstance(existing_logprobs, list):
+                self.storage[system_prompt][key]["logprobs"] = {None: existing_logprobs}
 
         if response not in self.storage[system_prompt][key]["content"]:
             # Add to storage
@@ -205,5 +216,5 @@ class CacheStorage:
             self._update_session_memory(system_prompt, key, response)
             
         if logprobs is not None:
-            self.storage[system_prompt][key]["logprobs"] = logprobs
+            self.storage[system_prompt][key]["logprobs"][temperature] = logprobs
         self._save_storage()
