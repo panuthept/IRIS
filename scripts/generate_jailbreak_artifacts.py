@@ -168,7 +168,9 @@ if __name__ == "__main__":
     args.attack_model = attack_model
 
     # Load jailbreak artifacts, if exists
-    jailbreak_artifacts = load(args)["jailbreak_artifacts"]
+    jailbreak_artifacts = load(args)
+    if jailbreak_artifacts is not None:
+        jailbreak_artifacts = jailbreak_artifacts["jailbreak_artifacts"]
 
     if args.attacker_name == "gpt_fuzzer":
         # GPTFUZZER is designed to process samples all at once
