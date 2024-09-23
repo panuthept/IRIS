@@ -47,6 +47,17 @@ class CFIGuard(GuardLLM):
         raise NotImplementedError
     
 
+class DummyBiasModel(GuardLLM):
+    def get_model_name(self) -> str:
+        return "dummy_bias_model"
+
+    def _prompt_classify(self, *args, **kwargs) -> Union[str, List[Tuple[str, float]]]:
+        return [("Harmful", 1.0), ("Benign", 0.0)]
+    
+    def _response_classify(self, *args, **kwargs) -> str:
+        raise NotImplementedError
+    
+
 if __name__ == "__main__":
     from iris.model_wrappers.guard_models import WildGuard
 
