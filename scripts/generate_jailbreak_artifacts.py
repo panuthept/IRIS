@@ -7,7 +7,9 @@ from iris.model_wrappers.guard_models import (
     GuardLLM,
     WildGuard,
     LlamaGuard,
-    ShieldGemma
+    ShieldGemma,
+    CFIGuard,
+    DummyBiasModel,
 )
 from iris.augmentations.instruction_augmentations.jailbreaks import (
     GPTFuzzerJailbreaking,
@@ -22,27 +24,35 @@ from iris.datasets import (
 )
 
 
-def get_model(target_model: str, api_key: str, api_base: str):
+def get_model(target_model: str, api_key: str, api_base: str, counterfactual_inference: bool = False, alpha: float = 0.9):
     if "wildguard" in target_model:
-        return WildGuard(
+        model = WildGuard(
             model_name_or_path=target_model,
             api_key=api_key,
             api_base=api_base,
         )
     elif "llama" in target_model:
-        return LlamaGuard(
+        model = LlamaGuard(
             model_name_or_path=target_model,
             api_key=api_key,
             api_base=api_base,
         )
     elif "google" in target_model:
-        return ShieldGemma(
+        model = ShieldGemma(
             model_name_or_path=target_model,
             api_key=api_key,
             api_base=api_base,
         )
     else:
         raise ValueError(f"Invalid target model: {target_model}")
+    
+    if counterfactual_inference:
+        model = CFIGuard(
+            target_model=model,
+            bias_model=DummyBiasModel(),
+            alpha=alpha,
+        )
+    return model
     
 def get_attacker(attacker_name: str, target_model: GuardLLM, max_iteration: int = 10):
     evaluator = lambda x: int(x.strip().capitalize() == "Benign")
@@ -149,6 +159,8 @@ if __name__ == "__main__":
     parser.add_argument("--target_model", type=str, default="allenai/wildguard")
     parser.add_argument("--api_key", type=str, default="EMPTY")
     parser.add_argument("--api_base", type=str, default="http://10.204.100.70:11699/v1")
+    parser.add_argument("--counterfactual_inference", action="store_true")
+    parser.add_argument("--alpha", type=float, default=0.9)
     parser.add_argument("--attacker_name", type=str, default="wildteaming")
     parser.add_argument("--max_iteration", type=int, default=10)
     parser.add_argument("--random_seed", type=int, default=42)
@@ -161,11 +173,13 @@ if __name__ == "__main__":
     random.seed(args.random_seed)
     np.random.seed(args.random_seed)
 
-    target_model = get_model(args.target_model, args.api_key, args.api_base)
+    target_model = get_model(args.target_model, args.api_key, args.api_base, args.counterfactual_inference, args.alpha)
     attacker, attack_model = get_attacker(args.attacker_name, target_model, args.max_iteration)
     dataset = get_dataset(args.dataset_name, args.dataset_intention)
     samples = dataset.as_samples(split=args.dataset_split)
     args.attack_model = attack_model
+    args.target_model = target_model.get_model_name()
+    print(args.target_model)
 
     # Load jailbreak artifacts, if exists
     jailbreak_artifacts = load(args)
