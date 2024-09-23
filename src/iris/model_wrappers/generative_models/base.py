@@ -35,6 +35,7 @@ class GenerativeLLM(LLM):
         if self.use_cache:
             answer, logprobs = self.cache_storage.retrieve(
                 prompt, 
+                temperature=self.temperature,
                 system_prompt=self.system_prompt,
                 apply_chat_template=apply_chat_template,
                 max_new_tokens=self.max_new_tokens,
@@ -60,6 +61,7 @@ class GenerativeLLM(LLM):
             self.cache_storage.cache(
                 answer, 
                 prompt, 
+                temperature=self.temperature,
                 system_prompt=self.system_prompt,
                 apply_chat_template=apply_chat_template,
                 max_new_tokens=self.max_new_tokens,
