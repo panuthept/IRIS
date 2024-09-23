@@ -1,8 +1,11 @@
 import os
-import torch
+import logging
 import argparse
-from iris.model_wrappers.guard_models import LlamaGuard, WildGuard
-from iris.augmentations.instruction_augmentations.jailbreaks import MultiLingualJailbreaking
+from iris.model_wrappers.guard_models import (
+    WildGuard,
+    LlamaGuard,
+    ShieldGemma
+)
 from iris.datasets import (
     AwesomePromptsDataset,
     JailbreakBenchDataset,
@@ -11,100 +14,66 @@ from iris.datasets import (
     XSTestDataset,
 )
 
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+def get_model(target_model: str, api_key: str, api_base: str):
+    if "wildguard" in target_model:
+        return WildGuard(
+            model_name_or_path=target_model,
+            api_key=api_key,
+            api_base=api_base,
+        )
+    elif "llama" in target_model:
+        return LlamaGuard(
+            model_name_or_path=target_model,
+            api_key=api_key,
+            api_base=api_base,
+        )
+    elif "google" in target_model:
+        return ShieldGemma(
+            model_name_or_path=target_model,
+            api_key=api_key,
+            api_base=api_base,
+        )
+    else:
+        raise ValueError(f"Invalid target model: {target_model}")
+    
+def get_dataset(dataset_name: str, dataset_intention: str):
+    if dataset_name == "awesome_prompts":
+        return AwesomePromptsDataset(intention=dataset_intention)
+    elif dataset_name == "jailbreak_bench":
+        return JailbreakBenchDataset(intention=dataset_intention)
+    elif dataset_name == "jailbreak_kv28k":
+        assert dataset_intention != "harmful", "JailbreakKV28k only has harmful intention"
+        return JailbreaKV28kDataset(intention=dataset_intention)
+    elif dataset_name == "wildguard_mix":
+        return WildGuardMixDataset(intention=dataset_intention)
+    elif dataset_name == "xs_test":
+        return XSTestDataset(intention=dataset_intention)
+    else:
+        raise ValueError(f"Invalid dataset name: {dataset_name}")
 
 
 if __name__ == "__main__":
     parser = parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-Guard-3-8B")
+    parser.add_argument("--target_model", type=str, default="allenai/wildguard")
+    parser.add_argument("--api_key", type=str, default="EMPTY")
+    parser.add_argument("--api_base", type=str, default="http://10.204.100.70:11699/v1")
     parser.add_argument("--dataset_name", type=str, default="jailbreak_bench")
-    parser.add_argument("--jailbreak_name", type=str, default=None)
-    parser.add_argument("--intention", type=str, default="harmful")
-    parser.add_argument("--use_cache", action="store_true")
-    parser.add_argument("--api_key", type=str, default=None)
-    parser.add_argument("--api_base", type=str, default=None)
+    parser.add_argument("--dataset_intention", type=str, default=None)
+    parser.add_argument("--dataset_split", type=str, default="test")
     args = parser.parse_args()
 
-    assert args.dataset_name in ["awesome_prompts", "jailbreak_bench", "jailbreakv_28k", "wildguardmix", "xstest"]
-    if args.jailbreak_name:
-        assert args.jailbreak_name in ["multilingual", "multilingual+"]
+    logger = logging.getLogger()
+    logger.setLevel(logging.WARNING)
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-    if args.dataset_name == "awesome_prompts":
-        dataset = AwesomePromptsDataset(intention=args.intention)
-    elif args.dataset_name == "jailbreak_bench":
-        dataset = JailbreakBenchDataset(intention=args.intention)
-    elif args.dataset_name == "jailbreakv_28k":
-        dataset = JailbreaKV28kDataset(intention=args.intention)
-    elif args.dataset_name == "wildguardmix":
-        dataset = WildGuardMixDataset(intention=args.intention)
-    else:
-        dataset = XSTestDataset(intention=args.intention)
-    samples = dataset.as_samples()
-    print(f"Running dataset: {args.dataset_name}")
-
-    # Get model
-    print(f"CUDA available: {torch.cuda.is_available()}")
-    if args.model_name.startswith("meta-llama"):
-        target_model = LlamaGuard(
-            model_name_or_path=args.model_name,
-            api_key=args.api_key,
-            api_base=args.api_base,
-            pipeline_kwargs={
-                "torch_dtype": torch.bfloat16,
-                "model_kwargs": {
-                    "cache_dir": "./data/models",
-                    "local_files_only": False,
-                }
-            },
-            use_cache=args.use_cache,
-            cache_path="./cache",
-        )
-    elif args.model_name == "allenai/wildguard":
-        target_model = WildGuard(
-            model_name_or_path=args.model_name,
-            api_key=args.api_key,
-            api_base=args.api_base,
-            pipeline_kwargs={
-                "torch_dtype": torch.bfloat16,
-                "model_kwargs": {
-                    "cache_dir": "./data/models",
-                    "local_files_only": False,
-                }
-            },
-            use_cache=args.use_cache,
-            cache_path="./cache",
-        )
-    else:
-        raise ValueError(f"Model {args.model_name} not supported.")
-    print(f"Device: {target_model.device}")
+    target_model = get_model(args.target_model, args.api_key, args.api_base)
+    dataset = get_dataset(args.dataset_name, args.dataset_intention)
+    samples = dataset.as_samples(split=args.dataset_split)
 
     samples = target_model.prompt_classify_batch(samples)
-    acc = sum([1 for sample in samples if sample.instructions_pred_label[0] == sample.instructions_true_label[0]]) / len(samples)
-    print(f"Accuracy: {acc}")
-
-    if args.jailbreak_name:
-        # Get jailbreak
-        if args.jailbreak_name == "multilingual":
-            augmentation = MultiLingualJailbreaking(
-                target_model=target_model, 
-                evaluator=lambda x: x.strip().capitalize() == "Benign",
-                apply_jailbreak_template=False,
-                translate_answer_to_en=False,
-                use_cache=args.use_cache,
-                cache_path="./cache",
-            )
-        elif args.jailbreak_name == "multilingual+":
-            augmentation = MultiLingualJailbreaking(
-                target_model=target_model, 
-                evaluator=lambda x: x.strip().capitalize() == "Benign",
-                apply_jailbreak_template=True,
-                translate_answer_to_en=False,
-                use_cache=args.use_cache,
-                cache_path="./cache",
-            )
-        else:
-            raise ValueError(f"Jailbreak {args.jailbreak_name} not supported.")
-        
-        augmentation.augment_batch(samples)
-        print(f"ASR: {augmentation.attack_success_rate}")
-        print(f"Supports: {len(samples)}")
+    harmful_samples = [sample for sample in samples if sample.instructions_true_label[0] == "Harmful"]
+    benign_samples = [sample for sample in samples if sample.instructions_true_label[0] == "Benign"]
+    tpr = sum([sample.instructions_pred_label[0] == "Harmful" for sample in harmful_samples]) / (len(harmful_samples) + 1e-7)
+    fpr = sum([sample.instructions_pred_label[0] == "Harmful" for sample in benign_samples]) / (len(benign_samples) + 1e-7)
+    print(f"TPR: {round(tpr, 2)}")
+    print(f"FPR: {round(fpr, 2)}")
