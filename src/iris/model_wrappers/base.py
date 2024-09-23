@@ -10,6 +10,7 @@ class LLM(ModelBase):
             system_prompt: str = None, 
             post_processing: Callable = None, 
             max_new_tokens: int = 1024,
+            temperature: float = 1,
             logprobs: bool = True,
             top_logprobs: int = 10,
             use_cache: bool = True,
@@ -20,6 +21,7 @@ class LLM(ModelBase):
         self.system_prompt = system_prompt
         self.post_processing = post_processing
         self.max_new_tokens = max_new_tokens
+        self.temperature = temperature
         self.logprobs = logprobs
         self.top_logprobs = top_logprobs
         self.use_cache = use_cache
