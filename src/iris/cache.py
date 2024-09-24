@@ -156,8 +156,13 @@ class CacheStorage:
                     logprobs = data.get("logprobs", None)
                     # Verify logprobs
                     if logprobs is not None:
+                        # NOTE: This is for backward compatibility
                         if isinstance(logprobs, dict):
                             logprobs = logprobs.get(temperature, None)
+                        else:
+                            if temperature is not None:
+                                logprobs = None
+                        # Verify logprobs
                         if logprobs is not None and isinstance(logprobs, list):
                             if top_logprobs is not None:
                                 logprobs = [logprob[:top_logprobs] for logprob in logprobs]
