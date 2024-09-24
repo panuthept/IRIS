@@ -134,6 +134,16 @@ class JailbreakBenchmark(Benchmark):
             if setting.get("setting_name", None) in ['Benign (Original)', 'Harmful (Original)']: continue
             output_path = f"{self.save_path}/{setting['save_name']}/{model_name}"
             
+            if head_index is None:
+                save_model_path = f"{output_path}/{activation_name}_{intervention_layers}_response.jsonl"
+            else:
+                save_model_path = f"{output_path}/{activation_name}_L{intervention_layers[0]}_H{head_index[0]}_response.jsonl"
+
+            from pathlib import Path
+            check_file = Path(save_model_path)
+            
+            if check_file.is_file(): continue
+            print(f'cur_missing file: {save_model_path}') 
             # Load the dataset
             dataset = self.get_dataset(
                 intention=setting.get("intention", None),
@@ -143,18 +153,11 @@ class JailbreakBenchmark(Benchmark):
             
             samples: List[Sample] = dataset.as_samples(split="test", prompt_template=self.prompt_template)
 
-            # if activation_name == 'attn':
-            # elif activation_name == 'mlp_post':
-            # many_at_one
-
-
             # Get the responses
             responses: List[ModelResponse] = model.complete_batch(samples)
             
             # # Save the responses
-            os.makedirs(output_path, exist_ok=True)
+            os.makedirs(output_path, exist_ok=True) 
+            save_model_answers(responses, save_model_path)
 
-            if head_index is None:
-                save_model_answers(responses, f"{output_path}/{activation_name}_{intervention_layers}_response.jsonl")
-            else:
-                save_model_answers(responses, f"{output_path}/{activation_name}_{head_index}_{intervention_layers}_response.jsonl")
+            
