@@ -16,24 +16,27 @@ from iris.datasets import (
     XSTestDataset,
 )
 
-def get_model(target_model: str, api_key: str, api_base: str, counterfactual_inference: bool = False, alpha: float = 0.9):
+def get_model(target_model: str, api_key: str, api_base: str, counterfactual_inference: bool = False, alpha: float = 0.9, temperature: float = 1.0):
     if "wildguard" in target_model:
         model = WildGuard(
             model_name_or_path=target_model,
             api_key=api_key,
             api_base=api_base,
+            temperature=temperature,
         )
     elif "llama" in target_model:
         model = LlamaGuard(
             model_name_or_path=target_model,
             api_key=api_key,
             api_base=api_base,
+            temperature=temperature,
         )
     elif "google" in target_model:
         model = ShieldGemma(
             model_name_or_path=target_model,
             api_key=api_key,
             api_base=api_base,
+            temperature=temperature,
         )
     else:
         raise ValueError(f"Invalid target model: {target_model}")
@@ -69,6 +72,7 @@ if __name__ == "__main__":
     parser.add_argument("--api_base", type=str, default="http://10.204.100.70:11699/v1")
     parser.add_argument("--counterfactual_inference", action="store_true")
     parser.add_argument("--alpha", type=float, default=0.9)
+    parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--dataset_name", type=str, default="jailbreak_bench")
     parser.add_argument("--dataset_intention", type=str, default=None)
     parser.add_argument("--dataset_split", type=str, default="test")
@@ -78,7 +82,7 @@ if __name__ == "__main__":
     logger.setLevel(logging.WARNING)
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-    target_model = get_model(args.target_model, args.api_key, args.api_base, args.counterfactual_inference, args.alpha)
+    target_model = get_model(args.target_model, args.api_key, args.api_base, args.counterfactual_inference, args.alpha, args.temperature)
     dataset = get_dataset(args.dataset_name, args.dataset_intention)
     samples = dataset.as_samples(split=args.dataset_split)
 
