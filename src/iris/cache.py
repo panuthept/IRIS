@@ -80,7 +80,7 @@ class CacheStorage:
         with open(os.path.join(self.cache_path, self.name, self.temp_file_name), "w") as f:
             json.dump(self.storage, f, indent=4)
         # Move to the actual file
-        os.rename(
+        os.replace(
             os.path.join(self.cache_path, self.name, self.temp_file_name),
             os.path.join(self.cache_path, self.name, self.cache_file_name),
         )
