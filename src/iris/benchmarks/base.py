@@ -124,7 +124,7 @@ class JailbreakBenchmark(Benchmark):
         model_name: str = None,
         activation_name: str = None,
         intervention_layers: List = None,
-        head_index: int = None,
+        head_index: List = None,
     ) -> Dict[str, SummarizedResult]:
         
         # Inference for each task
