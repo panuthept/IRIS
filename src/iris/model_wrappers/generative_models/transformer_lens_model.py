@@ -5,6 +5,7 @@ import transformer_lens.utils as utils
 from tqdm import tqdm
 from functools import partial
 from jaxtyping import Int, Float
+from typing import Tuple, List, Optional
 from transformer_lens import HookedTransformer
 from transformer_lens.utilities import devices
 from typing import List, Dict, Optional, Literal
@@ -242,8 +243,16 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
                     break
             return tokens
 
-    def _complete(self, promt: str, ref_prompt: str = None, apply_chat_template: bool = True, **kwargs) -> str:
+    def _complete(
+        self, promt: str, 
+        ref_prompt: Optional[str] = None, 
+        suffix_prompt: Optional[str] = None, 
+        apply_chat_template: bool = True, 
+        **kwargs
+    ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         if apply_chat_template:
+            if suffix_prompt:
+                print("[WARNING] suffix_prompt is not supported with apply_chat_template=True. Ignoring the suffix_prompt.")
             if self.system_prompt:
                 messages = [
                     {"role": "system", "content": self.system_prompt},
@@ -281,6 +290,9 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
             if self.system_prompt:
                 prompt = f"{self.system_prompt}\n\n{promt}"
                 ref_prompt = f"{self.system_prompt}\n\n{ref_prompt}" if ref_prompt else None
+            if suffix_prompt:
+                prompt = f"{prompt}{suffix_prompt}"
+                ref_prompt = f"{ref_prompt}{suffix_prompt}" if ref_prompt else None
             
             input_ids = self.tokenizer(
                 prompt,
@@ -306,7 +318,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
             **kwargs
         )
         output_ids = output_ids[:, input_lens:].squeeze(0)
-        return self.llm.to_string(output_ids)
+        return self.llm.to_string(output_ids), None
 
 
 if __name__ == "__main__":

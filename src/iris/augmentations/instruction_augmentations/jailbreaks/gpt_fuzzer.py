@@ -1,3 +1,4 @@
+import os
 import math
 import logging
 import pandas as pd
@@ -5,6 +6,8 @@ from tqdm import tqdm
 from iris.data_types import Sample
 from typing import List, Dict, Callable
 from easyjailbreak.models import ModelBase
+from llama_index.llms.openai import OpenAI
+from iris.model_wrappers.generative_models import APIGenerativeLLM
 from iris.augmentations.instruction_augmentations.jailbreaks import Jailbreaking
 from iris.augmentations.instruction_augmentations.jailbreaks.utils.gpt_fuzzer.core import PromptNode
 from iris.augmentations.instruction_augmentations.jailbreaks.utils.gpt_fuzzer.template import synthesis_message
@@ -38,8 +41,15 @@ class GPTFuzzerJailbreaking(Jailbreaking):
             include_failed_cases=include_failed_cases
         )
         if attack_model is None:
-            # TODO: Add a default attack model
-            raise ValueError("attack_model must be provided.")
+            # Check if OPENAI_API_KEY is set
+            if os.environ.get("OPENAI_API_KEY") is None:
+                raise ValueError("Please provide OPENAI_API_KEY in the environment variables.")
+            attack_model=APIGenerativeLLM(
+                llm=OpenAI(
+                    model="gpt-4o",
+                    api_key=os.environ.get("OPENAI_API_KEY"),
+                ),
+            )
         self.attack_model = attack_model
         self.max_query = max_query
         self.max_jailbreak = max_jailbreak
@@ -192,14 +202,11 @@ class GPTFuzzerJailbreaking(Jailbreaking):
 
 
 if __name__ == "__main__":
-    import os
     import json
     import random
     import numpy as np
-    from llama_index.llms.openai import OpenAI
     from iris.datasets import JailbreakBenchDataset
     from iris.model_wrappers.guard_models import WildGuard, LlamaGuard
-    from iris.model_wrappers.generative_models import APIGenerativeLLM
 
     random.seed(42)
     np.random.seed(42)

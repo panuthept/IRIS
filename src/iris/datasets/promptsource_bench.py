@@ -9,7 +9,6 @@ from collections import defaultdict
 from iris.data_types import Sample
 from iris.datasets.base import Dataset
 from iris.prompt_template import PromptTemplate
-from promptsource.templates import DatasetTemplates
 
 
 class PromptSourceDataset(Dataset):
@@ -120,6 +119,8 @@ class PromptSourceDataset(Dataset):
             path: str = "./data/datasets/promptsource/promptsource/templates",
             cache_dir: str = None,
     ):  
+        from promptsource.templates import DatasetTemplates
+        
         self.task_name = task_name
         self.prompt_name = prompt_name
         self.path = path

@@ -22,7 +22,7 @@ class CacheableTranslate(Translate):
 
     def translate(self, text, src_lang='auto'):
         if self.use_cache:
-            translation = self.cache_storage.retrieve(text)
+            translation, _ = self.cache_storage.retrieve(text)
         if translation is None:
             translation = super().translate(text, src_lang)
             self.cache_storage.cache(translation, text)
@@ -38,7 +38,7 @@ class MultiLingualJailbreaking(Jailbreaking):
         apply_jailbreak_template: bool = True,
         translate_answer_to_en: bool = True,
         use_cache: bool = True,
-        cache_path: str = None,
+        cache_path: str = "./cache",
         **kwargs,
     ):
         self.apply_jailbreak_template = apply_jailbreak_template

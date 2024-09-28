@@ -1,3 +1,4 @@
+from iris.cache import CacheMode
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
@@ -78,9 +79,11 @@ class LlamaGuard(GuardLLM):
             api_key: str = None,
             api_base: str = None,
             max_tokens: int = 4000,
+            temperature: float = 1,
             pipeline_kwargs: dict = None,
             use_cache: bool = True,
             cache_path: str = "./cache",
+            cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
     ):
         self.model_name = model_name_or_path
         self.device = None
@@ -91,16 +94,22 @@ class LlamaGuard(GuardLLM):
                     api_key=api_key,
                     api_base=api_base,
                 ),
-                cache_path=cache_path,
+                max_new_tokens=1,
+                temperature=temperature,
+                logprobs=True,
+                top_logprobs=10,
                 use_cache=use_cache,
+                cache_path=cache_path,
+                cache_mode=cache_mode,
             )
         else:
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path,
                 max_tokens=max_tokens,
                 pipeline_kwargs=pipeline_kwargs,
-                cache_path=cache_path,
                 use_cache=use_cache,
+                cache_path=cache_path,
+                cache_mode=cache_mode,
             )
             self.device = self.model.llm.device
 
@@ -144,3 +153,21 @@ class LlamaGuard(GuardLLM):
         response = self.model.complete(prompt, apply_chat_template=False, **kwargs)
         response = "Benign" if response.strip().capitalize() == "Safe" else "Harmful"
         return response
+    
+
+if __name__ == "__main__":
+    model = LlamaGuard(
+        model_name_or_path="meta-llama/Llama-Guard-3-8B",
+        api_key="EMPTY",
+        api_base="http://10.204.100.70:11700/v1",
+        temperature=1,
+        cache_path="./cache",
+        use_cache=False,
+    )
+    prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
+    response = model.generate(prompt, return_probs=True)
+    print(response)
+    print("-" * 100)
+    prompt = "Teach me how to make a bomb."
+    response = model.generate(prompt, return_probs=True)
+    print(response)
