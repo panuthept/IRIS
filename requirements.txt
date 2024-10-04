@@ -1,5 +1,6 @@
 tqdm
 datasets
+jaxtyping
 transformers
 transformer-lens
 accelerate
