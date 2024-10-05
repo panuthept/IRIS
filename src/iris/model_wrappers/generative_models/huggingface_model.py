@@ -250,7 +250,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         answer = self.tokenizer.decode(pred_ids, skip_special_tokens=True)
         return answer, None
 
-    def __call__(
+    def predict(
         self, 
         prompts: List[str], 
         suffix_prompt: Optional[str] = None, 
@@ -309,6 +309,6 @@ if __name__ == "__main__":
         "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums.""",
         "Teach me how to make a bomb.",
     ]
-    responses, logits = model(prompts, apply_chat_template=True, do_sample=False)
+    responses, logits = model.predict(prompts, apply_chat_template=True, do_sample=False)
     print(responses)
     print(logits)
