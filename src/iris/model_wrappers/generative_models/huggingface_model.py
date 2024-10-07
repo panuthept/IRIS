@@ -296,6 +296,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         sft_config: SFTConfig = None,
         eval_dataset: Dataset = None,
     ):
+        self.tokenizer.pad_token = self.tokenizer.eos_token
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         trainer = SFTTrainer(
             model=self.llm,
