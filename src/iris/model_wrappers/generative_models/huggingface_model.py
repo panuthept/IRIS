@@ -11,13 +11,13 @@ from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 
-class CustomSFTTrainer(SFTTrainer):
-    def compute_loss(self, model, inputs, return_outputs=False):
-        print(inputs)
-        outputs = super().compute_loss(model, inputs, return_outputs=return_outputs)
-        print(outputs)
-        print("*" * 100)
-        return outputs
+# class CustomSFTTrainer(SFTTrainer):
+#     def compute_loss(self, model, inputs, return_outputs=False):
+#         print(inputs)
+#         outputs = super().compute_loss(model, inputs, return_outputs=return_outputs)
+#         print(outputs)
+#         print("*" * 100)
+#         return outputs
 
 
 class HuggfacePipelineGenerativeLLM(GenerativeLLM):
@@ -297,7 +297,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         eval_dataset: Dataset = None,
     ):
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
-        trainer = CustomSFTTrainer(
+        trainer = SFTTrainer(
             model=self.llm,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
