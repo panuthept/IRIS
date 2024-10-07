@@ -86,12 +86,12 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
 
         self.llm = AutoModelForCausalLM.from_pretrained(
             model_name_or_path,
-            **from_pretrained_kwargs
+            cache_dir="./data/models",
         )
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_name_or_path,
+            cache_dir="./data/models",
             padding_side="left",
-            **from_pretrained_kwargs
         )
         self.model_name = model_name_or_path
         super().__init__(**kwargs)
