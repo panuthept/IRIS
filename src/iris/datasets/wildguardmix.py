@@ -80,10 +80,12 @@ if __name__ == "__main__":
     print(len(samples))
     print(samples[0].get_prompts()[0])
     print(samples[0].reference_answers[0])
+    print(samples[0].instructions_true_label[0])
     print("-" * 100)
 
     samples = dataset.as_samples(split="train")
     print(len(samples))
     print(samples[0].get_prompts()[0])
     print(samples[0].reference_answers[0])
+    print(samples[0].instructions_true_label[0])
     print("=" * 100)

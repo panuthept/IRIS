@@ -166,3 +166,5 @@ cache/
 outputs/
 dependencies/
 .DS_Store
+finetuned_models/
+wandb/
