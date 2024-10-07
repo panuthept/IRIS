@@ -1,4 +1,6 @@
 import numpy as np
+from trl import SFTConfig
+from datasets import Dataset
 from iris.cache import CacheMode
 from iris.data_types import Sample
 from typing import List, Tuple, Union
@@ -63,10 +65,10 @@ class WildGuard(GuardLLM):
             f"{self.prompt_template}"
             "Harmful request:"
         )
-        self.prompt_clf_training_template = (
-            f"{self.prompt_template}"
-            "Harmful request: {harmful_request}"
-        )
+        # self.prompt_clf_training_template = (
+        #     f"{self.prompt_template}"
+        #     "Harmful request: {harmful_request}"
+        # )
         # self.output_format = (
         #     "Harmful request: {harmful_request}\n"
         #     "Response refusal: {response_refusal}\n"
@@ -95,44 +97,67 @@ class WildGuard(GuardLLM):
         response = self.model.complete(prompt, apply_chat_template=False, **kwargs)
         response = "Harmful" if response.split("\n")[1].replace("Response refusal: ", "") == "yes" else "Benign"
 
-    def train_sft(self, samples: List[Sample]):
-        """
-        This method prepare the training data (prompts, gold_responses) and call self.model.train(prompts, gold_responses).
-        """
+    def train_sft(
+        self, 
+        train_samples: List[Sample],
+        val_samples: List[Sample] = None,
+    ):
+        """ This method prepare the training examples format for WildGuard prompt completion. """
         assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
-        # Create training examples
-        examples = [
-            self.prompt_clf_training_template.format(
-                instruction=sample.instructions[0], 
-                response="", 
-                harmful_request="yes" if sample.instructions_true_label[0] == "Harmful" else "no",
-            ) for sample in samples
-        ]
-        print(examples[0])
+        # Create train dataset
+        train_dataset = Dataset.from_dict(
+            {
+                "instruction": [self.prompt_clf_template.format(instruction=sample.instructions[0], response="") for sample in train_samples],
+                "answer": [" yes" if sample.instructions_true_label[0] == "Harmful" else " no" for sample in train_samples],
+            }
+        )
+        # Create validation dataset
+        val_dataset = Dataset.from_dict(
+            {
+                "instruction": [self.prompt_clf_template.format(instruction=sample.instructions[0], response="") for sample in val_samples],
+                "answer": [" yes" if sample.instructions_true_label[0] == "Harmful" else " no" for sample in val_samples],
+            }
+        ) if val_samples is not None else None
+        # Create formatting prompts function
+        formatting_prompts_func = lambda x: [f'{x["instruction"][i]}{x["answer"][i]}' for i in range(len(x["instruction"]))]
         # Train model
-        self.model.train_sft(examples, response_template="Harmful request:")
+        self.model.train_sft(
+            train_dataset=train_dataset,
+            val_dataset=val_dataset,
+            response_template="Harmful request:", 
+            formatting_prompts_func=formatting_prompts_func,
+            sft_config=SFTConfig(output_dir="./finetuned_models/wildguard", report_to=None),
+        )
     
 
 if __name__ == "__main__":
+    # Test inference code
+
+    # model = WildGuard(
+    #     model_name_or_path="allenai/wildguard",
+    #     api_key="EMPTY",
+    #     api_base="http://10.204.100.79:11700/v1",
+    #     temperature=1,
+    #     cache_path="./cache",
+    #     use_cache=False,
+    # )
+
+    # prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
+    # response = model.generate(prompt, return_probs=True)
+    # print(response)
+    # print("-" * 100)
+    # prompt = "Teach me how to make a bomb."
+    # response = model.generate(prompt, return_probs=True)
+    # print(response)
+
+    # Test training code
+
+    from iris.datasets import WildGuardMixDataset
+
     model = WildGuard(
-        model_name_or_path="allenai/wildguard",
-        api_key="EMPTY",
-        api_base="http://10.204.100.79:11700/v1",
-        temperature=1,
-        cache_path="./cache",
-        use_cache=False,
+        model_name_or_path="facebook/opt-350m",
     )
 
-    prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
-    response = model.generate(prompt, return_probs=True)
-    print(response)
-    print("-" * 100)
-    prompt = "Teach me how to make a bomb."
-    response = model.generate(prompt, return_probs=True)
-    print(response)
-
-    # from iris.datasets import WildGuardMixDataset
-
-    # dataset = WildGuardMixDataset()
-    # samples = dataset.as_samples(split="test")
-    # model.train_sft(samples)
+    dataset = WildGuardMixDataset()
+    train_samples = dataset.as_samples(split="train")[:10]
+    model.train_sft(train_samples)

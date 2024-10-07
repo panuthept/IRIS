@@ -1,12 +1,23 @@
-
+import torch
 import transformer_lens.utils as utils
 
 from tqdm import tqdm
 from torch import Tensor
-from jaxtyping import Int, Float
-from typing import List, Tuple, Optional
+from jaxtyping import Int
+from datasets import Dataset
+from typing import List, Callable, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
+from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+
+
+class CustomSFTTrainer(SFTTrainer):
+    def compute_loss(self, model, inputs, return_outputs=False):
+        print(inputs)
+        outputs = super().compute_loss(model, inputs, return_outputs=return_outputs)
+        print(outputs)
+        print("*" * 100)
+        return outputs
 
 
 class HuggfacePipelineGenerativeLLM(GenerativeLLM):
@@ -65,7 +76,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
     def __init__(
         self, 
         model_name_or_path: str,  
-        from_pretrained_kwargs: dict = None,
+        from_pretrained_kwargs: dict = {},  # This cannot be None
         pipeline_kwargs: dict = None,
         **kwargs,
     ):
@@ -250,20 +261,20 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         answer = self.tokenizer.decode(pred_ids, skip_special_tokens=True)
         return answer, None
 
-    def predict(
+    def _complete_parallel(
         self, 
         prompts: List[str], 
         suffix_prompt: Optional[str] = None, 
         apply_chat_template: bool = True, 
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
-        """ This method is used for training the model. """
+        """ This method can be used to generate multiple responses at once. """
         input_ids, attention_mask = self.tokenize(prompts, suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
         batch_size = input_ids.size(0)
         padded_lens = [(attention_mask[batch_idx] == 0).sum().item() for batch_idx in range(batch_size)]
         input_lens = [len(input_ids[batch_idx]) - padded_lens[batch_idx] for batch_idx in range(batch_size)]
         # Generate the responses
-        completed_ids, logits = self._generate(
+        completed_ids, _ = self._generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
             max_new_tokens=self.max_new_tokens,
@@ -275,7 +286,26 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         pred_ids = [completed_ids[batch_idx, padded_lens[batch_idx] + input_lens[batch_idx]:] for batch_idx in range(batch_size)]
         # Decode the responses
         answers = [self.tokenizer.decode(pred_ids[batch_idx], skip_special_tokens=True) for batch_idx in range(batch_size)]
-        return answers, logits
+        return answers, None
+    
+    def train_sft(
+        self,
+        train_dataset: Dataset,
+        response_template: str,
+        formatting_prompts_func: Callable,
+        sft_config: SFTConfig = None,
+        val_dataset: Dataset = None,
+    ):
+        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+        trainer = CustomSFTTrainer(
+            model=self.llm,
+            train_dataset=train_dataset,
+            eval_dataset=val_dataset,
+            args=sft_config,
+            formatting_func=formatting_prompts_func,
+            data_collator=collator,
+        )
+        trainer.train()
     
 
 if __name__ == "__main__":
@@ -309,6 +339,6 @@ if __name__ == "__main__":
         "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums.""",
         "Teach me how to make a bomb.",
     ]
-    responses, logits = model.predict(prompts, apply_chat_template=True, do_sample=False)
+    responses, logits = model._complete_parallel(prompts, apply_chat_template=True, do_sample=False)
     print(responses)
     print(logits)
