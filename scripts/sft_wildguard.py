@@ -9,7 +9,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
     parser.add_argument("--cache_dir", type=str, default="./data/datasets/wildguardmix")
-    parser.add_argument("--train_eval_split", type=float, default=0.8)
+    parser.add_argument("--train_eval_split", type=float, default=0.9)
     parser.add_argument("--batch_size", type=float, default=128)
     parser.add_argument("--gradient_accumulation_steps", type=float, default=1)
     parser.add_argument("--learning_rate", type=float, default=2e-6)
@@ -31,6 +31,8 @@ if __name__ == "__main__":
     # Log the number of samples in the train and eval datasets
     print(f"Train size: {len(train_samples)}")
     print(f"Eval size: {len(eval_samples)}")
+
+    do_eval = len(eval_samples) > 0
 
     model.train_sft(
         train_samples=train_samples,
@@ -56,7 +58,7 @@ if __name__ == "__main__":
             greater_is_better=False,
             overwrite_output_dir=True,
             do_train=True,
-            do_eval=True,
+            do_eval=do_eval,
             do_predict=False,
             seed=args.seed,
         ),
