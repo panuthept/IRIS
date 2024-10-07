@@ -60,14 +60,18 @@ class WildGuard(GuardLLM):
             "<|assistant|>\n"
         )
         self.prompt_clf_template = (
-            f"{self.prompt_template}\n"
+            f"{self.prompt_template}"
             "Harmful request:"
         )
-        self.output_format = (
-            "Harmful request: {harmful_request}\n"
-            "Response refusal: {response_refusal}\n"
-            "Harmful response: {harmful_response}"
+        self.prompt_clf_training_template = (
+            f"{self.prompt_template}"
+            "Harmful request: {harmful_request}"
         )
+        # self.output_format = (
+        #     "Harmful request: {harmful_request}\n"
+        #     "Response refusal: {response_refusal}\n"
+        #     "Harmful response: {harmful_response}"
+        # )
 
     def get_model_name(self) -> str:
         return self.model_name
@@ -91,29 +95,25 @@ class WildGuard(GuardLLM):
         response = self.model.complete(prompt, apply_chat_template=False, **kwargs)
         response = "Harmful" if response.split("\n")[1].replace("Response refusal: ", "") == "yes" else "Benign"
 
-    def train(self, samples: List[Sample]):
+    def train_sft(self, samples: List[Sample]):
         """
         This method prepare the training data (prompts, gold_responses) and call self.model.train(prompts, gold_responses).
         """
         assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
-        # Create gold labels
-        gold_responses = [
-            self.output_format.format(
+        # Create training examples
+        examples = [
+            self.prompt_clf_training_template.format(
+                instruction=sample.instructions[0], 
+                response="", 
                 harmful_request="yes" if sample.instructions_true_label[0] == "Harmful" else "no",
-                response_refusal="N/A",
-                harmful_response="N/A",
             ) for sample in samples
         ]
-        # Get input prompts
-        prompts = [self.prompt_template.format(instruction=sample.instructions[0], response="") for sample in samples]
+        print(examples[0])
         # Train model
-        self.model.train(prompts, gold_responses)
-        # TODO: Save trained model
+        self.model.train_sft(examples, response_template="Harmful request:")
     
 
 if __name__ == "__main__":
-    from iris.datasets import WildGuardMixDataset
-
     model = WildGuard(
         model_name_or_path="allenai/wildguard",
         api_key="EMPTY",
@@ -131,6 +131,8 @@ if __name__ == "__main__":
     response = model.generate(prompt, return_probs=True)
     print(response)
 
+    # from iris.datasets import WildGuardMixDataset
+
     # dataset = WildGuardMixDataset()
     # samples = dataset.as_samples(split="test")
-    # model.train(samples)
+    # model.train_sft(samples)
