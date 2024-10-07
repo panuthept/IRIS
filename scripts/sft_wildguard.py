@@ -1,4 +1,4 @@
-import logging
+import torch
 import argparse
 from trl import SFTConfig
 from iris.datasets import WildGuardMixDataset
@@ -32,34 +32,36 @@ if __name__ == "__main__":
     print(f"Train size: {len(train_samples)}")
     print(f"Eval size: {len(eval_samples)}")
 
-    do_eval = len(eval_samples) > 0
-
-    model.train_sft(
-        train_samples=train_samples,
-        eval_samples=eval_samples,
-        sft_config=SFTConfig(
-            output_dir=args.output_dir, 
-            report_to=args.report_to,
-            per_device_train_batch_size=args.batch_size,
-            per_device_eval_batch_size=args.batch_size,
-            gradient_accumulation_steps=args.gradient_accumulation_steps,
-            learning_rate=args.learning_rate,
-            weight_decay=args.weight_decay,
-            warmup_ratio=args.warmup_ratio,
-            num_train_epochs=args.epochs,
-            evaluation_strategy="steps",
-            logging_strategy="steps",
-            logging_steps=10,
-            eval_steps=args.eval_steps,
-            save_steps=args.eval_steps,
-            save_total_limit=5,
-            load_best_model_at_end=True,
-            metric_for_best_model="eval_loss",
-            greater_is_better=False,
-            overwrite_output_dir=True,
-            do_train=True,
-            do_eval=do_eval,
-            do_predict=False,
-            seed=args.seed,
-        ),
-    )
+    is_gpu_available = torch.cuda.is_available()
+    if is_gpu_available:
+        print(f"GPU Count: {torch.cuda.device_count()}")
+        do_eval = len(eval_samples) > 0
+        model.train_sft(
+            train_samples=train_samples,
+            eval_samples=eval_samples,
+            sft_config=SFTConfig(
+                output_dir=args.output_dir, 
+                report_to=args.report_to,
+                per_device_train_batch_size=args.batch_size,
+                per_device_eval_batch_size=args.batch_size,
+                gradient_accumulation_steps=args.gradient_accumulation_steps,
+                learning_rate=args.learning_rate,
+                weight_decay=args.weight_decay,
+                warmup_ratio=args.warmup_ratio,
+                num_train_epochs=args.epochs,
+                evaluation_strategy="steps",
+                logging_strategy="steps",
+                logging_steps=10,
+                eval_steps=args.eval_steps,
+                save_steps=args.eval_steps,
+                save_total_limit=5,
+                load_best_model_at_end=True,
+                metric_for_best_model="eval_loss",
+                greater_is_better=False,
+                overwrite_output_dir=True,
+                do_train=True,
+                do_eval=do_eval,
+                do_predict=False,
+                seed=args.seed,
+            ),
+        )
