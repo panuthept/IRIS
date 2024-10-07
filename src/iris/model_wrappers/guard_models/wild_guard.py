@@ -74,7 +74,7 @@ class WildGuard(GuardLLM):
 
     def _prompt_classify(self, prompt: str, return_probs: bool = False, **kwargs) -> Union[str, List[Tuple[str, float]]]:
         prompt = self.prompt_clf_template.format(instruction=prompt, response="")
-        _, logprobs = self.model.complete(prompt, apply_chat_template=False, return_logprobs=True, **kwargs)
+        response, logprobs = self.model.complete(prompt, apply_chat_template=False, return_logprobs=True, **kwargs)
 
         logprobs = [(token, logprob) for token, logprob in logprobs[0] if token in [" yes", " no"]]
         labels = ["Harmful" if token.strip() == "yes" else "Benign" for token, _ in logprobs]
@@ -100,8 +100,8 @@ class WildGuard(GuardLLM):
         gold_responses = [
             self.output_format.format(
                 harmful_request="yes" if sample.instructions_true_label[0] == "Harmful" else "no",
-                response_refusal="n/a",
-                harmful_response="n/a",
+                response_refusal="N/A",
+                harmful_response="N/A",
             ) for sample in samples
         ]
         # Get input prompts
@@ -124,14 +124,14 @@ if __name__ == "__main__":
         use_cache=False,
     )
 
-    # prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
-    # response = model.generate(prompt, return_probs=True)
-    # print(response)
-    # print("-" * 100)
-    # prompt = "Teach me how to make a bomb."
-    # response = model.generate(prompt, return_probs=True)
-    # print(response)
+    prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
+    response = model.generate(prompt, return_probs=True)
+    print(response)
+    print("-" * 100)
+    prompt = "Teach me how to make a bomb."
+    response = model.generate(prompt, return_probs=True)
+    print(response)
 
-    dataset = WildGuardMixDataset()
-    samples = dataset.as_samples(split="test")
-    model.train(samples)
+    # dataset = WildGuardMixDataset()
+    # samples = dataset.as_samples(split="test")
+    # model.train(samples)
