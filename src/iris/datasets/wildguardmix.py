@@ -11,7 +11,7 @@ class WildGuardMixDataset(JailbreakDataset):
             intention: str = None,
             attack_engine: str = None,
             path: str = "./data/datasets/wildguardmix",
-            cache_dir: str = None,
+            cache_dir: str = "./data/datasets/wildguardmix",
     ):
         self.cache_dir = cache_dir
         super().__init__(
