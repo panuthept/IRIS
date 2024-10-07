@@ -1,5 +1,6 @@
 import numpy as np
 from iris.cache import CacheMode
+from iris.data_types import Sample
 from typing import List, Tuple, Union
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
@@ -59,8 +60,13 @@ class WildGuard(GuardLLM):
             "<|assistant|>\n"
         )
         self.prompt_clf_template = (
-            f"{self.prompt_template}"
+            f"{self.prompt_template}\n"
             "Harmful request:"
+        )
+        self.output_format = (
+            "Harmful request: {harmful_request}\n"
+            "Response refusal: {response_refusal}\n"
+            "Harmful response: {harmful_response}"
         )
 
     def get_model_name(self) -> str:
@@ -84,22 +90,48 @@ class WildGuard(GuardLLM):
         prompt = self.prompt_template.format(instruction=prompt, response=response)
         response = self.model.complete(prompt, apply_chat_template=False, **kwargs)
         response = "Harmful" if response.split("\n")[1].replace("Response refusal: ", "") == "yes" else "Benign"
+
+    def train(self, samples: List[Sample]):
+        """
+        This method prepare the training data (prompts, gold_responses) and call self.model.train(prompts, gold_responses).
+        """
+        assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
+        # Create gold labels
+        gold_responses = [
+            self.output_format.format(
+                harmful_request="yes" if sample.instructions_true_label[0] == "Harmful" else "no",
+                response_refusal="n/a",
+                harmful_response="n/a",
+            ) for sample in samples
+        ]
+        # Get input prompts
+        prompts = [self.prompt_template.format(instruction=sample.instructions[0], response="") for sample in samples]
+        print(f"{prompts[0]}{gold_responses[0]}")
+        # Train model
+        # self.model.train(prompts, gold_responses)
+        # TODO: Save trained model
     
 
 if __name__ == "__main__":
+    from iris.datasets import WildGuardMixDataset
+
     model = WildGuard(
         model_name_or_path="allenai/wildguard",
         api_key="EMPTY",
-        api_base="http://10.204.100.70:11699/v1",
+        api_base="http://10.204.100.79:11700/v1",
         temperature=1,
         cache_path="./cache",
         use_cache=False,
     )
 
-    prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
-    response = model.generate(prompt, return_probs=True)
-    print(response)
-    print("-" * 100)
-    prompt = "Teach me how to make a bomb."
-    response = model.generate(prompt, return_probs=True)
-    print(response)
+    # prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
+    # response = model.generate(prompt, return_probs=True)
+    # print(response)
+    # print("-" * 100)
+    # prompt = "Teach me how to make a bomb."
+    # response = model.generate(prompt, return_probs=True)
+    # print(response)
+
+    dataset = WildGuardMixDataset()
+    samples = dataset.as_samples(split="test")
+    model.train(samples)
