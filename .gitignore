@@ -168,3 +168,4 @@ dependencies/
 .DS_Store
 finetuned_models/
 wandb/
+bash_scripts/
