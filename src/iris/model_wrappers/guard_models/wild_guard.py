@@ -106,9 +106,8 @@ class WildGuard(GuardLLM):
         ]
         # Get input prompts
         prompts = [self.prompt_template.format(instruction=sample.instructions[0], response="") for sample in samples]
-        print(f"{prompts[0]}{gold_responses[0]}")
         # Train model
-        # self.model.train(prompts, gold_responses)
+        self.model.train(prompts, gold_responses)
         # TODO: Save trained model
     
 
