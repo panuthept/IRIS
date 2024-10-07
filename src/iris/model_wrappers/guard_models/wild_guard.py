@@ -17,7 +17,6 @@ class WildGuard(GuardLLM):
             api_base: str = None,
             max_tokens: int = 4000,
             temperature: float = 1,
-            pipeline_kwargs: dict = None,
             use_cache: bool = True,
             cache_path: str = "./cache",
             cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
@@ -43,7 +42,8 @@ class WildGuard(GuardLLM):
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path,
                 max_tokens=max_tokens,
-                pipeline_kwargs=pipeline_kwargs,
+                max_new_tokens=1,
+                temperature=temperature,
                 use_cache=use_cache,
                 cache_path=cache_path,
                 cache_mode=cache_mode,
@@ -99,8 +99,9 @@ class WildGuard(GuardLLM):
 
     def train_sft(
         self, 
+        sft_config: SFTConfig,
         train_samples: List[Sample],
-        val_samples: List[Sample] = None,
+        eval_samples: List[Sample] = None,
     ):
         """ This method prepare the training examples format for WildGuard prompt completion. """
         assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
@@ -111,22 +112,22 @@ class WildGuard(GuardLLM):
                 "answer": [" yes" if sample.instructions_true_label[0] == "Harmful" else " no" for sample in train_samples],
             }
         )
-        # Create validation dataset
-        val_dataset = Dataset.from_dict(
+        # Create evaluation dataset
+        eval_dataset = Dataset.from_dict(
             {
-                "instruction": [self.prompt_clf_template.format(instruction=sample.instructions[0], response="") for sample in val_samples],
-                "answer": [" yes" if sample.instructions_true_label[0] == "Harmful" else " no" for sample in val_samples],
+                "instruction": [self.prompt_clf_template.format(instruction=sample.instructions[0], response="") for sample in eval_samples],
+                "answer": [" yes" if sample.instructions_true_label[0] == "Harmful" else " no" for sample in eval_samples],
             }
-        ) if val_samples is not None else None
+        ) if eval_samples is not None else None
         # Create formatting prompts function
         formatting_prompts_func = lambda x: [f'{x["instruction"][i]}{x["answer"][i]}' for i in range(len(x["instruction"]))]
         # Train model
         self.model.train_sft(
             train_dataset=train_dataset,
-            val_dataset=val_dataset,
+            eval_dataset=eval_dataset,
             response_template="Harmful request:", 
             formatting_prompts_func=formatting_prompts_func,
-            sft_config=SFTConfig(output_dir="./finetuned_models/wildguard", report_to=None),
+            sft_config=sft_config,
         )
     
 
@@ -160,4 +161,28 @@ if __name__ == "__main__":
 
     dataset = WildGuardMixDataset()
     train_samples = dataset.as_samples(split="train")[:10]
-    model.train_sft(train_samples)
+    train_samples, eval_samples = train_samples[:8], train_samples[8:]
+    model.train_sft(
+        train_samples=train_samples,
+        eval_samples=eval_samples,
+        sft_config=SFTConfig(
+            output_dir="./finetuned_models/wildguard", 
+            report_to="none",
+            per_device_train_batch_size=1,
+            per_device_eval_batch_size=1,
+            num_train_epochs=1,
+            evaluation_strategy="steps",
+            logging_strategy="steps",
+            logging_steps=1,
+            eval_steps=1,
+            save_steps=1,
+            save_total_limit=1,
+            load_best_model_at_end=True,
+            metric_for_best_model="eval_loss",
+            greater_is_better=False,
+            overwrite_output_dir=True,
+            do_train=True,
+            do_eval=True,
+            do_predict=False,
+        ),
+    )

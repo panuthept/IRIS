@@ -294,13 +294,13 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         response_template: str,
         formatting_prompts_func: Callable,
         sft_config: SFTConfig = None,
-        val_dataset: Dataset = None,
+        eval_dataset: Dataset = None,
     ):
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         trainer = CustomSFTTrainer(
             model=self.llm,
             train_dataset=train_dataset,
-            eval_dataset=val_dataset,
+            eval_dataset=eval_dataset,
             args=sft_config,
             formatting_func=formatting_prompts_func,
             data_collator=collator,
