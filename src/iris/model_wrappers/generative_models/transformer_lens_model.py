@@ -3,6 +3,7 @@ import transformers
 import transformer_lens.utils as utils
 
 from tqdm import tqdm
+from torch import Tensor
 from functools import partial
 from jaxtyping import Int, Float
 from typing import Tuple, List, Optional
@@ -242,78 +243,97 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
                 if stop_at_eos and finished_sequences.all():
                     break
             return tokens
-
-    def _complete(
-        self, promt: str, 
-        ref_prompt: Optional[str] = None, 
-        suffix_prompt: Optional[str] = None, 
-        apply_chat_template: bool = True, 
-        **kwargs
-    ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
+        
+    def tokenize(
+        self, 
+        texts: List[str],
+        ref_texts: Optional[List[str]] = None,
+        suffix_prompt: Optional[str] = None,
+        apply_chat_template: bool = True,
+    ) -> Int[Tensor, "batch pos"]:
         if apply_chat_template:
             if suffix_prompt:
                 print("[WARNING] suffix_prompt is not supported with apply_chat_template=True. Ignoring the suffix_prompt.")
-            if self.system_prompt:
-                messages = [
-                    {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": promt},
-                ]
-                ref_messages = [
-                    {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": ref_prompt},
-                ] if ref_prompt else None
-            else:
-                messages = [{"role": "user", "content": promt}]
-                ref_messages = [{"role": "user", "content": ref_prompt}] if ref_prompt else None
-            
-            input_ids = self.tokenizer.apply_chat_template(
+            # Create the messages
+            messages = [
+                [
+                    {"role": "system", "content": self.system_prompt}, 
+                    {"role": "user", "content": text}
+                ] if self.system_prompt else [{"role": "user", "content": text}] 
+                for text in texts
+            ]
+            # Create the ref messages (if available)
+            ref_messages = [
+                [
+                    {"role": "system", "content": self.system_prompt}, 
+                    {"role": "user", "content": text}
+                ] if self.system_prompt else [{"role": "user", "content": text}] 
+                for text in ref_texts
+            ] if ref_texts else None
+            # Tokenize the messages
+            encoded_texts = self.tokenizer.apply_chat_template(
                 messages,
                 max_length=self.max_tokens,
                 truncation=True,
                 add_generation_prompt=True,
                 return_dict=True,
+                padding=True,
                 return_tensors="pt",
-            )["input_ids"]
-            input_lens = input_ids.size(1)
-
-            ref_input_ids = None
+            )
+            # Tokenize the ref messages (if available)
+            encoded_ref_texts = None
             if ref_messages:
-                ref_input_ids = self.tokenizer.apply_chat_template(
+                encoded_ref_texts = self.tokenizer.apply_chat_template(
                     ref_messages,
                     max_length=self.max_tokens,
                     truncation=True,
                     add_generation_prompt=True,
                     return_dict=True,
+                    padding=True,
                     return_tensors="pt",
-                )["input_ids"]
+                )
         else:
-            if self.system_prompt:
-                prompt = f"{self.system_prompt}\n\n{promt}"
-                ref_prompt = f"{self.system_prompt}\n\n{ref_prompt}" if ref_prompt else None
-            if suffix_prompt:
-                prompt = f"{prompt}{suffix_prompt}"
-                ref_prompt = f"{ref_prompt}{suffix_prompt}" if ref_prompt else None
-            
-            input_ids = self.tokenizer(
-                prompt,
+            # Create the prompts
+            prompts = [f"{self.system_prompt}\n\n{text}" if self.system_prompt else text for text in texts]
+            prompts = [f"{text}{suffix_prompt}" if suffix_prompt else text for text in prompts]
+            # Create the ref prompts (if available)
+            ref_prompts = [f"{self.system_prompt}\n\n{text}" if self.system_prompt else text for text in ref_texts] if ref_texts else None
+            ref_prompts = [f"{text}{suffix_prompt}" if suffix_prompt else text for text in ref_prompts] if ref_texts else None
+            # Tokenize the prompts
+            encoded_texts = self.tokenizer(
+                texts,
                 max_length=self.max_tokens,
                 truncation=True,
+                padding=True,
                 return_tensors="pt",
-            )["input_ids"]
-            input_lens = input_ids.size(1)
-
-            ref_input_ids = None
-            if ref_prompt:
-                ref_input_ids = self.tokenizer(
-                    ref_prompt,
+            )
+            # Tokenize the red prompts (if available)
+            encoded_ref_texts = None
+            if ref_prompts:
+                encoded_ref_texts = self.tokenizer(
+                    ref_prompts,
                     max_length=self.max_tokens,
                     truncation=True,
+                    padding=True,
                     return_tensors="pt",
-                )["input_ids"]
+                )
+        return encoded_texts, encoded_ref_texts
 
+    def _complete(
+        self, 
+        prompt: str, 
+        ref_prompt: Optional[str] = None, 
+        suffix_prompt: Optional[str] = None, 
+        apply_chat_template: bool = True, 
+        **kwargs
+    ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
+        # Tokenize the prompt
+        encoded_texts, encoded_ref_texts = self.tokenize([prompt], [ref_prompt], suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
+        input_lens = encoded_texts["input_ids"].size(1)
+        # Generate the response
         output_ids = self._generate(
-            input=input_ids, 
-            ref_input=ref_input_ids,
+            input=encoded_texts["input_ids"], 
+            ref_input=encoded_ref_texts["ref_input_ids"] if encoded_ref_texts else None,
             verbose=False,
             **kwargs
         )
