@@ -4,15 +4,17 @@ import transformer_lens.utils as utils
 
 from tqdm import tqdm
 from torch import Tensor
+from datasets import Dataset
 from functools import partial
 from jaxtyping import Int, Float
-from typing import Tuple, List, Optional
 from transformer_lens import HookedTransformer
 from transformer_lens.utilities import devices
 from typing import List, Dict, Optional, Literal
+from typing import List, Tuple, Callable, Optional
 from transformer_lens.hook_points import HookPoint
 from transformer_lens.utils import USE_DEFAULT_VALUE
 from iris.model_wrappers.generative_models.base import GenerativeLLM
+from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 
 
 def mlp_ablation_hook(
@@ -50,6 +52,8 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
         )
         self.cfg = self.llm.cfg
         self.tokenizer = self.llm.tokenizer
+        self.tokenizer.pad_token = self.tokenizer.eos_token
+
         self.model_name = huggingface_model_name_or_path
         self.max_tokens = max_tokens
         self.activation_name = activation_name
@@ -328,6 +332,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Tokenize the prompt
+        self.tokenizer.padding_side = "left"
         encoded_texts, encoded_ref_texts = self.tokenize([prompt], [ref_prompt], suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
         input_lens = encoded_texts["input_ids"].size(1)
         # Generate the response
@@ -339,6 +344,26 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
         )
         output_ids = output_ids[:, input_lens:].squeeze(0)
         return self.llm.to_string(output_ids), None
+    
+    def train_sft(
+        self,
+        train_dataset: Dataset,
+        response_template: str,
+        formatting_prompts_func: Callable,
+        sft_config: SFTConfig = None,
+        eval_dataset: Dataset = None,
+    ):
+        self.tokenizer.padding_side = "right"
+        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+        trainer = SFTTrainer(
+            model=self.llm,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            args=sft_config,
+            formatting_func=formatting_prompts_func,
+            data_collator=collator,
+        )
+        trainer.train()
 
 
 if __name__ == "__main__":
