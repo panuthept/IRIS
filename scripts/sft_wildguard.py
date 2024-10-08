@@ -10,14 +10,15 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
     parser.add_argument("--cache_dir", type=str, default="./data/datasets/wildguardmix")
     parser.add_argument("--train_eval_split", type=float, default=0.9)
-    parser.add_argument("--batch_size", type=float, default=128)
-    parser.add_argument("--gradient_accumulation_steps", type=float, default=1)
+    parser.add_argument("--max_seq_length", type=int, default=512)
+    parser.add_argument("--batch_size", type=int, default=128)
+    parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
     parser.add_argument("--learning_rate", type=float, default=2e-6)
     parser.add_argument("--weight_decay", type=float, default=0.00)
     parser.add_argument("--warmup_ratio", type=float, default=0.03)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--epochs", type=float, default=2)
-    parser.add_argument("--eval_steps", type=float, default=10)
+    parser.add_argument("--epochs", type=int, default=2)
+    parser.add_argument("--eval_steps", type=int, default=10)
     parser.add_argument("--output_dir", type=str, default="./finetuned_models/sft_wildguard")
     parser.add_argument("--report_to", type=str, default="none")
     args = parser.parse_args()
@@ -42,6 +43,7 @@ if __name__ == "__main__":
             sft_config=SFTConfig(
                 output_dir=args.output_dir, 
                 report_to=args.report_to,
+                max_seq_length=args.max_seq_length,
                 per_device_train_batch_size=args.batch_size,
                 per_device_eval_batch_size=args.batch_size,
                 gradient_accumulation_steps=args.gradient_accumulation_steps,
