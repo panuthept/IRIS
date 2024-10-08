@@ -10,7 +10,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
     parser.add_argument("--cache_dir", type=str, default="./data/datasets/wildguardmix")
     parser.add_argument("--train_eval_split", type=float, default=0.9)
-    parser.add_argument("--max_seq_length", type=int, default=512)
+    parser.add_argument("--max_seq_length", type=int, default=1024)
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
     parser.add_argument("--learning_rate", type=float, default=2e-6)
