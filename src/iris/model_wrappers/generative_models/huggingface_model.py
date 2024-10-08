@@ -231,9 +231,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 padding=True,
                 return_tensors="pt",
             )
-        input_ids = encoded_texts["input_ids"]
-        attention_mask = encoded_texts["attention_mask"]
-        return input_ids, attention_mask
+        return encoded_texts
 
     def _complete(
         self, 
@@ -244,13 +242,13 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Tokenize the prompt
-        input_ids, attention_mask = self.tokenize([prompt], suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
-        input_lens = input_ids.size(1)
+        encoded_texts = self.tokenize([prompt], suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
+        input_lens = encoded_texts["input_ids"].size(1)
         # Generate the response
         self.llm.eval()
         completed_ids, _ = self._generate(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
+            input_ids=encoded_texts["input_ids"],
+            attention_mask=encoded_texts["attention_mask"],
             max_new_tokens=self.max_new_tokens,
             temperature=self.temperature,
             return_logits=True,
@@ -269,14 +267,14 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         """ This method can be used to generate multiple responses at once. """
-        input_ids, attention_mask = self.tokenize(prompts, suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
-        batch_size = input_ids.size(0)
-        padded_lens = [(attention_mask[batch_idx] == 0).sum().item() for batch_idx in range(batch_size)]
-        input_lens = [len(input_ids[batch_idx]) - padded_lens[batch_idx] for batch_idx in range(batch_size)]
+        encoded_texts = self.tokenize(prompts, suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
+        batch_size = encoded_texts["input_ids"].size(0)
+        padded_lens = [(encoded_texts["attention_mask"][batch_idx] == 0).sum().item() for batch_idx in range(batch_size)]
+        input_lens = [len(encoded_texts["input_ids"][batch_idx]) - padded_lens[batch_idx] for batch_idx in range(batch_size)]
         # Generate the responses
         completed_ids, _ = self._generate(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
+            input_ids=encoded_texts["input_ids"],
+            attention_mask=encoded_texts["attention_mask"],
             max_new_tokens=self.max_new_tokens,
             temperature=self.temperature,
             return_logits=True,
