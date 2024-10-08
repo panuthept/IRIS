@@ -122,7 +122,41 @@ class WildGuard(GuardLLM):
         # Create formatting prompts function
         formatting_prompts_func = lambda x: [f'{x["instruction"][i]}{x["answer"][i]}' for i in range(len(x["instruction"]))]
         # Train model
+        response_template = self.model.tokenizer("Harmful request:", return_tensors="pt", add_special_tokens=False)
         self.model.train_sft(
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            response_template=response_template,
+            formatting_prompts_func=formatting_prompts_func,
+            sft_config=sft_config,
+        )
+
+    def train_iris(
+        self, 
+        sft_config: SFTConfig,
+        train_samples: List[Sample],
+        eval_samples: List[Sample] = None,
+    ):
+        """ This method prepare the training examples format for WildGuard prompt completion. """
+        assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
+        # Create train dataset
+        train_dataset = Dataset.from_dict(
+            {
+                "instruction": [self.prompt_clf_template.format(instruction=sample.instructions[0], response="") for sample in train_samples],
+                "answer": [" yes" if sample.instructions_true_label[0] == "Harmful" else " no" for sample in train_samples],
+            }
+        )
+        # Create evaluation dataset
+        eval_dataset = Dataset.from_dict(
+            {
+                "instruction": [self.prompt_clf_template.format(instruction=sample.instructions[0], response="") for sample in eval_samples],
+                "answer": [" yes" if sample.instructions_true_label[0] == "Harmful" else " no" for sample in eval_samples],
+            }
+        ) if eval_samples is not None else None
+        # Create formatting prompts function
+        formatting_prompts_func = lambda x: [f'{x["instruction"][i]}{x["answer"][i]}' for i in range(len(x["instruction"]))]
+        # Train model
+        self.model.train_iris(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             response_template="Harmful request:", 

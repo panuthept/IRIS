@@ -1,18 +1,20 @@
 import torch
-import transformers
 import transformer_lens.utils as utils
 
 from tqdm import tqdm
 from torch import Tensor
+from datasets import Dataset
 from functools import partial
 from jaxtyping import Int, Float
-from typing import Tuple, List, Optional
 from transformer_lens import HookedTransformer
 from transformer_lens.utilities import devices
 from typing import List, Dict, Optional, Literal
+from typing import List, Tuple, Callable, Optional
 from transformer_lens.hook_points import HookPoint
 from transformer_lens.utils import USE_DEFAULT_VALUE
+from transformers import AutoTokenizer, AutoModelForCausalLM
 from iris.model_wrappers.generative_models.base import GenerativeLLM
+from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 
 
 def mlp_ablation_hook(
@@ -23,11 +25,21 @@ def mlp_ablation_hook(
     value[:, -1, :] = new_value[:, -1, :]
     return value
 
+class IRISTrainer(SFTTrainer):
+    def __init__(self, alpha: float = 0.5):
+        self.alpha = alpha
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        print(inputs)
+        outputs = super().compute_loss(model, inputs, return_outputs=return_outputs)
+        print(outputs)
+        print("*" * 100)
+        return outputs
 
 class TransformerLensGenerativeLLM(GenerativeLLM):
     def __init__(
             self, 
-            huggingface_model_name_or_path: str,  
+            model_name_or_path: str,  
             max_tokens: int = 512,
             activation_name: str = "mlp_post",
             activation_layers: List[int] = [23],
@@ -37,27 +49,35 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
     ):
         if use_cache:
             raise ValueError("Caching is not supported for TransformerLensGenerativeLLM")
-        # We have to initialize the tokenizer separately, as we need to set the cache_dir
-        tokenizer = transformers.AutoTokenizer.from_pretrained(
-            huggingface_model_name_or_path,
-            **from_pretrained_kwargs,
+        # We have to initialize the model and tokenizer separately, as we need to use the cache_dir
+        hf_model = AutoModelForCausalLM.from_pretrained(
+            model_name_or_path,
+            cache_dir="./data/models",
         )
-        tokenizer.init_kwargs["cache_dir"] = from_pretrained_kwargs["cache_dir"] if from_pretrained_kwargs else None
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name_or_path,
+            cache_dir="./data/models",
+        )
+        tokenizer.init_kwargs["cache_dir"] = "./data/models"
+        # Create hooked transformer
         self.llm = HookedTransformer.from_pretrained(
-            model_name=huggingface_model_name_or_path,
+            model_name=model_name_or_path,
+            hf_model=hf_model,
             tokenizer=tokenizer,
-            **from_pretrained_kwargs,
+            cache_dir="./data/models",
         )
         self.cfg = self.llm.cfg
         self.tokenizer = self.llm.tokenizer
-        self.model_name = huggingface_model_name_or_path
+        self.tokenizer.pad_token = self.tokenizer.eos_token
+
+        self.model_name = model_name_or_path
         self.max_tokens = max_tokens
         self.activation_name = activation_name
         self.activation_layers = activation_layers
         super().__init__(use_cache=use_cache, **kwargs)
 
     def get_model_name(self) -> str:
-        # TODO: Add a better way to get the model name. the current way is not reliable as the huggingface_model_name_or_path can be a path
+        # TODO: Add a better way to get the model name. the current way is not reliable as the model_name_or_path can be a path
         return self.model_name
     
     def _generate(
@@ -328,6 +348,7 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Tokenize the prompt
+        self.tokenizer.padding_side = "left"
         encoded_texts, encoded_ref_texts = self.tokenize([prompt], [ref_prompt], suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
         input_lens = encoded_texts["input_ids"].size(1)
         # Generate the response
@@ -339,6 +360,48 @@ class TransformerLensGenerativeLLM(GenerativeLLM):
         )
         output_ids = output_ids[:, input_lens:].squeeze(0)
         return self.llm.to_string(output_ids), None
+    
+    def train_sft(
+        self,
+        train_dataset: Dataset,
+        response_template: str,
+        formatting_prompts_func: Callable,
+        sft_config: SFTConfig = None,
+        eval_dataset: Dataset = None,
+    ):
+        self.tokenizer.padding_side = "right"
+        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+        trainer = SFTTrainer(
+            model=self.llm,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            args=sft_config,
+            formatting_func=formatting_prompts_func,
+            data_collator=collator,
+        )
+        trainer.train()
+
+    def train_iris(
+        self,
+        train_dataset: Dataset,
+        response_template: str,
+        formatting_prompts_func: Callable,
+        sft_config: SFTConfig = None,
+        eval_dataset: Dataset = None,
+        alpha: float = 0.5,
+    ):
+        self.tokenizer.padding_side = "right"
+        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+        trainer = IRISTrainer(
+            model=self.llm,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            args=sft_config,
+            formatting_func=formatting_prompts_func,
+            data_collator=collator,
+            alpha=alpha,
+        )
+        trainer.train()
 
 
 if __name__ == "__main__":
