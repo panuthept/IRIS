@@ -51,7 +51,7 @@ if __name__ == "__main__":
                 weight_decay=args.weight_decay,
                 warmup_ratio=args.warmup_ratio,
                 num_train_epochs=args.epochs,
-                evaluation_strategy="steps",
+                eval_strategy="steps",
                 logging_strategy="steps",
                 logging_steps=10,
                 eval_steps=args.eval_steps,
