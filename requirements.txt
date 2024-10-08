@@ -1,7 +1,9 @@
+trl
 tqdm
 datasets
 jaxtyping
 transformers
+easyjailbreak
 transformer-lens
 accelerate
 rouge-score
