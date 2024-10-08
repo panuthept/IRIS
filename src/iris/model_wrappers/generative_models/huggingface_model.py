@@ -91,8 +91,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_name_or_path,
             cache_dir="./data/models",
-            padding_side="left",
         )
+        self.tokenizer.pad_token = self.tokenizer.eos_token
         self.model_name = model_name_or_path
         super().__init__(**kwargs)
 
@@ -242,6 +242,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Tokenize the prompt
+        self.tokenizer.padding_side = "left"
         encoded_texts = self.tokenize([prompt], suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
         input_lens = encoded_texts["input_ids"].size(1)
         # Generate the response
@@ -267,6 +268,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         """ This method can be used to generate multiple responses at once. """
+        # Tokenize the prompt
+        self.tokenizer.padding_side = "left"
         encoded_texts = self.tokenize(prompts, suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
         batch_size = encoded_texts["input_ids"].size(0)
         padded_lens = [(encoded_texts["attention_mask"][batch_idx] == 0).sum().item() for batch_idx in range(batch_size)]
@@ -294,7 +297,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         sft_config: SFTConfig = None,
         eval_dataset: Dataset = None,
     ):
-        self.tokenizer.pad_token = self.tokenizer.eos_token
+        self.tokenizer.padding_side = "right"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         trainer = SFTTrainer(
             model=self.llm,
