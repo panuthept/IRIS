@@ -156,10 +156,11 @@ class WildGuard(GuardLLM):
         # Create formatting prompts function
         formatting_prompts_func = lambda x: [f'{x["instruction"][i]}{x["answer"][i]}' for i in range(len(x["instruction"]))]
         # Train model
+        response_template = self.model.tokenizer("Harmful request:", return_tensors="pt", add_special_tokens=False)
         self.model.train_iris(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            response_template="Harmful request:", 
+            response_template=response_template, 
             formatting_prompts_func=formatting_prompts_func,
             sft_config=sft_config,
         )
