@@ -205,7 +205,7 @@ if __name__ == "__main__":
             per_device_train_batch_size=1,
             per_device_eval_batch_size=1,
             num_train_epochs=1,
-            evaluation_strategy="steps",
+            eval_strategy="steps",
             logging_strategy="steps",
             logging_steps=1,
             eval_steps=1,
