@@ -75,6 +75,8 @@ class WildGuard(GuardLLM):
         #     "Harmful response: {harmful_response}"
         # )
 
+        self.response_template_ids = self._get_response_template_ids()
+
     def get_model_name(self) -> str:
         return self.model_name
 
@@ -132,11 +134,10 @@ class WildGuard(GuardLLM):
         # Create formatting prompts function
         formatting_prompts_func = lambda x: [f'{x["instruction"][i]}{x["answer"][i]}' for i in range(len(x["instruction"]))]
         # Train model
-        response_template = self._get_response_template_ids()
         self.model.train_sft(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            response_template=response_template,
+            response_template=self.response_template_ids,
             formatting_prompts_func=formatting_prompts_func,
             sft_config=sft_config,
         )
@@ -166,11 +167,10 @@ class WildGuard(GuardLLM):
         # Create formatting prompts function
         formatting_prompts_func = lambda x: [f'{x["instruction"][i]}{x["answer"][i]}' for i in range(len(x["instruction"]))]
         # Train model
-        response_template = self._get_response_template_ids()
         self.model.train_iris(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            response_template=response_template, 
+            response_template=self.response_template_ids, 
             formatting_prompts_func=formatting_prompts_func,
             sft_config=sft_config,
         )
