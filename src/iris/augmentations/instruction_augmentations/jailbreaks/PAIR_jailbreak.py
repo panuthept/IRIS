@@ -1,9 +1,10 @@
 import ast
-from openai import OpenAI
+# from openai import OpenAI
+from llama_index.llms.openai import OpenAI
 import pandas as pd
 from iris.data_types import Sample
-from typing import List, Tuple, Callable
 from easyjailbreak.models import ModelBase
+from typing import List, Tuple, Callable, Optional
 from iris.augmentations.instruction_augmentations.jailbreaks import Jailbreaking
 from easyjailbreak.models import OpenaiModel, HuggingfaceModel
 import os.path
@@ -17,7 +18,7 @@ from easyjailbreak.datasets.jailbreak_datasets import JailbreakDataset, Instance
 from easyjailbreak.seed.seed_template import SeedTemplate
 from easyjailbreak.mutation.generation import HistoricalInsight
 from easyjailbreak.models import OpenaiModel, HuggingfaceModel
-from easyjailbreak.metrics.Evaluator.Evaluator_GenerativeGetScore import EvaluatorGenerativeGetScore
+# from easyjailbreak.metrics.Evaluator.Evaluator_GenerativeGetScore import EvaluatorGenerativeGetScore
 
 from iris.model_wrappers.generative_models.api_model import APIGenerativeLLM
 
@@ -26,8 +27,8 @@ class PAIRJailbreaking(Jailbreaking):
     def __init__(
         self, 
         target_model: ModelBase, 
-        attack_model: ModelBase = None,
-        evaluator: ModelBase = None, # A function that takes a string and returns 1 if the string is jailbroken, 0 otherwise
+        evaluator: Callable, # A function that takes a string and returns 1 if the string is jailbroken, 0 otherwise
+        attack_model: Optional[ModelBase] = None,
         attack_max_n_tokens=500,
         max_n_attack_attempts=5,
         attack_temperature=1,
@@ -64,7 +65,8 @@ class PAIRJailbreaking(Jailbreaking):
         self.current_reject: int = 0
 
         self.mutations = [HistoricalInsight(attack_model, attr_name=[])]
-        self.evaluator = EvaluatorGenerativeGetScore(attack_model)
+        # self.evaluator = EvaluatorGenerativeGetScore(attack_model)
+        self.evaluator = evaluator
         self.processed_instances = JailbreakDataset([])
 
         self.attack_max_n_tokens = attack_max_n_tokens
@@ -85,25 +87,23 @@ class PAIRJailbreaking(Jailbreaking):
                 self.attack_model.generation_config = {'max_tokens': attack_max_n_tokens,
                                                        'temperature': attack_temperature,
                                                        'top_p': attack_top_p}
-            elif isinstance(self.attack_model, HuggingfaceModel):
-                self.attack_model.generation_config = {'max_new_tokens': attack_max_n_tokens,
-                                                       'temperature': attack_temperature,
-                                                       'do_sample': True,
-                                                       'top_p': attack_top_p,
-                                                       'eos_token_id': self.attack_model.tokenizer.eos_token_id}
+            # elif isinstance(self.attack_model, HuggingfaceModel):
+            #     self.attack_model.generation_config = {'max_new_tokens': attack_max_n_tokens,
+            #                                            'temperature': attack_temperature,
+            #                                            'do_sample': True,
+            #                                            'top_p': attack_top_p,
+            #                                            'eos_token_id': self.attack_model.tokenizer.eos_token_id}
 
-        if isinstance(self.evaluator, OpenaiModel) and self.evaluator.generation_config == {}:
-            self.evaluator.generation_config = {'max_tokens': self.judge_max_n_tokens,
-                                                 'temperature': self.judge_temperature}
-        elif isinstance(self.evaluator, HuggingfaceModel) and self.evaluator.generation_config == {}:
-            self.evaluator.generation_config = {'do_sample': True,
-                                                 'max_new_tokens': self.judge_max_n_tokens,
-                                                 'temperature': self.judge_temperature}
+        # if isinstance(self.evaluator, OpenaiModel) and self.evaluator.generation_config == {}:
+        #     self.evaluator.generation_config = {'max_tokens': self.judge_max_n_tokens,
+        #                                          'temperature': self.judge_temperature}
+        # elif isinstance(self.evaluator, HuggingfaceModel) and self.evaluator.generation_config == {}:
+        #     self.evaluator.generation_config = {'do_sample': True,
+        #                                          'max_new_tokens': self.judge_max_n_tokens,
+        #                                          'temperature': self.judge_temperature}
             
-        self.attack_system_message, self.attack_seed = SeedTemplate().new_seeds(template_file='data\seed\seed_template.json',
-                                                                                method_list=['PAIR'])
-        self.judge_seed = \
-            SeedTemplate().new_seeds(template_file='data\seed\seed_template.json', prompt_usage='judge', method_list=['PAIR'])[0]
+        self.attack_system_message, self.attack_seed = SeedTemplate().new_seeds(template_file='./data/prompts/seed_template.json', method_list=['PAIR'])
+        self.judge_seed = SeedTemplate().new_seeds(template_file='./data/prompts/seed_template.json', prompt_usage='judge', method_list=['PAIR'])[0]
         
     def extract_json(self, s):
         r"""
@@ -142,8 +142,14 @@ class PAIRJailbreaking(Jailbreaking):
         :param ~Instance instance: The instance used to attack the target model.
         :return: ~Instance: The instance with the jailbreak result saved in its eval_results.
         """
-        instance.jailbreak_prompt = self.attack_seed.format(query=instance.query,
-                                                            reference_responses=instance.reference_responses[0])
+        instance.jailbreak_prompt = self.attack_seed.format(
+            query=instance.query,
+            reference_responses=instance.reference_responses[0]
+        )
+        # self.attack_model.system_prompt = self.attack_system_message.format(
+        #     query=instance.query, 
+        #     reference_responses=instance.reference_responses[0]
+        # )
         self.attack_model.set_system_message(self.attack_system_message.format(query=instance.query,
                                                                                reference_responses=
                                                                                instance.reference_responses[0]))
@@ -170,12 +176,14 @@ class PAIRJailbreaking(Jailbreaking):
 
                 # generate new attack prompt
                 stream.attack_attrs['attack_conversation'].append_message(
-                    stream.attack_attrs['attack_conversation'].roles[0], stream.jailbreak_prompt)
-                if isinstance(self.attack_model, HuggingfaceModel):
-                    stream.attack_attrs['attack_conversation'].append_message(
-                        stream.attack_attrs['attack_conversation'].roles[1], init_message)
-                    stream.jailbreak_prompt = stream.attack_attrs['attack_conversation'].get_prompt()[
-                                              :-len(stream.attack_attrs['attack_conversation'].sep2)]
+                    stream.attack_attrs['attack_conversation'].roles[0], stream.jailbreak_prompt
+                )
+
+                # if isinstance(self.attack_model, HuggingfaceModel):
+                #     stream.attack_attrs['attack_conversation'].append_message(
+                #         stream.attack_attrs['attack_conversation'].roles[1], init_message)
+                #     stream.jailbreak_prompt = stream.attack_attrs['attack_conversation'].get_prompt()[
+                #                               :-len(stream.attack_attrs['attack_conversation'].sep2)]
                 if isinstance(self.attack_model, OpenaiModel):
                     stream.jailbreak_prompt = stream.attack_attrs['attack_conversation'].to_openai_api_messages()
 
@@ -297,16 +305,23 @@ if __name__ == "__main__":
             eval_results=[] 
         )
     # )
-    attack_model = OpenaiModel(model_name='gpt-4',
-                         api_key=os.environ.get("OPENAI_API_KEY"))
+    attack_model = OpenaiModel(model_name='gpt-4o', api_keys=os.environ.get("OPENAI_API_KEY"))
 
-    target_model = OpenaiModel(model_name='gpt-4',
-                         api_key=os.environ.get("OPENAI_API_KEY"))
+    class DummyTargetModel(ModelBase):
+        def generate(self, *args, **kwargs):
+            return "Harmful"
+        
+    def evaluator(response):
+        return int(response.strip().capitalize() == "Benign") * 10
+        
+    target_model = DummyTargetModel()
+    # target_model = OpenaiModel(model_name='gpt-4',
+    #                      api_key=os.environ.get("OPENAI_API_KEY"))
 
     attacker = PAIRJailbreaking(
         target_model=target_model,
         attack_model=attack_model,
-        evaluator=attack_model,
+        evaluator=evaluator,
     )
 
     ans = attacker.single_attack(instance)
