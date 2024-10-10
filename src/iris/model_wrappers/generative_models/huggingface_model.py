@@ -1,3 +1,4 @@
+import os
 import torch
 import transformer_lens.utils as utils
 
@@ -87,10 +88,16 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         self.llm = AutoModelForCausalLM.from_pretrained(
             model_name_or_path,
             cache_dir="./data/models",
+            local_files_only=os.path.exists(
+                f'./data/models/models--{model_name_or_path.replace("/", "--")}'
+            ),
         )
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_name_or_path,
             cache_dir="./data/models",
+            local_files_only=os.path.exists(
+                f'./data/models/models--{model_name_or_path.replace("/", "--")}'
+            ),
         )
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.model_name = model_name_or_path
