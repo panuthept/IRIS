@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 #SBATCH --job-name=SFT_WildGuard_V100
-#SBATCH --output=sft_wildguard.out
+#SBATCH --output=sft_wildguard_v100.out
 #SBATCH --nodes=1
 #SBATCH --partition=scads
 #SBATCH --account=scads
