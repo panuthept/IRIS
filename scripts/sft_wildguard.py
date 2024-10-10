@@ -21,6 +21,7 @@ if __name__ == "__main__":
     parser.add_argument("--eval_steps", type=int, default=10)
     parser.add_argument("--output_dir", type=str, default="./finetuned_models/sft_wildguard")
     parser.add_argument("--report_to", type=str, default="none")
+    parser.add_argument("--allow_cpu", action="store_true")
     args = parser.parse_args()
 
     model = WildGuard(model_name_or_path=args.model_name)
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     print(f"Eval size: {len(eval_samples)}")
 
     is_gpu_available = torch.cuda.is_available()
-    if is_gpu_available:
+    if is_gpu_available or args.allow_cpu:
         print(f"GPU Count: {torch.cuda.device_count()}")
         do_eval = len(eval_samples) > 0
         model.train_sft(
