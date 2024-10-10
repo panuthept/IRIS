@@ -53,12 +53,13 @@ class PAIRJailbreaking(Jailbreaking):
             # Check if OPENAI_API_KEY is set
             if os.environ.get("OPENAI_API_KEY") is None:
                 raise ValueError("Please provide OPENAI_API_KEY in the environment variables.")
-            attack_model=APIGenerativeLLM(
-                llm=OpenAI(
-                    model="gpt-4o",
-                    api_key=os.environ.get("OPENAI_API_KEY"),
-                ),
-            )
+            attack_model = OpenaiModel(model_name='gpt-4o', api_keys=os.environ.get("OPENAI_API_KEY"))
+            # attack_model=APIGenerativeLLM(
+            #     llm=OpenAI(
+            #         model="gpt-4o",
+            #         api_key=os.environ.get("OPENAI_API_KEY"),
+            #     ),
+            # )
         self.attack_model = attack_model
         self.current_query: int = 0
         self.current_jailbreak: int = 0
@@ -150,9 +151,12 @@ class PAIRJailbreaking(Jailbreaking):
         #     query=instance.query, 
         #     reference_responses=instance.reference_responses[0]
         # )
-        self.attack_model.set_system_message(self.attack_system_message.format(query=instance.query,
-                                                                               reference_responses=
-                                                                               instance.reference_responses[0]))
+        self.attack_model.set_system_message(
+            self.attack_system_message.format(
+                query=instance.query,
+                reference_responses=instance.reference_responses[0]
+            )
+        )
 
         instance.attack_attrs.update({
             'attack_conversation': copy.deepcopy(self.attack_model.conversation)}
@@ -186,6 +190,7 @@ class PAIRJailbreaking(Jailbreaking):
                 #                               :-len(stream.attack_attrs['attack_conversation'].sep2)]
                 if isinstance(self.attack_model, OpenaiModel):
                     stream.jailbreak_prompt = stream.attack_attrs['attack_conversation'].to_openai_api_messages()
+                    stream.jailbreak_prompt = [message['content'] for message in stream.jailbreak_prompt if message['role'] != 'system']
 
                 for _ in range(self.max_n_attack_attempts):
                     new_instance = self.mutations[0](jailbreak_dataset=JailbreakDataset([stream]),
@@ -203,23 +208,30 @@ class PAIRJailbreaking(Jailbreaking):
                 else:
                     logging.info(f"Failed to generate output after {self.max_n_attack_attempts} attempts. Terminating.")
                     stream.jailbreak_prompt = stream.query
+
                 # Get target responses
-                if isinstance(self.target_model, OpenaiModel):
-                    stream.target_responses = [
-                        self.target_model.generate(stream.jailbreak_prompt, max_tokens=self.target_max_n_tokens,
-                                                   temperature=self.target_temperature, top_p=self.target_top_p)]
-                elif isinstance(self.target_model, HuggingfaceModel):
-                    stream.target_responses = [
-                        self.target_model.generate(stream.jailbreak_prompt,
-                                                   max_new_tokens=self.target_max_n_tokens,
-                                                   temperature=self.target_temperature, do_sample=True,
-                                                   top_p=self.target_top_p,
-                                                   eos_token_id=self.target_model.tokenizer.eos_token_id)]
+                print("=" * 100)
+                print(stream.jailbreak_prompt)
+                print("=" * 100)
+                stream.target_responses = self.target_model.generate(stream.target_responses)
+                print(stream.target_responses)
+
+                # if isinstance(self.target_model, OpenaiModel):
+                #     stream.target_responses = [
+                #         self.target_model.generate(stream.jailbreak_prompt, max_tokens=self.target_max_n_tokens,
+                #                                    temperature=self.target_temperature, top_p=self.target_top_p)]
+                # elif isinstance(self.target_model, HuggingfaceModel):
+                #     stream.target_responses = [
+                #         self.target_model.generate(stream.jailbreak_prompt,
+                #                                    max_new_tokens=self.target_max_n_tokens,
+                #                                    temperature=self.target_temperature, do_sample=True,
+                #                                    top_p=self.target_top_p,
+                #                                    eos_token_id=self.target_model.tokenizer.eos_token_id)]
                 # Get judge scores
                 if self.evaluator is None:
                     stream.eval_results = [random.randint(1, 10)]
                 else:
-                    self.evaluator(JailbreakDataset([stream]))
+                    stream.eval_results = self.evaluator(stream.target_responses)
 
                 # early stop
                 if stream.eval_results == [10]:
@@ -305,7 +317,7 @@ if __name__ == "__main__":
             eval_results=[] 
         )
     # )
-    attack_model = OpenaiModel(model_name='gpt-4o', api_keys=os.environ.get("OPENAI_API_KEY"))
+    # attack_model = OpenaiModel(model_name='gpt-4o', api_keys=os.environ.get("OPENAI_API_KEY"))
 
     class DummyTargetModel(ModelBase):
         def generate(self, *args, **kwargs):
@@ -320,7 +332,7 @@ if __name__ == "__main__":
 
     attacker = PAIRJailbreaking(
         target_model=target_model,
-        attack_model=attack_model,
+        # attack_model=attack_model,
         evaluator=evaluator,
     )
 
