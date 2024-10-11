@@ -4,6 +4,7 @@ git clone https://github.com/JailbreakBench/artifacts.git jailbreak_bench
 git clone https://github.com/EddyLuo1232/JailBreakV_28K.git jailbreakv_28k
 git clone https://github.com/paul-rottger/exaggerated-safety.git xstest
 git clone https://github.com/bigscience-workshop/promptsource.git promptsource
+git clone https://github.com/EasyJailbreak/EasyJailbreak.git easyjailbreak
 
 mkdir datasets
 mv instruction_induction datasets/instruction_induction
@@ -12,5 +13,6 @@ mv jailbreak_bench datasets/jailbreak_bench
 mv jailbreakv_28k datasets/jailbreakv_28k
 mv xstest datasets/xstest
 mv promptsource datasets/promptsource
+mv easyjailbreak datasets/easyjailbreak
 
 python download_huggingface_datasets.py
