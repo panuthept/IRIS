@@ -4,7 +4,6 @@ from iris.data_types import Sample
 from typing import List, Tuple, Callable
 from easyjailbreak.models import ModelBase
 from iris.augmentations.instruction_augmentations import InstructionAugmentation
-# from iris.augmentations.instruction_augmentations.jailbreaks import Jailbreaking
 
 
 class Jailbreaking(InstructionAugmentation):
