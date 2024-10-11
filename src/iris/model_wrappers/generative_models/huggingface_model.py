@@ -86,21 +86,34 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         if pipeline_kwargs is not None:
             raise ValueError("pipeline_kwargs is not deprecated, please use from_pretrained_kwargs instead.")
 
-        self.llm = AutoModelForCausalLM.from_pretrained(
-            model_name_or_path,
-            cache_dir="./data/models",
-            device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
-            local_files_only=os.path.exists(
-                f'./data/models/models--{model_name_or_path.replace("/", "--")}'
-            ),
-        )
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            model_name_or_path,
-            cache_dir="./data/models",
-            local_files_only=os.path.exists(
-                f'./data/models/models--{model_name_or_path.replace("/", "--")}'
-            ),
-        )
+        # Load model
+        try:
+            self.llm = AutoModelForCausalLM.from_pretrained(
+                model_name_or_path,
+                cache_dir="./data/models",
+                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                local_files_only=True,
+            )
+        except:
+            self.llm = AutoModelForCausalLM.from_pretrained(
+                model_name_or_path,
+                cache_dir="./data/models",
+                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                local_files_only=False,
+            )
+        # Load tokenizer
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                model_name_or_path,
+                cache_dir="./data/models",
+                local_files_only=True,
+            )
+        except:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                model_name_or_path,
+                cache_dir="./data/models",
+                local_files_only=False,
+            )
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.model_name = model_name_or_path
         super().__init__(**kwargs)
