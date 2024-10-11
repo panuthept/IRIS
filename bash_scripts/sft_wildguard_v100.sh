@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --partition=scads
 #SBATCH --account=scads
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:2
 #SBATCH --mem=128gb
 #SBATCH --time=5-00:00:0
 #SBATCH --cpus-per-task=10
@@ -22,6 +22,6 @@ fi
 CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/sft_wildguard.py \
 --model_name facebook/opt-350m \
 --max_seq_length 2048 \
---batch_size 64 \
---gradient_accumulation_steps 2 \
+--batch_size 1 \
+--gradient_accumulation_steps 128 \
 --output_dir ./finetuned_models/sft_wildguard_opt_350m
