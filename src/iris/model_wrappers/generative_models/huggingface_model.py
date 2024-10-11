@@ -311,6 +311,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             args=sft_config,
+            tokenizer=self.tokenizer,
             formatting_func=formatting_prompts_func,
             data_collator=collator,
         )
