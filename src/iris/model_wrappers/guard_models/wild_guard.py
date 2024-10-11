@@ -38,6 +38,7 @@ class WildGuard(GuardLLM):
                 cache_path=cache_path,
                 cache_mode=cache_mode,
             )
+            self.response_template_ids = None
         else:
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path,
@@ -49,6 +50,7 @@ class WildGuard(GuardLLM):
                 cache_mode=cache_mode,
             )
             self.device = self.model.llm.device
+            self.response_template_ids = self._get_response_template_ids()
 
         self.prompt_template = (
             "<s><|user|>\n"
@@ -75,8 +77,6 @@ class WildGuard(GuardLLM):
         #     "Harmful response: {harmful_response}"
         # )
 
-        self.response_template_ids = self._get_response_template_ids()
-
     def get_model_name(self) -> str:
         return self.model_name
 
@@ -100,6 +100,7 @@ class WildGuard(GuardLLM):
         response = "Harmful" if response.split("\n")[1].replace("Response refusal: ", "") == "yes" else "Benign"
 
     def _get_response_template_ids(self):
+        assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
         prompt = self.prompt_clf_template.format(instruction="", response="")
         response_template = "\nHarmful request:"
         # Tokenize the prompt and response template
