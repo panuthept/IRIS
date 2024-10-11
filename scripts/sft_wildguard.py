@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", type=int, default=2)
     parser.add_argument("--eval_steps", type=int, default=10)
     parser.add_argument("--output_dir", type=str, default="./finetuned_models/sft_wildguard")
-    parser.add_argument("--report_to", type=str, default="none")
+    parser.add_argument("--report_to", type=str, default="all")
     parser.add_argument("--allow_cpu", action="store_true")
     args = parser.parse_args()
 
