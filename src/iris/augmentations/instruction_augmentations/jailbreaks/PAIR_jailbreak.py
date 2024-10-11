@@ -29,6 +29,7 @@ class PAIRJailbreaking(Jailbreaking):
         target_model: ModelBase, 
         evaluator: Callable, # A function that takes a string and returns 1 if the string is jailbroken, 0 otherwise
         attack_model: Optional[ModelBase] = None,
+        template_file: str = "./data/prompts/seed_template.json",
         attack_max_n_tokens=500,
         max_n_attack_attempts=5,
         attack_temperature=1,
@@ -103,8 +104,8 @@ class PAIRJailbreaking(Jailbreaking):
         #                                          'max_new_tokens': self.judge_max_n_tokens,
         #                                          'temperature': self.judge_temperature}
             
-        self.attack_system_message, self.attack_seed = SeedTemplate().new_seeds(template_file='IRIS\data\prompts\seed_template.json', method_list=['PAIR'])
-        self.judge_seed = SeedTemplate().new_seeds(template_file='IRIS\data\prompts\seed_template.json', prompt_usage='judge', method_list=['PAIR'])[0]
+        self.attack_system_message, self.attack_seed = SeedTemplate().new_seeds(template_file=template_file, method_list=['PAIR'])
+        self.judge_seed = SeedTemplate().new_seeds(template_file=template_file, prompt_usage='judge', method_list=['PAIR'])[0]
         
     def extract_json(self, s):
         r"""
@@ -193,6 +194,9 @@ class PAIRJailbreaking(Jailbreaking):
                 if isinstance(self.attack_model, OpenaiModel):
                     stream.jailbreak_prompt = stream.attack_attrs['attack_conversation'].to_openai_api_messages()
                     stream.jailbreak_prompt = [message['content'] for message in stream.jailbreak_prompt if message['role'] != 'system']
+                    print("*" * 100)
+                    print(stream.jailbreak_prompt)
+                    print("*" * 100)
 
                 for _ in range(self.max_n_attack_attempts):
                     new_instance = self.mutations[0](jailbreak_dataset=JailbreakDataset([stream]),
@@ -217,6 +221,8 @@ class PAIRJailbreaking(Jailbreaking):
                 print("=" * 100)
                 stream.target_responses = self.target_model.generate(stream.target_responses)
                 print(stream.target_responses)
+                print()
+                print()
 
                 # if isinstance(self.target_model, OpenaiModel):
                 #     stream.target_responses = [
