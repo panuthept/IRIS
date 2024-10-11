@@ -39,7 +39,7 @@ class PAIRJailbreaking(Jailbreaking):
         target_top_p=1,
         judge_max_n_tokens=10,
         judge_temperature=1,
-        n_streams=5,
+        n_streams=1,
         keep_last_n=3,
         n_iterations=5,
         include_failed_cases: bool = False,
@@ -185,6 +185,9 @@ class PAIRJailbreaking(Jailbreaking):
                 stream.attack_attrs['attack_conversation'].append_message(
                     stream.attack_attrs['attack_conversation'].roles[0], stream.jailbreak_prompt
                 )
+                print("#" * 100)
+                print(stream.attack_attrs['attack_conversation'])
+                print("#" * 100)
 
                 # if isinstance(self.attack_model, HuggingfaceModel):
                 #     stream.attack_attrs['attack_conversation'].append_message(
