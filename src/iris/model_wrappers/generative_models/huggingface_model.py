@@ -6,6 +6,7 @@ from tqdm import tqdm
 from torch import Tensor
 from jaxtyping import Int
 from datasets import Dataset
+from accelerate import PartialState
 from typing import List, Callable, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
@@ -88,6 +89,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         self.llm = AutoModelForCausalLM.from_pretrained(
             model_name_or_path,
             cache_dir="./data/models",
+            device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
             local_files_only=os.path.exists(
                 f'./data/models/models--{model_name_or_path.replace("/", "--")}'
             ),
