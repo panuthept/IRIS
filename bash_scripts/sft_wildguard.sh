@@ -19,4 +19,4 @@ if [ "$SLURM_JOBTMP" != "" ]; then
     export XDG_RUNTIME_DIR=$SLURM_JOBTMP
 fi
 
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python -m torch.distributed.launch scripts/sft_wildguard.py
+CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/accelerate launch scripts/sft_wildguard.py
