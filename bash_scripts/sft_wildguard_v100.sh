@@ -19,7 +19,7 @@ if [ "$SLURM_JOBTMP" != "" ]; then
     export XDG_RUNTIME_DIR=$SLURM_JOBTMP
 fi
 
-CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/accelerate launch scripts/sft_wildguard.py \
+CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/sft_wildguard.py \
 --model_name facebook/opt-350m \
 --max_seq_length 2048 \
 --batch_size 1 \
