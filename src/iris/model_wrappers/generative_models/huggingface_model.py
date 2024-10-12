@@ -144,7 +144,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         temperature: float = 1.0,
         freq_penalty: float = 0.0,
         return_logprobs: bool = False,
-        verbose: bool = True,
+        verbose: bool = False,
     ):
         tokens = input_ids
         assert isinstance(tokens, torch.Tensor)
