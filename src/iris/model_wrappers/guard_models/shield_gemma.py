@@ -17,6 +17,7 @@ class ShieldGemma(GuardLLM):
     def __init__(
             self, 
             model_name_or_path: str = "google/shieldgemma-9b", 
+            checkpoint_path: str = None,
             api_key: str = None,
             api_base: str = None,
             max_tokens: int = 4000,
@@ -46,6 +47,7 @@ class ShieldGemma(GuardLLM):
         else:
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path,
+                checkpoint_path=checkpoint_path,
                 max_tokens=max_tokens,
                 pipeline_kwargs=pipeline_kwargs,
                 use_cache=use_cache,
