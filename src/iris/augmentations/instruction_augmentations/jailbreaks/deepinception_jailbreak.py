@@ -88,7 +88,7 @@ class DeepInceptionJailbreaking(Jailbreaking):
 
     def _attack(self, instruction: str, reference_answers: List[str] = None) -> List[Tuple[str, str]]:
         """
-        Return a list of tuples, each containing the in-context attack jailbreak instruction (original instruction) and the target response.
+        Return a list of tuples, each containing the deepinception jailbreak instruction (original instruction) and the target response.
         """
         template_file = "./data/datasets/easyjailbreak/easyjailbreak/seed/seed_template.json"
         init_prompt = self.seed_template(seeds_num=1, prompt_usage='attack', methods=['DeepInception'], template_file=template_file)
