@@ -82,7 +82,7 @@ class LlamaGuard(GuardLLM):
             max_tokens: int = 4000,
             temperature: float = 1,
             pipeline_kwargs: dict = None,
-            use_cache: bool = True,
+            use_cache: bool = False,
             cache_path: str = "./cache",
             cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
     ):

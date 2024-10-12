@@ -34,7 +34,7 @@ class WildGuard(GuardLLM):
             api_base: str = None,
             max_tokens: int = 4000,
             temperature: float = 0,
-            use_cache: bool = True,
+            use_cache: bool = False,
             cache_path: str = "./cache",
             cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
     ):
