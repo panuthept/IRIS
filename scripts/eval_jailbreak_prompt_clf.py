@@ -2,30 +2,9 @@ import os
 import json
 import logging
 import argparse
+from iris.datasets import load_dataset
 from iris.model_wrappers.guard_models import load_guard
-from iris.datasets import (
-    AwesomePromptsDataset,
-    JailbreakBenchDataset,
-    JailbreaKV28kDataset,
-    WildGuardMixDataset,
-    XSTestDataset,
-)
 
-    
-def get_dataset(dataset_name: str, dataset_intention: str):
-    if dataset_name == "awesome_prompts":
-        return AwesomePromptsDataset(intention=dataset_intention)
-    elif dataset_name == "jailbreak_bench":
-        return JailbreakBenchDataset(intention=dataset_intention)
-    elif dataset_name == "jailbreak_kv28k":
-        assert dataset_intention != "harmful", "JailbreakKV28k only has harmful intention"
-        return JailbreaKV28kDataset(intention=dataset_intention)
-    elif dataset_name == "wildguard_mix":
-        return WildGuardMixDataset(intention=dataset_intention)
-    elif dataset_name == "xs_test":
-        return XSTestDataset(intention=dataset_intention)
-    else:
-        raise ValueError(f"Invalid dataset name: {dataset_name}")
     
 def get_path(args):
     return f"{args.artifact_dir}/{args.attacker_name}/{args.dataset_name}/{args.dataset_split}/{args.dataset_intention}.json"
@@ -49,8 +28,8 @@ if __name__ == "__main__":
     parser.add_argument("--api_base", type=str, default=None)
     parser.add_argument("--attacker_name", type=str, default="wildteaming")
     parser.add_argument("--artifact_dir", type=str, default="./jailbreak_artifacts")
-    parser.add_argument("--dataset_name", type=str, default="jailbreak_bench")
-    parser.add_argument("--dataset_intention", type=str, default=None)
+    parser.add_argument("--dataset_name", type=str, default="JailbreakBenchDataset")
+    parser.add_argument("--prompt_intention", type=str, default=None)
     parser.add_argument("--dataset_split", type=str, default="test")
     args = parser.parse_args()
 
@@ -59,7 +38,7 @@ if __name__ == "__main__":
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     target_model = load_guard(args.guard_name, args.model_name, args.checkpoint_path, args.api_key, args.api_base)
-    dataset = get_dataset(args.dataset_name, args.dataset_intention)
+    dataset = load_dataset(args.dataset_name, args.prompt_intention)
     samples = dataset.as_samples(split=args.dataset_split)
 
     samples = target_model.prompt_classify_batch(samples)
