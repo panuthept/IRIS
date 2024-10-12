@@ -2,11 +2,7 @@ import os
 import json
 import logging
 import argparse
-from iris.model_wrappers.guard_models import (
-    WildGuard,
-    LlamaGuard,
-    ShieldGemma
-)
+from iris.model_wrappers.guard_models import load_guard_model
 from iris.datasets import (
     AwesomePromptsDataset,
     JailbreakBenchDataset,
@@ -15,30 +11,6 @@ from iris.datasets import (
     XSTestDataset,
 )
 
-def get_model(guard_name: str, model_name: str, checkpoint_path: str, api_key: str, api_base: str):
-    if "WildGuard" in guard_name:
-        return WildGuard(
-            model_name_or_path=model_name,
-            checkpoint_path=checkpoint_path,
-            api_key=api_key,
-            api_base=api_base,
-        )
-    elif "LlamaGuard" in guard_name:
-        return LlamaGuard(
-            model_name_or_path=model_name,
-            checkpoint_path=checkpoint_path,
-            api_key=api_key,
-            api_base=api_base,
-        )
-    elif "ShieldGemma" in guard_name:
-        return ShieldGemma(
-            model_name_or_path=model_name,
-            checkpoint_path=checkpoint_path,
-            api_key=api_key,
-            api_base=api_base,
-        )
-    else:
-        raise ValueError(f"Invalid guard model: {guard_name}")
     
 def get_dataset(dataset_name: str, dataset_intention: str):
     if dataset_name == "awesome_prompts":
@@ -86,7 +58,7 @@ if __name__ == "__main__":
     logger.setLevel(logging.WARNING)
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-    target_model = get_model(args.guard_name, args.model_name, args.checkpoint_path, args.api_key, args.api_base)
+    target_model = load_guard_model(args.guard_name, args.model_name, args.checkpoint_path, args.api_key, args.api_base)
     dataset = get_dataset(args.dataset_name, args.dataset_intention)
     samples = dataset.as_samples(split=args.dataset_split)
 
