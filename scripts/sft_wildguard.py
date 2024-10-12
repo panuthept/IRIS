@@ -57,7 +57,7 @@ if __name__ == "__main__":
                 logging_steps=10,
                 eval_steps=args.eval_steps,
                 save_steps=args.eval_steps,
-                save_total_limit=5,
+                save_total_limit=12,
                 load_best_model_at_end=True,
                 metric_for_best_model="eval_loss",
                 greater_is_better=False,
