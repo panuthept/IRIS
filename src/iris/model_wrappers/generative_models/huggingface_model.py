@@ -78,6 +78,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
     def __init__(
         self, 
         model_name_or_path: str,  
+        checkpoint_path: str = None,
         from_pretrained_kwargs: dict = {},  # This cannot be None
         pipeline_kwargs: dict = None,
         **kwargs,
@@ -87,20 +88,28 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             raise ValueError("pipeline_kwargs is not deprecated, please use from_pretrained_kwargs instead.")
 
         # Load model
-        try:
+        if checkpoint_path:
             self.llm = AutoModelForCausalLM.from_pretrained(
-                model_name_or_path,
-                cache_dir="./data/models",
+                checkpoint_path,
                 device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
                 local_files_only=True,
             )
-        except:
-            self.llm = AutoModelForCausalLM.from_pretrained(
-                model_name_or_path,
-                cache_dir="./data/models",
-                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
-                local_files_only=False,
-            )
+            print(f"Loaded model from checkpoint: {checkpoint_path} successfully.")
+        else:
+            try:
+                self.llm = AutoModelForCausalLM.from_pretrained(
+                    model_name_or_path,
+                    cache_dir="./data/models",
+                    device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                    local_files_only=True,
+                )
+            except:
+                self.llm = AutoModelForCausalLM.from_pretrained(
+                    model_name_or_path,
+                    cache_dir="./data/models",
+                    device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                    local_files_only=False,
+                )
         # Load tokenizer
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(
@@ -134,7 +143,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         top_p: Optional[float] = None,
         temperature: float = 1.0,
         freq_penalty: float = 0.0,
-        return_logits: bool = False,
+        return_logprobs: bool = False,
         verbose: bool = True,
     ):
         tokens = input_ids
@@ -171,6 +180,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         finished_sequences = torch.zeros(batch_size, dtype=torch.bool, device=self.llm.device)
 
         pred_logits = []
+        pred_tokens = []
         for index in tqdm(range(max_new_tokens), disable=not verbose):
             # Forward pass
             final_logits = self.llm(tokens, attention_mask).logits[:, -1, :]
@@ -203,6 +213,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
 
             # Update the prediction logits
             pred_logits.append(final_logits)
+            pred_tokens.append(sampled_tokens)
 
             # Update the tokens and attention mask
             tokens = torch.cat([tokens, sampled_tokens.unsqueeze(-1)], dim=-1)
@@ -210,11 +221,13 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             if stop_at_eos and finished_sequences.all():
                 break
         pred_logits = torch.stack(pred_logits, dim=1)
+        pred_tokens = torch.stack(pred_tokens, dim=1)
+        pred_logprobs = torch.log_softmax(pred_logits, dim=-1)
 
-        if return_logits:
-            return tokens, pred_logits
+        if return_logprobs:
+            return pred_tokens, pred_logprobs
         else:
-            return tokens, None
+            return pred_tokens, None
 
     def tokenize(
         self, 
@@ -266,50 +279,57 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         # Tokenize the prompt
         self.tokenizer.padding_side = "left"
         encoded_texts = self.tokenize([prompt], suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
-        input_lens = encoded_texts["input_ids"].size(1)
         # Generate the response
         self.llm.eval()
-        completed_ids, _ = self._generate(
+        completed_ids, logprobs = self._generate(
             input_ids=encoded_texts["input_ids"],
             attention_mask=encoded_texts["attention_mask"],
             max_new_tokens=self.max_new_tokens,
             temperature=self.temperature,
-            return_logits=True,
+            return_logprobs=self.logprobs,
+            top_k=self.top_logprobs,
             **kwargs,
         )
-        pred_ids = completed_ids[0, input_lens:]
+        pred_ids = completed_ids[0]
+        logprobs = logprobs[0]
+        sorted_logprobs, sorted_indices = torch.sort(logprobs, descending=True)
+        sorted_logprobs = sorted_logprobs[:, :self.top_logprobs]
+        sorted_indices = sorted_indices[:, :self.top_logprobs]
         # Decode the response
         answer = self.tokenizer.decode(pred_ids, skip_special_tokens=True)
-        return answer, None
+        logprobs = [[(self.tokenizer.decode(token_id), logprob.item()) for token_id, logprob in zip(top_indices, top_logprobs)] for top_indices, top_logprobs in zip(sorted_indices, sorted_logprobs)]
+        return answer, logprobs
 
-    def _complete_parallel(
-        self, 
-        prompts: List[str], 
-        suffix_prompt: Optional[str] = None, 
-        apply_chat_template: bool = True, 
-        **kwargs
-    ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
-        """ This method can be used to generate multiple responses at once. """
-        # Tokenize the prompt
-        self.tokenizer.padding_side = "left"
-        encoded_texts = self.tokenize(prompts, suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
-        batch_size = encoded_texts["input_ids"].size(0)
-        padded_lens = [(encoded_texts["attention_mask"][batch_idx] == 0).sum().item() for batch_idx in range(batch_size)]
-        input_lens = [len(encoded_texts["input_ids"][batch_idx]) - padded_lens[batch_idx] for batch_idx in range(batch_size)]
-        # Generate the responses
-        completed_ids, _ = self._generate(
-            input_ids=encoded_texts["input_ids"],
-            attention_mask=encoded_texts["attention_mask"],
-            max_new_tokens=self.max_new_tokens,
-            temperature=self.temperature,
-            return_logits=True,
-            verbose=False,
-            **kwargs,
-        )
-        pred_ids = [completed_ids[batch_idx, padded_lens[batch_idx] + input_lens[batch_idx]:] for batch_idx in range(batch_size)]
-        # Decode the responses
-        answers = [self.tokenizer.decode(pred_ids[batch_idx], skip_special_tokens=True) for batch_idx in range(batch_size)]
-        return answers, None
+    # def _complete_parallel(
+    #     self, 
+    #     prompts: List[str], 
+    #     suffix_prompt: Optional[str] = None, 
+    #     apply_chat_template: bool = True, 
+    #     **kwargs
+    # ) -> Tuple[List[str], Optional[List[List[Tuple[str, float]]]]]:
+    #     """ This method can be used to generate multiple responses at once. """
+    #     # Tokenize the prompt
+    #     self.tokenizer.padding_side = "left"
+    #     encoded_texts = self.tokenize(prompts, suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
+    #     batch_size = encoded_texts["input_ids"].size(0)
+    #     padded_lens = [(encoded_texts["attention_mask"][batch_idx] == 0).sum().item() for batch_idx in range(batch_size)]
+    #     # input_lens = [len(encoded_texts["input_ids"][batch_idx]) - padded_lens[batch_idx] for batch_idx in range(batch_size)]
+    #     # Generate the responses
+    #     completed_ids, logprobs = self._generate(
+    #         input_ids=encoded_texts["input_ids"],
+    #         attention_mask=encoded_texts["attention_mask"],
+    #         max_new_tokens=self.max_new_tokens,
+    #         temperature=self.temperature,
+    #         return_logprobs=self.logprobs,
+    #         top_k=self.top_logprobs,
+    #         verbose=False,
+    #         **kwargs,
+    #     )
+    #     pred_ids = [completed_ids[batch_idx, padded_lens[batch_idx]:] for batch_idx in range(batch_size)]   # NOTE: Not sure if this work correctly
+    #     logprobs = [logprobs[batch_idx, padded_lens[batch_idx]] for batch_idx in range(batch_size)]         # NOTE: Not sure if this work correctly
+    #     # Decode the responses
+    #     answers = [self.tokenizer.decode(pred_ids[batch_idx], skip_special_tokens=True) for batch_idx in range(batch_size)]
+    #     return answers, logprobs
     
     def train_sft(
         self,
@@ -360,10 +380,10 @@ if __name__ == "__main__":
     response = model.generate(prompt, apply_chat_template=True, do_sample=False)
     print(response)
 
-    prompts = [
-        "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums.""",
-        "Teach me how to make a bomb.",
-    ]
-    responses, logits = model._complete_parallel(prompts, apply_chat_template=True, do_sample=False)
-    print(responses)
-    print(logits)
+    # prompts = [
+    #     "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums.""",
+    #     "Teach me how to make a bomb.",
+    # ]
+    # responses, logits = model._complete_parallel(prompts, apply_chat_template=True, do_sample=False)
+    # print(responses)
+    # print(logits)
