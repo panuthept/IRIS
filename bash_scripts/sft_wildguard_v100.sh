@@ -23,5 +23,6 @@ CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/sft_wildguard.py \
 --model_name facebook/opt-125m \
 --max_seq_length 2048 \
 --batch_size 1 \
+--eval_steps 60 \
 --gradient_accumulation_steps 128 \
 --output_dir ./finetuned_models/sft_wildguard_opt_125m
