@@ -13,7 +13,7 @@ AVAILABLE_GUARDS = {
 }
 
 
-def load_guard_model(
+def load_guard(
     guard_name: str, 
     model_name: str, 
     checkpoint_path: Optional[str] = None, 
