@@ -2,7 +2,7 @@ import os
 import json
 import logging
 import argparse
-from iris.model_wrappers.guard_models import load_guard_model
+from iris.model_wrappers.guard_models import load_guard
 from iris.datasets import (
     AwesomePromptsDataset,
     JailbreakBenchDataset,
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     logger.setLevel(logging.WARNING)
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-    target_model = load_guard_model(args.guard_name, args.model_name, args.checkpoint_path, args.api_key, args.api_base)
+    target_model = load_guard(args.guard_name, args.model_name, args.checkpoint_path, args.api_key, args.api_base)
     dataset = get_dataset(args.dataset_name, args.dataset_intention)
     samples = dataset.as_samples(split=args.dataset_split)
 
