@@ -110,6 +110,10 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                     device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
                     local_files_only=False,
                 )
+        self.cached_activations = {}
+        for name, module in self.llm.named_modules():
+            module.register_forward_hook(self.cache_activation(name))
+
         # Load tokenizer
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(
@@ -126,6 +130,11 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.model_name = model_name_or_path
         super().__init__(**kwargs)
+
+    def cache_activation(self, name):
+        def hook(model, input, output):
+            self.cached_activations[name] = output
+        return hook
 
     def get_model_name(self) -> str:
         # TODO: Add a better way to get the model name. the current way is not reliable as the model_name_or_path can be a path
