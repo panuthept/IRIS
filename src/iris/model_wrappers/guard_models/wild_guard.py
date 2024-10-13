@@ -79,7 +79,10 @@ class WildGuard(GuardLLM):
         prompt = self.prompt_clf_template.format(instruction=prompt, response="")
         response, logprobs = self.model.complete(prompt, apply_chat_template=False, return_logprobs=True, **kwargs)
 
-        logprobs = [(token, logprob) for token, logprob in logprobs[0] if token in [" yes", " no"]]
+        if logprobs is None:
+            logprobs = [[(token, 0) for token in [" yes", " no"]]]
+
+        logprobs = [(token, logprob) for token, logprob in logprobs[0] if token in [" yes", " no"]] # NOTE: logprobs[0] is the first predicted token
         labels = ["Harmful" if token.strip() == "yes" else "Benign" for token, _ in logprobs]
         scores = [logprob for _, logprob in logprobs]
         scores = np.exp(scores) / np.sum(np.exp(scores))
