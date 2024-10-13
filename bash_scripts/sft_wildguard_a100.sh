@@ -25,4 +25,5 @@ CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/sft_wildguard.py \
 --batch_size 1 \
 --eval_steps 60 \
 --gradient_accumulation_steps 128 \
+--report_to none \
 --output_dir ./finetuned_models/sft_wildguard_opt_350m
