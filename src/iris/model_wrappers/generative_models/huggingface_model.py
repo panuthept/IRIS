@@ -299,37 +299,6 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         answer = self.tokenizer.decode(pred_ids, skip_special_tokens=True)
         logprobs = [[(self.tokenizer.decode(token_id), logprob.item()) for token_id, logprob in zip(top_indices, top_logprobs)] for top_indices, top_logprobs in zip(sorted_indices, sorted_logprobs)]
         return answer, logprobs
-
-    # def _complete_parallel(
-    #     self, 
-    #     prompts: List[str], 
-    #     suffix_prompt: Optional[str] = None, 
-    #     apply_chat_template: bool = True, 
-    #     **kwargs
-    # ) -> Tuple[List[str], Optional[List[List[Tuple[str, float]]]]]:
-    #     """ This method can be used to generate multiple responses at once. """
-    #     # Tokenize the prompt
-    #     self.tokenizer.padding_side = "left"
-    #     encoded_texts = self.tokenize(prompts, suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
-    #     batch_size = encoded_texts["input_ids"].size(0)
-    #     padded_lens = [(encoded_texts["attention_mask"][batch_idx] == 0).sum().item() for batch_idx in range(batch_size)]
-    #     # input_lens = [len(encoded_texts["input_ids"][batch_idx]) - padded_lens[batch_idx] for batch_idx in range(batch_size)]
-    #     # Generate the responses
-    #     completed_ids, logprobs = self._generate(
-    #         input_ids=encoded_texts["input_ids"],
-    #         attention_mask=encoded_texts["attention_mask"],
-    #         max_new_tokens=self.max_new_tokens,
-    #         temperature=self.temperature,
-    #         return_logprobs=self.logprobs,
-    #         top_k=self.top_logprobs,
-    #         verbose=False,
-    #         **kwargs,
-    #     )
-    #     pred_ids = [completed_ids[batch_idx, padded_lens[batch_idx]:] for batch_idx in range(batch_size)]   # NOTE: Not sure if this work correctly
-    #     logprobs = [logprobs[batch_idx, padded_lens[batch_idx]] for batch_idx in range(batch_size)]         # NOTE: Not sure if this work correctly
-    #     # Decode the responses
-    #     answers = [self.tokenizer.decode(pred_ids[batch_idx], skip_special_tokens=True) for batch_idx in range(batch_size)]
-    #     return answers, logprobs
     
     def train_sft(
         self,
