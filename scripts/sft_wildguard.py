@@ -8,6 +8,7 @@ from iris.model_wrappers.guard_models import WildGuard
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
+    parser.add_argument("--attack_engine", type=str, default=None)
     parser.add_argument("--cache_dir", type=str, default="./data/datasets/wildguardmix")
     parser.add_argument("--train_eval_split", type=float, default=0.9)
     parser.add_argument("--max_seq_length", type=int, default=8192)
@@ -25,7 +26,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     model = WildGuard(model_name_or_path=args.model_name)
-    dataset = WildGuardMixDataset(cache_dir=args.cache_dir)
+    dataset = WildGuardMixDataset(attack_engine=args.attack_engine, cache_dir=args.cache_dir)
 
     samples = dataset.as_samples(split="train")
     train_size = int(len(samples) * args.train_eval_split)
