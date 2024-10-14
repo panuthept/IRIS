@@ -306,7 +306,9 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         sorted_indices = sorted_indices[:, :self.top_logprobs]
         # Decode the response
         answer = self.tokenizer.decode(pred_ids, skip_special_tokens=True)
-        logprobs = [[(self.tokenizer.decode(token_id), logprob.item()) for token_id, logprob in zip(top_indices, top_logprobs)] for top_indices, top_logprobs in zip(sorted_indices, sorted_logprobs)]
+        # NOTE: This implementation is to ensure that the spaces are not removed from the tokens
+        logprobs = [[(self.tokenizer.convert_ids_to_tokens([token_id])[0], self.tokenizer.decode(token_id), logprob.item()) for token_id, logprob in zip(top_indices, top_logprobs)] for top_indices, top_logprobs in zip(sorted_indices, sorted_logprobs)]
+        logprobs = [[(f" {token2}" if token1 != token2 and token1.endswith(token2) else token2, logprob) for token1, token2, logprob in logprob_list] for logprob_list in logprobs]
         return answer, logprobs
     
     def train_sft(
