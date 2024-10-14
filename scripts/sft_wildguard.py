@@ -1,4 +1,5 @@
 import torch
+import random
 import argparse
 from trl import SFTConfig
 from iris.datasets import WildGuardMixDataset
@@ -25,10 +26,13 @@ if __name__ == "__main__":
     parser.add_argument("--allow_cpu", action="store_true")
     args = parser.parse_args()
 
+    random.seed(args.seed)
+
     model = WildGuard(model_name_or_path=args.model_name)
     dataset = WildGuardMixDataset(attack_engine=args.attack_engine, cache_dir=args.cache_dir)
-
     samples = dataset.as_samples(split="train")
+
+    random.shuffle(samples)
     train_size = int(len(samples) * args.train_eval_split)
     train_samples, eval_samples = samples[:train_size], samples[train_size:]
     # Log the number of samples in the train and eval datasets
