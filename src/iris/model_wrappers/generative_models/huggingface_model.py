@@ -13,13 +13,13 @@ from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 
-# class CustomSFTTrainer(SFTTrainer):
-#     def compute_loss(self, model, inputs, return_outputs=False):
-#         print(inputs)
-#         outputs = super().compute_loss(model, inputs, return_outputs=return_outputs)
-#         print(outputs)
-#         print("*" * 100)
-#         return outputs
+class IRISTrainer(SFTTrainer):
+    def compute_loss(self, model, inputs, return_outputs=False):
+        print(inputs)
+        outputs = super().compute_loss(model, inputs, return_outputs=return_outputs)
+        print(outputs)
+        print("*" * 100)
+        return outputs
 
 
 class HuggfacePipelineGenerativeLLM(GenerativeLLM):
@@ -320,6 +320,27 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         self.tokenizer.padding_side = "right"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         trainer = SFTTrainer(
+            model=self.llm,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            args=sft_config,
+            tokenizer=self.tokenizer,
+            formatting_func=formatting_prompts_func,
+            data_collator=collator,
+        )
+        trainer.train()
+
+    def train_iris(
+        self,
+        train_dataset: Dataset,
+        response_template: str,
+        formatting_prompts_func: Callable,
+        sft_config: SFTConfig = None,
+        eval_dataset: Dataset = None,
+    ):
+        self.tokenizer.padding_side = "right"
+        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+        trainer = IRISTrainer(
             model=self.llm,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
