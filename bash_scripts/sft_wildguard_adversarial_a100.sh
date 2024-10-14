@@ -20,11 +20,11 @@ if [ "$SLURM_JOBTMP" != "" ]; then
 fi
 
 CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/sft_wildguard.py \
---model_name facebook/opt-350m \
+--model_name mistralai/Mistral-7B-v0.3 \
 --attack_engine adversarial \
---max_seq_length 2048 \
+--max_seq_length 8192 \
 --batch_size 1 \
 --eval_steps 60 \
 --gradient_accumulation_steps 128 \
 --report_to none \
---output_dir ./finetuned_models/sft_wildguard_adversarial_opt_350m
+--output_dir ./finetuned_models/sft_wildguard_adversarial
