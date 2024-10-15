@@ -13,7 +13,7 @@ class LLM(ModelBase):
             temperature: float = 1,
             logprobs: bool = True,
             top_logprobs: int = 10,
-            use_cache: bool = True,
+            use_cache: bool = False,
             cache_path: str = None,
             cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
             **kwargs,

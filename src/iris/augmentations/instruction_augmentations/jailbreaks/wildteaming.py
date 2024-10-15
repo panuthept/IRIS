@@ -62,6 +62,9 @@ class WildTeamingJailbreaking(Jailbreaking):
             evaluator=evaluator,
             include_failed_cases=include_failed_cases
         )
+
+    def get_attack_model_name(self) -> str:
+        return self.attack_model.get_model_name()
     
     def _attack(self, instruction: str, num_attacks: int, reference_answers: List[str] = None) -> List[str]:
         if reference_answers is not None:

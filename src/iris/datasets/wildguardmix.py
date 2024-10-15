@@ -27,7 +27,7 @@ class WildGuardMixDataset(JailbreakDataset):
 
     @classmethod
     def attack_engines_available(cls) -> List[str]:
-        return ["adversarial"]
+        return ["vanilla", "adversarial"]
     
     def _load_dataset(self, path: str) -> Dict[str, List]:
         data: Dict[str, List] = defaultdict(list)
@@ -37,8 +37,11 @@ class WildGuardMixDataset(JailbreakDataset):
         for sample in train_dataset["train"]:
             if sample["prompt_harm_label"] is None:
                 continue
-            if self.attack_engine is not None and self.attack_engine == "adversarial" and not sample["adversarial"]:
-                continue
+            if self.attack_engine is not None:
+                if self.attack_engine == "vanilla" and sample["adversarial"]:
+                    continue
+                if self.attack_engine == "adversarial" and not sample["adversarial"]:
+                    continue
 
             intention = "benign" if sample["prompt_harm_label"] == "unharmful" else "harmful"
             if self.intention is not None and intention != self.intention:
