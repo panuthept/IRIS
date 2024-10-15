@@ -113,6 +113,7 @@ class WildGuard(GuardLLM):
         sft_config: SFTConfig,
         train_samples: List[Sample],
         eval_samples: List[Sample] = None,
+        low_rank: bool = False,
     ):
         """ This method prepare the training examples format for WildGuard prompt completion. """
         assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
@@ -139,6 +140,7 @@ class WildGuard(GuardLLM):
             response_template=self.response_template_ids,
             formatting_prompts_func=formatting_prompts_func,
             sft_config=sft_config,
+            low_rank=low_rank,
         )
 
     def train_iris(
