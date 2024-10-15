@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
-#SBATCH --job-name=SFT_WildGuard_A100
-#SBATCH --output=sft_wildguard_A100.out
+#SBATCH --job-name=SFT_WildGuard_Vanilla_A100
+#SBATCH --output=SFT_WildGuard_Vanilla_A100.out
 #SBATCH --nodes=1
 #SBATCH --partition=scads-a100
 #SBATCH --account=scads
@@ -21,9 +21,10 @@ fi
 
 CUDA_LAUNCH_BLOCKING=1 ~/.conda/envs/iris/bin/python scripts/sft_wildguard.py \
 --model_name mistralai/Mistral-7B-v0.3 \
---max_seq_length 2048 \
+--attack_engine vanilla \
+--max_seq_length 8192 \
 --batch_size 1 \
 --eval_steps 60 \
 --gradient_accumulation_steps 128 \
 --report_to none \
---output_dir ./finetuned_models/sft_wildguard
+--output_dir ./finetuned_models/sft_wildguard_vanilla

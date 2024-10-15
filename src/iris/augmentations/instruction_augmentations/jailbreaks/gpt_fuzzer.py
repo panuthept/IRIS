@@ -86,6 +86,9 @@ class GPTFuzzerJailbreaking(Jailbreaking):
         self.mutate_policy.fuzzer = self
         self.select_policy.fuzzer = self
 
+    def get_attack_model_name(self) -> str:
+        return self.attack_model.get_model_name()
+
     def reset(self):
         self.current_query: int = 0
         self.current_jailbreak: int = 0
