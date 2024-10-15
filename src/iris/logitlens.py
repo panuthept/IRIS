@@ -1,5 +1,6 @@
 import torch
 from torch import nn, Tensor
+from transformers import AutoTokenizer
 from typing import List, Dict, Union, Tuple
 
 
@@ -14,11 +15,13 @@ class LogitLens:
     def __init__(
         self, 
         lm_head: nn.Module,
+        tokenizer: AutoTokenizer,
         module_names: Union[List[str], str] = None,
         k: int = 5,
     ):
         self.k = k
         self.lm_head = lm_head
+        self.tokenizer = tokenizer
         self.module_names = self.resolve_module_names(module_names)
         self.cached_activations: Dict[str, List[List[int]]] = {}
 
@@ -51,3 +54,9 @@ class LogitLens:
         if module_name not in self.cached_activations:
             self.cached_activations[module_name] = []
         self.cached_activations[module_name].extend([torch.argsort(logits[batch_idx], descending=True)[:self.k].tolist() for batch_idx in range(logits.size(0))])
+
+    def get_last_activations(self) -> Dict[str, List[int]]:
+        last_activations = {}
+        for module_name in self.cached_activations:
+            last_activations[module_name] = self.tokenizer.convert_ids_to_tokens(self.cached_activations[module_name][-1])
+        return last_activations

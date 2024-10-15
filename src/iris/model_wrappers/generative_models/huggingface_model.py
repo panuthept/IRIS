@@ -5,6 +5,7 @@ import transformer_lens.utils as utils
 from tqdm import tqdm
 from torch import Tensor
 from jaxtyping import Int
+from peft import LoraConfig
 from datasets import Dataset
 from accelerate import PartialState
 from iris.logitlens import LogitLens
@@ -106,12 +107,6 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                     device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
                     local_files_only=False,
                 )
-
-        # Add hooks to cache activations
-        modules_to_cache = model_name_or_path if modules_to_cache is None else modules_to_cache
-        self.logitlens = LogitLens(self.llm.lm_head, module_names=modules_to_cache)
-        self.logitlens.register_hooks(self.llm)
-
         # Load tokenizer
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(
@@ -126,6 +121,15 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 local_files_only=False,
             )
         self.tokenizer.pad_token = self.tokenizer.eos_token
+
+        # Add hooks to cache activations
+        modules_to_cache = model_name_or_path if modules_to_cache is None else modules_to_cache
+        self.logitlens = LogitLens(
+            lm_head=self.llm.lm_head, 
+            tokenizer=self.tokenizer,
+            module_names=modules_to_cache,
+        )
+        self.logitlens.register_hooks(self.llm)
         self.model_name = model_name_or_path
         super().__init__(**kwargs)
 
@@ -318,6 +322,14 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         sft_config: SFTConfig = None,
         eval_dataset: Dataset = None,
     ):
+        peft_config = LoraConfig(
+            r=16,
+            lora_alpha=32,
+            lora_dropout=0.05,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        
         self.tokenizer.padding_side = "right"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         trainer = SFTTrainer(
@@ -328,6 +340,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             tokenizer=self.tokenizer,
             formatting_func=formatting_prompts_func,
             data_collator=collator,
+            peft_config=peft_config,
         )
         trainer.train()
 
