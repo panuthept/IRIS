@@ -4,6 +4,9 @@ from iris.augmentations.instruction_augmentations.jailbreaks.base import Jailbre
 from iris.augmentations.instruction_augmentations.jailbreaks.gpt_fuzzer import GPTFuzzerJailbreaking
 from iris.augmentations.instruction_augmentations.jailbreaks.wildteaming import WildTeamingJailbreaking
 from iris.augmentations.instruction_augmentations.jailbreaks.multilingual_jailbreak import MultiLingualJailbreaking, MultiLingualJailbreakingPlus
+from iris.augmentations.instruction_augmentations.jailbreaks.jailbroken_jailbreak import JailbrokenJailbreaking
+from iris.augmentations.instruction_augmentations.jailbreaks.deepinception_jailbreak import DeepInceptionJailbreaking
+from iris.augmentations.instruction_augmentations.jailbreaks.ica_jailbreak import ICAJailbreaking
 
 
 AVAILABLE_ATTACKERS = {
@@ -11,7 +14,11 @@ AVAILABLE_ATTACKERS = {
     "WildTeamingJailbreaking": WildTeamingJailbreaking,
     "MultiLingualJailbreaking": MultiLingualJailbreaking,
     "MultiLingualJailbreakingPlus": MultiLingualJailbreakingPlus,
+    "JailbrokenJailbreaking": JailbrokenJailbreaking,
+    "DeepInceptionJailbreaking": DeepInceptionJailbreaking,
+    "ICAJailbreaking": ICAJailbreaking,
 }
+
 
 
 def load_attacker(
