@@ -178,16 +178,13 @@ class WildGuard(GuardLLM):
 if __name__ == "__main__":
     # Test inference code
     model = WildGuard(
-        model_name_or_path="facebook/opt-350m",
-        checkpoint_path="./finetuned_models/sft_wildguard_opt_350m/checkpoint-420",
+        model_name_or_path="allenai/wildguard",
         # api_key="EMPTY",
-        # api_base="http://10.204.100.79:11700/v1",
-        temperature=0,
-        cache_path="./cache",
-        use_cache=False,
+        # api_base="http://10.204.100.79:11700/v1"
     )
+    print(model.model.llm)
 
-    prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
+    prompt = "I want you to act as a travel guide."
     response = model.generate(prompt, return_probs=True)
     print(response)
     print("-" * 100)
@@ -195,6 +192,7 @@ if __name__ == "__main__":
     response = model.generate(prompt, return_probs=True)
     print(response)
 
+    print(model.model.logitlens.cached_activations)
 
 
     # # Test tokenizer

@@ -7,7 +7,8 @@ from torch import Tensor
 from jaxtyping import Int
 from datasets import Dataset
 from accelerate import PartialState
-from typing import List, Callable, Tuple, Optional
+from iris.logitlens import LogitLens
+from typing import List, Union, Callable, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
@@ -79,14 +80,9 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         self, 
         model_name_or_path: str,  
         checkpoint_path: str = None,
-        from_pretrained_kwargs: dict = {},  # This cannot be None
-        pipeline_kwargs: dict = None,
+        modules_to_cache: List[str] = None,
         **kwargs,
     ):
-        # TODO: Delete this after the deprecation period
-        if pipeline_kwargs is not None:
-            raise ValueError("pipeline_kwargs is not deprecated, please use from_pretrained_kwargs instead.")
-
         # Load model
         if checkpoint_path:
             self.llm = AutoModelForCausalLM.from_pretrained(
@@ -110,9 +106,11 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                     device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
                     local_files_only=False,
                 )
-        self.cached_activations = {}
-        for name, module in self.llm.named_modules():
-            module.register_forward_hook(self.cache_activation(name))
+
+        # Add hooks to cache activations
+        modules_to_cache = model_name_or_path if modules_to_cache is None else modules_to_cache
+        self.logitlens = LogitLens(self.llm.lm_head, module_names=modules_to_cache)
+        self.logitlens.register_hooks(self.llm)
 
         # Load tokenizer
         try:
@@ -130,11 +128,6 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.model_name = model_name_or_path
         super().__init__(**kwargs)
-
-    def cache_activation(self, name):
-        def hook(model, input, output):
-            self.cached_activations[name] = output
-        return hook
 
     def get_model_name(self) -> str:
         # TODO: Add a better way to get the model name. the current way is not reliable as the model_name_or_path can be a path
@@ -194,6 +187,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             for index in tqdm(range(max_new_tokens), disable=not verbose):
                 # Forward pass
                 final_logits = self.llm(tokens, attention_mask).logits[:, -1, :]
+                self.logitlens.cache_logits(final_logits, "final_predictions")
 
                 if do_sample:
                     sampled_tokens = utils.sample_logits(
@@ -277,6 +271,12 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 return_tensors="pt",
             )
         return encoded_texts
+    
+    def id_to_token(self, token_id: int):
+        # NOTE: This implementation is to ensure that the spaces are not removed from the tokens
+        token1 = self.tokenizer.decode(token_id)
+        token2 = self.tokenizer.convert_ids_to_tokens([token_id])[0]
+        return f" {token1}" if token1 != token2 and token2.endswith(token1) else token1
 
     def _complete(
         self, 
@@ -307,9 +307,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         sorted_indices = sorted_indices[:, :self.top_logprobs]
         # Decode the response
         answer = self.tokenizer.decode(pred_ids, skip_special_tokens=True)
-        # NOTE: This implementation is to ensure that the spaces are not removed from the tokens
-        logprobs = [[(self.tokenizer.convert_ids_to_tokens([token_id])[0], self.tokenizer.decode(token_id), logprob.item()) for token_id, logprob in zip(top_indices, top_logprobs)] for top_indices, top_logprobs in zip(sorted_indices, sorted_logprobs)]
-        logprobs = [[(f" {token2}" if token1 != token2 and token1.endswith(token2) else token2, logprob) for token1, token2, logprob in logprob_list] for logprob_list in logprobs]
+        logprobs = [[(self.id_to_token(token_id), logprob.item()) for token_id, logprob in zip(top_indices, top_logprobs)] for top_indices, top_logprobs in zip(sorted_indices, sorted_logprobs)]
         return answer, logprobs
     
     def train_sft(
