@@ -155,88 +155,89 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         return_logprobs: bool = False,
         verbose: bool = False,
     ):
-        tokens = input_ids
-        assert isinstance(tokens, torch.Tensor)
-        batch_size, ctx_length = tokens.shape
-        tokens = tokens.to(self.llm.device)
-        attention_mask = attention_mask.to(self.llm.device)
+        with torch.no_grad():
+            tokens = input_ids
+            assert isinstance(tokens, torch.Tensor)
+            batch_size, ctx_length = tokens.shape
+            tokens = tokens.to(self.llm.device)
+            attention_mask = attention_mask.to(self.llm.device)
 
-        stop_tokens: List[int] = []
-        eos_token_for_padding = 0
-        assert self.tokenizer is not None
-        if stop_at_eos:
-            tokenizer_has_eos_token = (
-                self.tokenizer is not None and self.tokenizer.eos_token_id is not None
-            )
-            if eos_token_id is None:
-                assert (
-                    tokenizer_has_eos_token
-                ), "Must pass a eos_token_id if stop_at_eos is True and tokenizer is None or has no eos_token_id"
-
-                eos_token_id = self.tokenizer.eos_token_id
-
-            if isinstance(eos_token_id, int):
-                stop_tokens = [eos_token_id]
-                eos_token_for_padding = eos_token_id
-            else:
-                # eos_token_id is a Sequence (e.g. list or tuple)
-                stop_tokens = eos_token_id
-                eos_token_for_padding = (
-                    self.tokenizer.eos_token_id if tokenizer_has_eos_token else eos_token_id[0]
-                )
-
-        # An array to track which sequences in the batch have finished.
-        finished_sequences = torch.zeros(batch_size, dtype=torch.bool, device=self.llm.device)
-
-        pred_logits = []
-        pred_tokens = []
-        for index in tqdm(range(max_new_tokens), disable=not verbose):
-            # Forward pass
-            final_logits = self.llm(tokens, attention_mask).logits[:, -1, :]
-
-            if do_sample:
-                sampled_tokens = utils.sample_logits(
-                    final_logits,
-                    top_k=top_k,
-                    top_p=top_p,
-                    temperature=temperature,
-                    freq_penalty=freq_penalty,
-                    tokens=tokens,
-                ).to(self.llm.device)
-            else:
-                sampled_tokens = final_logits.argmax(-1).to(
-                    self.llm.device
-                )
-
+            stop_tokens: List[int] = []
+            eos_token_for_padding = 0
+            assert self.tokenizer is not None
             if stop_at_eos:
-                # For all unfinished sequences, add on the next token. If a sequence was
-                # finished, throw away the generated token and add eos_token_for_padding
-                # instead.
-                sampled_tokens[finished_sequences] = eos_token_for_padding
-                finished_sequences.logical_or_(
-                    torch.isin(
-                        sampled_tokens.to(self.llm.device),
-                        torch.tensor(stop_tokens).to(self.llm.device),
-                    )
+                tokenizer_has_eos_token = (
+                    self.tokenizer is not None and self.tokenizer.eos_token_id is not None
                 )
+                if eos_token_id is None:
+                    assert (
+                        tokenizer_has_eos_token
+                    ), "Must pass a eos_token_id if stop_at_eos is True and tokenizer is None or has no eos_token_id"
 
-            # Update the prediction logits
-            pred_logits.append(final_logits)
-            pred_tokens.append(sampled_tokens)
+                    eos_token_id = self.tokenizer.eos_token_id
 
-            # Update the tokens and attention mask
-            tokens = torch.cat([tokens, sampled_tokens.unsqueeze(-1)], dim=-1)
-            attention_mask = torch.cat([attention_mask, torch.ones(batch_size, 1, device=self.llm.device)], dim=-1)
-            if stop_at_eos and finished_sequences.all():
-                break
-        pred_logits = torch.stack(pred_logits, dim=1)
-        pred_tokens = torch.stack(pred_tokens, dim=1)
-        pred_logprobs = torch.log_softmax(pred_logits, dim=-1)
+                if isinstance(eos_token_id, int):
+                    stop_tokens = [eos_token_id]
+                    eos_token_for_padding = eos_token_id
+                else:
+                    # eos_token_id is a Sequence (e.g. list or tuple)
+                    stop_tokens = eos_token_id
+                    eos_token_for_padding = (
+                        self.tokenizer.eos_token_id if tokenizer_has_eos_token else eos_token_id[0]
+                    )
 
-        if return_logprobs:
-            return pred_tokens, pred_logprobs
-        else:
-            return pred_tokens, None
+            # An array to track which sequences in the batch have finished.
+            finished_sequences = torch.zeros(batch_size, dtype=torch.bool, device=self.llm.device)
+
+            pred_logits = []
+            pred_tokens = []
+            for index in tqdm(range(max_new_tokens), disable=not verbose):
+                # Forward pass
+                final_logits = self.llm(tokens, attention_mask).logits[:, -1, :]
+
+                if do_sample:
+                    sampled_tokens = utils.sample_logits(
+                        final_logits,
+                        top_k=top_k,
+                        top_p=top_p,
+                        temperature=temperature,
+                        freq_penalty=freq_penalty,
+                        tokens=tokens,
+                    ).to(self.llm.device)
+                else:
+                    sampled_tokens = final_logits.argmax(-1).to(
+                        self.llm.device
+                    )
+
+                if stop_at_eos:
+                    # For all unfinished sequences, add on the next token. If a sequence was
+                    # finished, throw away the generated token and add eos_token_for_padding
+                    # instead.
+                    sampled_tokens[finished_sequences] = eos_token_for_padding
+                    finished_sequences.logical_or_(
+                        torch.isin(
+                            sampled_tokens.to(self.llm.device),
+                            torch.tensor(stop_tokens).to(self.llm.device),
+                        )
+                    )
+
+                # Update the prediction logits
+                pred_logits.append(final_logits)
+                pred_tokens.append(sampled_tokens)
+
+                # Update the tokens and attention mask
+                tokens = torch.cat([tokens, sampled_tokens.unsqueeze(-1)], dim=-1)
+                attention_mask = torch.cat([attention_mask, torch.ones(batch_size, 1, device=self.llm.device)], dim=-1)
+                if stop_at_eos and finished_sequences.all():
+                    break
+            pred_logits = torch.stack(pred_logits, dim=1)
+            pred_tokens = torch.stack(pred_tokens, dim=1)
+            pred_logprobs = torch.log_softmax(pred_logits, dim=-1)
+
+            if return_logprobs:
+                return pred_tokens, pred_logprobs
+            else:
+                return pred_tokens, None
 
     def tokenize(
         self, 
