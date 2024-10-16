@@ -7,7 +7,7 @@ from iris.datasets import WildGuardMixDataset
 from iris.model_wrappers.guard_models import WildGuard
 
 
-# python scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 4096 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir /workspace/env/sft_wildguard --low_rank
+# python scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 4096 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir /workspace/env/sft_wildguard --use_lora
 
 
 if __name__ == "__main__":
