@@ -20,7 +20,7 @@ if __name__ == "__main__":
     model = WildGuard(model_name_or_path="allenai/wildguard")
 
     # Harmful prompts
-    dataset = JailbreakBenchDataset(intention="harmful", attack_engine=args.attack_engine)
+    dataset = WildGuardMixDataset(intention="harmful", attack_engine=args.attack_engine)
     samples = dataset.as_samples(split="test")
 
     for sample in tqdm(samples):
