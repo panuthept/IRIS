@@ -28,6 +28,10 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", type=str, default="./finetuned_models/sft_wildguard")
     parser.add_argument("--report_to", type=str, default="all")
     parser.add_argument("--allow_cpu", action="store_true")
+    parser.add_argument("--use_lora", action="store_true")
+    parser.add_argument("--lora_rank", type=int, default=16)
+    parser.add_argument("--lora_alpha", type=int, default=32)
+    parser.add_argument("--lora_dropout", type=float, default=0.05)
     args = parser.parse_args()
 
     random.seed(args.seed)
@@ -77,10 +81,10 @@ if __name__ == "__main__":
                 seed=args.seed,
             ),
             peft_config=LoraConfig(
-                r=16,
-                lora_alpha=32,
-                lora_dropout=0.05,
+                r=args.lora_rank,
+                lora_alpha=args.lora_alpha,
+                lora_dropout=args.lora_dropout,
                 bias="none",
                 task_type="CAUSAL_LM",
-            ),
+            ) if args.use_lora else None,
         )
