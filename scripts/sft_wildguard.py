@@ -2,6 +2,7 @@ import torch
 import random
 import argparse
 from trl import SFTConfig
+from peft import LoraConfig
 from iris.datasets import WildGuardMixDataset
 from iris.model_wrappers.guard_models import WildGuard
 
@@ -26,7 +27,6 @@ if __name__ == "__main__":
     parser.add_argument("--eval_steps", type=int, default=10)
     parser.add_argument("--output_dir", type=str, default="./finetuned_models/sft_wildguard")
     parser.add_argument("--report_to", type=str, default="all")
-    parser.add_argument("--low_rank", action="store_true")
     parser.add_argument("--allow_cpu", action="store_true")
     args = parser.parse_args()
 
@@ -76,5 +76,11 @@ if __name__ == "__main__":
                 do_predict=False,
                 seed=args.seed,
             ),
-            low_rank=args.low_rank,
+            peft_config=LoraConfig(
+                r=16,
+                lora_alpha=32,
+                lora_dropout=0.05,
+                bias="none",
+                task_type="CAUSAL_LM",
+            ),
         )

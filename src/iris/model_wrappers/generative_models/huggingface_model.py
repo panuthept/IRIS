@@ -320,8 +320,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         response_template: str,
         formatting_prompts_func: Callable,
         sft_config: SFTConfig = None,
+        peft_config: LoraConfig = None,
         eval_dataset: Dataset = None,
-        low_rank: bool = False,
     ):
         peft_config = LoraConfig(
             r=16,
@@ -341,7 +341,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             tokenizer=self.tokenizer,
             formatting_func=formatting_prompts_func,
             data_collator=collator,
-            peft_config=peft_config if low_rank else None,
+            peft_config=peft_config,
         )
         trainer.train()
 
@@ -351,6 +351,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         response_template: str,
         formatting_prompts_func: Callable,
         sft_config: SFTConfig = None,
+        peft_config: LoraConfig = None,
         eval_dataset: Dataset = None,
     ):
         self.tokenizer.padding_side = "right"
@@ -363,6 +364,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             tokenizer=self.tokenizer,
             formatting_func=formatting_prompts_func,
             data_collator=collator,
+            peft_config=peft_config,
         )
         trainer.train()
     

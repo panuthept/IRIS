@@ -1,5 +1,6 @@
 import numpy as np
 from trl import SFTConfig
+from peft import LoraConfig
 from datasets import Dataset
 from iris.cache import CacheMode
 from iris.data_types import Sample
@@ -113,7 +114,7 @@ class WildGuard(GuardLLM):
         sft_config: SFTConfig,
         train_samples: List[Sample],
         eval_samples: List[Sample] = None,
-        low_rank: bool = False,
+        peft_config: LoraConfig = None,
     ):
         """ This method prepare the training examples format for WildGuard prompt completion. """
         assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
@@ -140,7 +141,7 @@ class WildGuard(GuardLLM):
             response_template=self.response_template_ids,
             formatting_prompts_func=formatting_prompts_func,
             sft_config=sft_config,
-            low_rank=low_rank,
+            peft_config=peft_config,
         )
 
     def train_iris(
@@ -148,6 +149,7 @@ class WildGuard(GuardLLM):
         sft_config: SFTConfig,
         train_samples: List[Sample],
         eval_samples: List[Sample] = None,
+        peft_config: LoraConfig = None,
     ):
         """ This method prepare the training examples format for WildGuard prompt completion. """
         assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
@@ -174,6 +176,7 @@ class WildGuard(GuardLLM):
             response_template=self.response_template_ids, 
             formatting_prompts_func=formatting_prompts_func,
             sft_config=sft_config,
+            peft_config=peft_config,
         )
     
 
