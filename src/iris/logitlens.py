@@ -61,23 +61,29 @@ class LogitLens:
             self.cached_activations[module_name] = []
         self.cached_activations[module_name].extend([torch.argsort(logits[batch_idx], descending=True)[:self.k].tolist() for batch_idx in range(logits.size(0))])
 
-    def get_last_activations(self) -> Dict[str, List[str]]:
+    def get_last_activations(
+        self, 
+        decode_activations: bool = True,
+    ) -> Dict[str, Union[List[str], Tensor]]:
         last_activations = {}
         for module_name in self.cached_activations:
-            last_activations[module_name] = self.tokenizer.convert_ids_to_tokens(self.cached_activations[module_name][-1])
+            activations = self.cached_activations[module_name][-1]
+            if decode_activations:
+                activations = self.tokenizer.convert_ids_to_tokens(activations)
+            last_activations[module_name] = activations
         return last_activations
     
-    def get_activations(self) -> Dict[str, List[Tuple[str, int]]]:
-        # Accumulate activations
-        accum_activations = {}
-        for module_name in self.cached_activations:
-            accum_activations[module_name] = {}
-            for sample_activations in self.cached_activations[module_name]:
-                for token_id in sample_activations:
-                    token = self.tokenizer.convert_ids_to_tokens([token_id])[0]
-                    if token not in accum_activations[module_name]:
-                        accum_activations[module_name][token] = 0
-                    accum_activations[module_name][token] += 1
-            # Sort activations
-            accum_activations[module_name] = sorted(accum_activations[module_name].items(), key=lambda x: x[1], reverse=True)[:self.k]
-        return accum_activations
+    # def get_activations(self, decode_activations: bool = True) -> Dict[str, Union[List[Tuple[str, int]], Tensor]]:
+    #     # Accumulate activations
+    #     accum_activations = {}
+    #     for module_name in self.cached_activations:
+    #         accum_activations[module_name] = {}
+    #         for sample_activations in self.cached_activations[module_name]:
+    #             for token_id in sample_activations:
+    #                 token = self.tokenizer.convert_ids_to_tokens([token_id])[0]
+    #                 if token not in accum_activations[module_name]:
+    #                     accum_activations[module_name][token] = 0
+    #                 accum_activations[module_name][token] += 1
+    #         # Sort activations
+    #         accum_activations[module_name] = sorted(accum_activations[module_name].items(), key=lambda x: x[1], reverse=True)[:self.k]
+    #     return accum_activations
