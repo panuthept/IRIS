@@ -1,9 +1,5 @@
 import json
 import argparse
-import numpy as np
-import seaborn as sns 
-import matplotlib.pyplot as plt 
-
 from tqdm import tqdm
 from iris.datasets import WildGuardMixDataset
 from iris.model_wrappers.guard_models import WildGuard
@@ -11,11 +7,16 @@ from iris.model_wrappers.guard_models import WildGuard
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
+    parser.add_argument("--checkpoint_path", type=str, default="./finetuned_models/sft_wildguard/checkpoint-1220")
     parser.add_argument("--attack_engine", type=str, default="vanilla")
     args = parser.parse_args()
 
     # Initial model
-    model = WildGuard(model_name_or_path="allenai/wildguard")
+    model = WildGuard(
+        model_name_or_path=args.model_name,
+        checkpoint_path=args.checkpoint_path,
+    )
 
     # Harmful prompts
     dataset = WildGuardMixDataset(intention="harmful", attack_engine=args.attack_engine)
