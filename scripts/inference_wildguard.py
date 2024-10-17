@@ -32,7 +32,7 @@ if __name__ == "__main__":
             labels = sample.instructions_true_label
             for prompt, label in zip(prompts, labels):
                 response = model.generate(prompt, return_probs=True)
-                cache = model.model.logitlens.fetch_cache(return_logits=True, return_activations=True)
+                cache = model.model.logitlens.fetch_cache(return_tokens=False, return_logits=True, return_activations=True)
                 f.write(json.dumps({
                     "prompt": prompt,
                     "response": response,
