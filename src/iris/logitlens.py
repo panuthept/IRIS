@@ -27,11 +27,11 @@ class LogitLens:
         self.tokenizer = tokenizer
         self.module_names = self._resolve_module_names(module_names)
 
-        self.cached_activations: Dict[str, Tensor] = {}
+        self.cached_activations: Dict[str, List[List[float]]] = {}
         self.cached_logits: Dict[str, List[List[Tuple[int, float]]]] = {}
 
     def _clear_cache(self):
-        self.cached_activations: Dict[str, Tensor] = {}
+        self.cached_activations: Dict[str, List[List[float]]] = {}
         self.cached_logits: Dict[str, List[List[Tuple[int, float]]]] = {}
 
     def _resolve_module_names(self, module_names):
@@ -49,29 +49,33 @@ class LogitLens:
             # Get last token activations
             activations = output[:, -1]  # (batch_size, hidden_size)
             logits = self.lm_head(activations)  # (batch_size, vocab_size)
-            token_ids: List[List[int]] = [torch.argsort(logits[batch_idx], descending=True)[:self.k].tolist() for batch_idx in range(logits.size(0))]
 
             # Update cached_activations
-            activations = activations.detach().cpu().clone()
+            activations = activations.detach().cpu().clone().tolist()
             if name not in self.cached_activations:
                 self.cached_activations[name] = activations
             else:
-                self.cached_activations[name] = torch.cat([self.cached_activations[name], activations], dim=0)
+                self.cached_activations[name].extend(activations)
             
             # Update cached_logits
-            logits = logits.detach().cpu().clone()
+            sorted_logits, sorted_indices = torch.sort(logits, descending=True, dim=-1)
+            topk_logits = sorted_logits[:, :self.k].detach().cpu().clone().tolist()
+            topk_indices = sorted_indices[:, :self.k].detach().cpu().clone().tolist()
+
             if name not in self.cached_logits:
                 self.cached_logits[name] = []
-            self.cached_logits[name].extend(list(zip(token_ids, logits)))
+            self.cached_logits[name].extend([list(zip(topk_indices[batch_idx], topk_logits[batch_idx])) for batch_idx in range(len(topk_logits))])
         return hook
     
-    def _decode(self, logits: List[List[Tuple[int, float]]]) -> List[List[Tuple[str, float]]]:
-        tokens: List[List[Tuple[str, float]]] = []
-        for sample_logits in logits:
-            tokens = self.tokenizer.convert_ids_to_tokens([token_id for token_id, _ in sample_logits])
-            scores = [score for _, score in sample_logits]
-            tokens.append(list(zip(tokens, scores)))
-        return tokens
+    def _decode(self, logits: Dict[str, List[List[Tuple[int, float]]]]) -> Dict[str, List[List[Tuple[str, float]]]]:
+        decoded_logits: Dict[str, List[List[Tuple[str, float]]]] = {}
+        for module_name in logits:
+            decoded_logits[module_name] = []
+            for sample_logits in logits[module_name]:
+                tokens = self.tokenizer.convert_ids_to_tokens([token_id for token_id, _ in sample_logits])
+                scores = [score for _, score in sample_logits]
+                decoded_logits[module_name].append(list(zip(tokens, scores)))
+        return decoded_logits
     
     def register_hooks(self, model):
         for name, module in model.named_modules():
@@ -79,45 +83,27 @@ class LogitLens:
                 module.register_forward_hook(self._add_hook(name))
     
     def cache_logits(self, logits: Tensor, module_name: str):
-        token_ids: List[List[int]] = [torch.argsort(logits[batch_idx], descending=True)[:self.k].tolist() for batch_idx in range(logits.size(0))]
         # Update cached_logits
-        logits = logits.detach().cpu().clone()
+        sorted_logits, sorted_indices = torch.sort(logits, descending=True, dim=-1)
+        topk_logits = sorted_logits[:, :self.k].detach().cpu().clone().tolist()
+        topk_indices = sorted_indices[:, :self.k].detach().cpu().clone().tolist()
+
         if module_name not in self.cached_logits:
             self.cached_logits[module_name] = []
-        self.cached_logits[module_name].extend(list(zip(token_ids, logits)))
+        self.cached_logits[module_name].extend([list(zip(topk_indices[batch_idx], topk_logits[batch_idx])) for batch_idx in range(len(topk_logits))])
 
-    def fetch_cache(self, decode: bool = True) -> Dict[str, Any]:
-        cache = {
-            "tokens": self._decode(self.cached_logits) if decode else None, 
-            "logits": self.cached_logits, 
-            "activations": self.cached_activations
-        }
+    def fetch_cache(
+        self, 
+        return_tokens: bool = True,
+        return_logits: bool = False,
+        return_activations: bool = False,
+    ) -> Dict[str, Any]:
+        cache = {}
+        if return_tokens:
+            cache["tokens"] = self._decode(self.cached_logits)
+        if return_logits:
+            cache["logits"] = self.cached_logits
+        if return_activations:
+            cache["activations"] = self.cached_activations
         self._clear_cache()
         return cache
-
-    # def get_last_activations(
-    #     self, 
-    #     decode_activations: bool = True,
-    # ) -> Dict[str, Union[List[str], Tensor]]:
-    #     last_activations = {}
-    #     for module_name in self.cached_logits:
-    #         activations = self.cached_logits[module_name][-1]
-    #         if decode_activations:
-    #             activations = self.tokenizer.convert_ids_to_tokens(activations)
-    #         last_activations[module_name] = activations
-    #     return last_activations
-    
-    # def get_activations(self, decode_activations: bool = True) -> Dict[str, Union[List[Tuple[str, int]], Tensor]]:
-    #     # Accumulate activations
-    #     accum_activations = {}
-    #     for module_name in self.cached_logits:
-    #         accum_activations[module_name] = {}
-    #         for sample_activations in self.cached_logits[module_name]:
-    #             for token_id in sample_activations:
-    #                 token = self.tokenizer.convert_ids_to_tokens([token_id])[0]
-    #                 if token not in accum_activations[module_name]:
-    #                     accum_activations[module_name][token] = 0
-    #                 accum_activations[module_name][token] += 1
-    #         # Sort activations
-    #         accum_activations[module_name] = sorted(accum_activations[module_name].items(), key=lambda x: x[1], reverse=True)[:self.k]
-    #     return accum_activations

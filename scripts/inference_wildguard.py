@@ -11,7 +11,7 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint_path", type=str, default="./finetuned_models/sft_wildguard/checkpoint-1220")
     parser.add_argument("--dataset_name", type=str, default="JailbreakBenchDataset")
     parser.add_argument("--prompt_intention", type=str, default=None)
-    parser.add_argument("--attack_engine", type=str, default="vanilla")
+    parser.add_argument("--attack_engine", type=str, default=None)
     parser.add_argument("--dataset_split", type=str, default="test")
     parser.add_argument("--output_path", type=str, default="./outputs/inference_wildguard.jsonl")
     args = parser.parse_args()
@@ -26,16 +26,16 @@ if __name__ == "__main__":
     dataset = load_dataset(args.dataset_name, args.prompt_intention, args.attack_engine)
     samples = dataset.as_samples(split=args.dataset_split)
 
-    for sample in tqdm(samples):
-        prompts = sample.get_prompts()
-        labels = sample.instructions_true_label
-        for prompt, label in zip(prompts, labels):
-            response = model.generate(prompt, return_probs=True)
-            activations = model.model.logitlens.get_last_activations()
-            with open(args.output_path, "w") as f:
+    with open(args.output_path, "w") as f:
+        for sample in tqdm(samples):
+            prompts = sample.get_prompts()
+            labels = sample.instructions_true_label
+            for prompt, label in zip(prompts, labels):
+                response = model.generate(prompt, return_probs=True)
+                cache = model.model.logitlens.fetch_cache(return_logits=True, return_activations=True)
                 f.write(json.dumps({
                     "prompt": prompt,
                     "response": response,
                     "label": label,
-                    "activations": activations
+                    "cache": cache
                 }, ensure_ascii=False) + "\n")
