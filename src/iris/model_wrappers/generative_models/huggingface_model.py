@@ -9,7 +9,7 @@ from peft import LoraConfig
 from datasets import Dataset
 from accelerate import PartialState
 from iris.logitlens import LogitLens
-from typing import List, Union, Callable, Tuple, Optional
+from typing import List, Callable, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
@@ -86,27 +86,10 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
     ):
         # Load model
         if checkpoint_path:
-            self.llm = AutoModelForCausalLM.from_pretrained(
-                checkpoint_path,
-                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
-                local_files_only=True,
-            )
-            print(f"Loaded model from checkpoint: {checkpoint_path} successfully.")
+            self.llm = self.load_finetuned_model(model_name_or_path, checkpoint_path)
         else:
-            try:
-                self.llm = AutoModelForCausalLM.from_pretrained(
-                    model_name_or_path,
-                    cache_dir="./data/models",
-                    device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
-                    local_files_only=True,
-                )
-            except:
-                self.llm = AutoModelForCausalLM.from_pretrained(
-                    model_name_or_path,
-                    cache_dir="./data/models",
-                    device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
-                    local_files_only=False,
-                )
+            self.llm = self.load_pretrained_model(model_name_or_path)
+            
         # Load tokenizer
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(
@@ -132,6 +115,44 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         self.logitlens.register_hooks(self.llm)
         self.model_name = model_name_or_path
         super().__init__(**kwargs)
+
+    def load_pretrained_model(self, model_name_or_path: str) -> AutoModelForCausalLM:
+        try:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name_or_path,
+                cache_dir="./data/models",
+                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                local_files_only=True,
+            )
+        except:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name_or_path,
+                cache_dir="./data/models",
+                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                local_files_only=False,
+            )
+        return model
+
+    def load_finetuned_model(self, model_name, checkpoint_path: str) -> AutoModelForCausalLM:
+        if os.path.exists(os.path.join(checkpoint_path, "adapter_model.safetensors")):
+            from peft import PeftModel # Lazy import
+            # Load base model
+            model = self.load_pretrained_model(model_name)
+            # Load PEFT model (finetuned)
+            peft_model = PeftModel.from_pretrained(model, checkpoint_path)
+            # Merge and unload the PEFT model
+            model = peft_model.merge_and_unload()
+            print(f"Loaded model from PEFT checkpoint: {checkpoint_path} successfully.")
+        elif os.path.exists(os.path.join(checkpoint_path, "model.safetensors")):
+            model = AutoModelForCausalLM.from_pretrained(
+                checkpoint_path,
+                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                local_files_only=True,
+            )
+            print(f"Loaded model from full checkpoint: {checkpoint_path} successfully.")
+        else:
+            raise ValueError(f"Full and LoRA models not found at {checkpoint_path}")
+        return model
 
     def get_model_name(self) -> str:
         # TODO: Add a better way to get the model name. the current way is not reliable as the model_name_or_path can be a path
