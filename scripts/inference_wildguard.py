@@ -1,7 +1,7 @@
 import json
 import argparse
 from tqdm import tqdm
-from iris.datasets import WildGuardMixDataset
+from iris.datasets import load_dataset
 from iris.model_wrappers.guard_models import WildGuard
 
 
@@ -9,7 +9,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
     parser.add_argument("--checkpoint_path", type=str, default="./finetuned_models/sft_wildguard/checkpoint-1220")
+    parser.add_argument("--dataset_name", type=str, default="JailbreakBenchDataset")
+    parser.add_argument("--prompt_intention", type=str, default=None)
     parser.add_argument("--attack_engine", type=str, default="vanilla")
+    parser.add_argument("--dataset_split", type=str, default="test")
+    parser.add_argument("--output_path", type=str, default="./outputs/inference_wildguard.jsonl")
     args = parser.parse_args()
 
     # Initial model
@@ -18,35 +22,17 @@ if __name__ == "__main__":
         checkpoint_path=args.checkpoint_path,
     )
 
-    # Harmful prompts
-    dataset = WildGuardMixDataset(intention="harmful", attack_engine=args.attack_engine)
-    samples = dataset.as_samples(split="test")
+    # Initial dataset
+    dataset = load_dataset(args.dataset_name, args.prompt_intention, args.attack_engine)
+    samples = dataset.as_samples(split=args.dataset_split)
 
     for sample in tqdm(samples):
         prompts = sample.get_prompts()
-        labels = ["Harmful"] * len(prompts)
+        labels = sample.instructions_true_label
         for prompt, label in zip(prompts, labels):
-            response = model.generate(prompt, return_probs=False)
+            response = model.generate(prompt, return_probs=True)
             activations = model.model.logitlens.get_last_activations()
-            with open("./harmful_prompts.jsonl", "a") as f:
-                f.write(json.dumps({
-                    "prompt": prompt,
-                    "response": response,
-                    "label": label,
-                    "activations": activations
-                }, ensure_ascii=False) + "\n")
-
-    # Benign prompts
-    dataset = WildGuardMixDataset(intention="benign", attack_engine=args.attack_engine)
-    samples = dataset.as_samples(split="test")
-
-    for sample in tqdm(samples):
-        prompts = sample.get_prompts()
-        labels = ["Benign"] * len(prompts)
-        for prompt, label in zip(prompts, labels):
-            response = model.generate(prompt, return_probs=False)
-            activations = model.model.logitlens.get_last_activations()
-            with open("./benign_prompts.jsonl", "a") as f:
+            with open(args.output_path, "w") as f:
                 f.write(json.dumps({
                     "prompt": prompt,
                     "response": response,
