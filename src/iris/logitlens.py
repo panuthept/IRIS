@@ -7,7 +7,10 @@ from typing import List, Dict, Union, Tuple
 DEFAULT_MODULE_NAMES = {
     "allenai/wildguard": [f"model.layers.{layer_idx}.self_attn" for layer_idx in range(32)] + 
         [f"model.layers.{layer_idx}.mlp" for layer_idx in range(32)] + \
-        [f"model.layers.{layer_idx}" for layer_idx in range(32)]
+        [f"model.layers.{layer_idx}" for layer_idx in range(32)],
+    "mistralai/Mistral-7B-v0.3": [f"model.layers.{layer_idx}.self_attn" for layer_idx in range(32)] + 
+        [f"model.layers.{layer_idx}.mlp" for layer_idx in range(32)] + \
+        [f"model.layers.{layer_idx}" for layer_idx in range(32)],
 }
 
 
