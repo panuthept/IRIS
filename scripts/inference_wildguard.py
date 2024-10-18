@@ -6,14 +6,14 @@ from iris.datasets import load_dataset
 from iris.model_wrappers.guard_models import WildGuard
 
 """
-CUDA_VISIBLE_DEVICES=? python scripts/inference_wildguard.py \
+CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
 --dataset_name WildGuardMixDataset \
---prompt_intention benign \
+--prompt_intention harmful \
 --attack_engine vanilla \
 --dataset_split train \
 --save_tokens \
---output_path ./outputs/wildguard/WildGuardMixDataset/vanilla_benign_prompts.jsonl
+--output_path ./outputs/wildguard/WildGuardMixDataset/train/vanilla_harmful_prompts.jsonl
 """
 
 if __name__ == "__main__":
