@@ -1,16 +1,29 @@
 import torch
+import random
 import argparse
 from trl import SFTConfig
+from peft import LoraConfig
 from iris.datasets import WildGuardMixDataset
 from iris.model_wrappers.guard_models import WildGuard
+
+
+####################### SFT with LoRA #######################
+# accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard --use_lora
+# accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_vanilla --use_lora --attack_engine vanilla
+# accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_adversarial --use_lora --attack_engine adversarial
+##################### SFT Full-finetune #####################
+# accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard
+# accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_vanilla --attack_engine vanilla
+# accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_adversarial --attack_engine adversarial
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
+    parser.add_argument("--attack_engine", type=str, default=None)
     parser.add_argument("--cache_dir", type=str, default="./data/datasets/wildguardmix")
     parser.add_argument("--train_eval_split", type=float, default=0.9)
-    parser.add_argument("--max_seq_length", type=int, default=512)
+    parser.add_argument("--max_seq_length", type=int, default=8192)
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
     parser.add_argument("--learning_rate", type=float, default=2e-6)
@@ -20,13 +33,21 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", type=int, default=2)
     parser.add_argument("--eval_steps", type=int, default=10)
     parser.add_argument("--output_dir", type=str, default="./finetuned_models/sft_wildguard")
-    parser.add_argument("--report_to", type=str, default="none")
+    parser.add_argument("--report_to", type=str, default="all")
+    parser.add_argument("--allow_cpu", action="store_true")
+    parser.add_argument("--use_lora", action="store_true")
+    parser.add_argument("--lora_rank", type=int, default=16)
+    parser.add_argument("--lora_alpha", type=int, default=32)
+    parser.add_argument("--lora_dropout", type=float, default=0.05)
     args = parser.parse_args()
 
-    model = WildGuard(model_name_or_path=args.model_name)
-    dataset = WildGuardMixDataset(cache_dir=args.cache_dir)
+    random.seed(args.seed)
 
+    model = WildGuard(model_name_or_path=args.model_name)
+    dataset = WildGuardMixDataset(attack_engine=args.attack_engine, cache_dir=args.cache_dir)
     samples = dataset.as_samples(split="train")
+
+    random.shuffle(samples)
     train_size = int(len(samples) * args.train_eval_split)
     train_samples, eval_samples = samples[:train_size], samples[train_size:]
     # Log the number of samples in the train and eval datasets
@@ -34,7 +55,7 @@ if __name__ == "__main__":
     print(f"Eval size: {len(eval_samples)}")
 
     is_gpu_available = torch.cuda.is_available()
-    if is_gpu_available:
+    if is_gpu_available or args.allow_cpu:
         print(f"GPU Count: {torch.cuda.device_count()}")
         do_eval = len(eval_samples) > 0
         model.train_sft(
@@ -51,12 +72,12 @@ if __name__ == "__main__":
                 weight_decay=args.weight_decay,
                 warmup_ratio=args.warmup_ratio,
                 num_train_epochs=args.epochs,
-                evaluation_strategy="steps",
+                eval_strategy="steps",
                 logging_strategy="steps",
                 logging_steps=10,
                 eval_steps=args.eval_steps,
                 save_steps=args.eval_steps,
-                save_total_limit=5,
+                save_total_limit=12,
                 load_best_model_at_end=True,
                 metric_for_best_model="eval_loss",
                 greater_is_better=False,
@@ -66,4 +87,11 @@ if __name__ == "__main__":
                 do_predict=False,
                 seed=args.seed,
             ),
+            peft_config=LoraConfig(
+                r=args.lora_rank,
+                lora_alpha=args.lora_alpha,
+                lora_dropout=args.lora_dropout,
+                bias="none",
+                task_type="CAUSAL_LM",
+            ) if args.use_lora else None,
         )

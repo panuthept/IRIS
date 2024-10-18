@@ -76,12 +76,13 @@ class LlamaGuard(GuardLLM):
     def __init__(
             self, 
             model_name_or_path: str = "meta-llama/Llama-Guard-3-8B", 
+            checkpoint_path: str = None,
             api_key: str = None,
             api_base: str = None,
             max_tokens: int = 4000,
             temperature: float = 1,
             pipeline_kwargs: dict = None,
-            use_cache: bool = True,
+            use_cache: bool = False,
             cache_path: str = "./cache",
             cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
     ):
@@ -105,6 +106,7 @@ class LlamaGuard(GuardLLM):
         else:
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path,
+                checkpoint_path=checkpoint_path,
                 max_tokens=max_tokens,
                 pipeline_kwargs=pipeline_kwargs,
                 use_cache=use_cache,
