@@ -1,9 +1,20 @@
+import os
 import json
 import argparse
 from tqdm import tqdm
 from iris.datasets import load_dataset
 from iris.model_wrappers.guard_models import WildGuard
 
+"""
+CUDA_VISIBLE_DEVICES=? python scripts/inference_wildguard.py \
+--model_name mistralai/Mistral-7B-v0.3 \
+--checkpoint_path ./finetuned_models/sft_wildguard/checkpoint-1220 \
+--dataset_name WildGuardMixDataset \
+--attack_engine vanilla \
+--dataset_split train \
+--save_tokens \
+--output_path ./outputs/wildguard/WildGuardMixDataset/inference_wildguard.jsonl
+"""
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -28,6 +39,9 @@ if __name__ == "__main__":
     # Initial dataset
     dataset = load_dataset(args.dataset_name, args.prompt_intention, args.attack_engine)
     samples = dataset.as_samples(split=args.dataset_split)
+
+    # Create save directory
+    os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
 
     with open(args.output_path, "w") as f:
         for sample in tqdm(samples):
