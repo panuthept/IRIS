@@ -51,6 +51,7 @@ class GenerativeLLM(LLM):
                 apply_chat_template=apply_chat_template, 
                 **kwargs
             )
+        if self.use_cache:
             # Cache the answer
             self.cache_storage.cache(
                 answer, 
