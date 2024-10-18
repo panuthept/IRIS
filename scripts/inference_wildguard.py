@@ -13,6 +13,9 @@ if __name__ == "__main__":
     parser.add_argument("--prompt_intention", type=str, default=None)
     parser.add_argument("--attack_engine", type=str, default=None)
     parser.add_argument("--dataset_split", type=str, default="test")
+    parser.add_argument("--save_tokens", action="store_true")
+    parser.add_argument("--save_logits", action="store_true")
+    parser.add_argument("--save_activations", action="store_true")
     parser.add_argument("--output_path", type=str, default="./outputs/inference_wildguard.jsonl")
     args = parser.parse_args()
 
@@ -32,7 +35,7 @@ if __name__ == "__main__":
             labels = sample.instructions_true_label
             for prompt, label in zip(prompts, labels):
                 response = model.generate(prompt, return_probs=True)
-                cache = model.model.logitlens.fetch_cache(return_tokens=False, return_logits=True, return_activations=True)
+                cache = model.model.logitlens.fetch_cache(return_tokens=args.save_tokens, return_logits=args.save_logits, return_activations=args.save_activations)
                 f.write(json.dumps({
                     "prompt": prompt,
                     "response": response,
