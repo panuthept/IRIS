@@ -27,8 +27,12 @@ class LogitLens:
         self.tokenizer = tokenizer
         self.module_names = self._resolve_module_names(module_names)
 
+        self.intermediate_logits: Dict[str, Tensor] = {}
         self.cached_activations: Dict[str, List[List[float]]] = {}
         self.cached_logits: Dict[str, List[List[Tuple[int, float]]]] = {}
+
+    def _clear_intermediate_logits(self):
+        self.intermediate_logits: Dict[str, Tensor] = {}
 
     def _clear_cache(self):
         self.cached_activations: Dict[str, List[List[float]]] = {}
@@ -49,6 +53,9 @@ class LogitLens:
             # Get last token activations
             activations = output[:, -1]  # (batch_size, hidden_size)
             logits = self.lm_head(activations)  # (batch_size, vocab_size)
+            
+            # Update intermediate logits
+            self.intermediate_logits[name] = logits
 
             # Update cached_activations
             activations = activations.detach().cpu().clone().tolist()
@@ -92,6 +99,11 @@ class LogitLens:
             self.cached_logits[module_name] = []
         self.cached_logits[module_name].extend([list(zip(topk_indices[batch_idx], topk_logits[batch_idx])) for batch_idx in range(len(topk_logits))])
 
+    def fetch_intermediate_logits(self):
+        intermediate_logits = self.intermediate_logits
+        self._clear_intermediate_logits()
+        return intermediate_logits
+    
     def fetch_cache(
         self, 
         return_tokens: bool = True,

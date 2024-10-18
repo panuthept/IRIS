@@ -4,7 +4,7 @@ from peft import LoraConfig
 from datasets import Dataset
 from iris.cache import CacheMode
 from iris.data_types import Sample
-from typing import List, Tuple, Union
+from typing import List, Dict, Any, Tuple, Union
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
@@ -109,15 +109,11 @@ class WildGuard(GuardLLM):
         response_template_ids = [template_id for template_id, prompt_id in zip(response_template_ids[::-1], prompt_ids[::-1]) if template_id == prompt_id]
         return response_template_ids[::-1]
 
-    def train_sft(
+    def _prepare_datasets(
         self, 
-        sft_config: SFTConfig,
         train_samples: List[Sample],
         eval_samples: List[Sample] = None,
-        peft_config: LoraConfig = None,
-    ):
-        """ This method prepare the training examples format for WildGuard prompt completion. """
-        assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
+    ) -> Dict[str, Any]:
         # Create train dataset
         train_dataset = Dataset.from_dict(
             {
@@ -132,12 +128,28 @@ class WildGuard(GuardLLM):
                 "answer": [" yes" if sample.instructions_true_label[0] == "Harmful" else " no" for sample in eval_samples],
             }
         ) if eval_samples is not None else None
+        return {
+            "train": train_dataset,
+            "eval": eval_dataset,
+        }
+
+    def train_sft(
+        self, 
+        sft_config: SFTConfig,
+        train_samples: List[Sample],
+        eval_samples: List[Sample] = None,
+        peft_config: LoraConfig = None,
+    ):
+        """ This method prepare the training examples format for WildGuard prompt completion. """
+        assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
+        # Prepare train and evaluation datasets
+        datasets = self._prepare_datasets(train_samples, eval_samples)
         # Create formatting prompts function
         formatting_prompts_func = lambda x: [f'{x["instruction"][i]}{x["answer"][i]}' for i in range(len(x["instruction"]))]
         # Train model
         self.model.train_sft(
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
+            train_dataset=datasets["train"],
+            eval_dataset=datasets["eval"],
             response_template=self.response_template_ids,
             formatting_prompts_func=formatting_prompts_func,
             sft_config=sft_config,
@@ -148,35 +160,27 @@ class WildGuard(GuardLLM):
         self, 
         sft_config: SFTConfig,
         train_samples: List[Sample],
+        intermediate_labels: Dict[str, Dict[int, int]],
         eval_samples: List[Sample] = None,
         peft_config: LoraConfig = None,
+        iris_alpha: float = 0.5,
     ):
         """ This method prepare the training examples format for WildGuard prompt completion. """
         assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
-        # Create train dataset
-        train_dataset = Dataset.from_dict(
-            {
-                "instruction": [self.prompt_clf_template.format(instruction=sample.instructions[0], response="") for sample in train_samples],
-                "answer": [" yes" if sample.instructions_true_label[0] == "Harmful" else " no" for sample in train_samples],
-            }
-        )
-        # Create evaluation dataset
-        eval_dataset = Dataset.from_dict(
-            {
-                "instruction": [self.prompt_clf_template.format(instruction=sample.instructions[0], response="") for sample in eval_samples],
-                "answer": [" yes" if sample.instructions_true_label[0] == "Harmful" else " no" for sample in eval_samples],
-            }
-        ) if eval_samples is not None else None
+        # Prepare train and evaluation datasets
+        datasets = self._prepare_datasets(train_samples, eval_samples)
         # Create formatting prompts function
         formatting_prompts_func = lambda x: [f'{x["instruction"][i]}{x["answer"][i]}' for i in range(len(x["instruction"]))]
         # Train model
         self.model.train_iris(
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
+            train_dataset=datasets["train"],
+            eval_dataset=datasets["eval"],
+            intermediate_labels=intermediate_labels,
             response_template=self.response_template_ids, 
             formatting_prompts_func=formatting_prompts_func,
             sft_config=sft_config,
             peft_config=peft_config,
+            iris_alpha=iris_alpha,
         )
     
 

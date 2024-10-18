@@ -3,25 +3,104 @@ import torch
 import transformer_lens.utils as utils
 
 from tqdm import tqdm
+from typing import Dict
 from torch import Tensor
-from jaxtyping import Int
 from peft import LoraConfig
 from datasets import Dataset
+from jaxtyping import Int, Float
 from accelerate import PartialState
 from iris.logitlens import LogitLens
 from typing import List, Callable, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers.trainer import _is_peft_model, MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
 
 
 class IRISTrainer(SFTTrainer):
+    """
+    Example of intermediate_labels:
+    intermediate_labels = {
+        "model.layers.18": {label_id: token_id},
+        "model.layers.19": {label_id: token_id},
+        ...
+    }
+    """
+    def __init__(
+        self, 
+        logitlens: LogitLens, 
+        intermediate_labels: Dict[str, Dict[int, int]],
+        iris_alpha: float = 0.5,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.iris_alpha = iris_alpha
+        self.logitlens = logitlens
+        self.intermediate_labels = intermediate_labels
+
+    def _compute_intermediate_loss(
+        self, 
+        intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]], 
+        final_labels: Int[Tensor, "batch"],
+    ):
+        flatten_intermediate_labels: Int[Tensor, "layer*batch"] = []
+        flatten_intermediate_logits: Float[Tensor, "layer*batch vocab"] = []
+        for module_name in self.intermediate_labels:
+            for batch_idx in range(intermediate_logits[module_name].size(0)):
+                flatten_intermediate_logits.append(intermediate_logits[module_name][batch_idx])
+                flatten_intermediate_labels.append(self.intermediate_labels[module_name][final_labels[batch_idx].item()])
+        # Convert to tensors
+        flatten_intermediate_logits = torch.stack(flatten_intermediate_logits, dim=0)
+        flatten_intermediate_labels = torch.tensor(flatten_intermediate_labels, device=final_labels.device)
+
     def compute_loss(self, model, inputs, return_outputs=False):
-        print(inputs)
-        outputs = super().compute_loss(model, inputs, return_outputs=return_outputs)
-        print(outputs)
-        print("*" * 100)
-        return outputs
+        """
+        How the loss is computed by Trainer. By default, all models return the loss in the first element.
+
+        Subclass and override for custom behavior.
+        """
+        # Model forward pass
+        outputs = model(**inputs)
+        # Get intermediate logits
+        intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
+        print(intermediate_logits)
+
+        # Save past state if it exists
+        # TODO: this needs to be fixed and made cleaner later.
+        if self.args.past_index >= 0:
+            self._past = outputs[self.args.past_index]
+
+        # Get labels for LabelSmoother loss
+        if self.label_smoother is not None and "labels" in inputs:
+            labels = inputs.pop("labels")
+        else:
+            labels = None
+        # Compute loss
+        if labels is not None:
+            unwrapped_model = self.accelerator.unwrap_model(model)
+            if _is_peft_model(unwrapped_model):
+                model_name = unwrapped_model.base_model.model._get_name()
+            else:
+                model_name = unwrapped_model._get_name()
+            # Compute LabelSmoother loss
+            if model_name in MODEL_FOR_CAUSAL_LM_MAPPING_NAMES.values():
+                lm_loss = self.label_smoother(outputs, labels, shift_labels=True)
+            else:
+                lm_loss = self.label_smoother(outputs, labels)
+            # Compute intermediate loss
+            intermediate_loss = self._compute_intermediate_loss(intermediate_logits, labels)
+            # Compute final loss
+            loss = (1 - self.iris_alpha) * lm_loss + self.iris_alpha * intermediate_loss
+        else:
+            if isinstance(outputs, dict) and "loss" not in outputs:
+                raise ValueError(
+                    "The model did not return a loss from the inputs, only the following keys: "
+                    f"{','.join(outputs.keys())}. For reference, the inputs it received are {','.join(inputs.keys())}."
+                )
+            # We don't use .loss here since the model may return tuples instead of ModelOutput.
+            loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
+
+        return (loss, outputs) if return_outputs else loss
 
 
 class HuggfacePipelineGenerativeLLM(GenerativeLLM):
@@ -369,15 +448,20 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
     def train_iris(
         self,
         train_dataset: Dataset,
+        intermediate_labels: Dict[str, Dict[int, int]],
         response_template: str,
         formatting_prompts_func: Callable,
         sft_config: SFTConfig = None,
         peft_config: LoraConfig = None,
         eval_dataset: Dataset = None,
+        iris_alpha: float = 0.5,
     ):
         self.tokenizer.padding_side = "right"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         trainer = IRISTrainer(
+            logitlens=self.logitlens,
+            intermediate_labels=intermediate_labels,
+            iris_alpha=iris_alpha,
             model=self.llm,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
