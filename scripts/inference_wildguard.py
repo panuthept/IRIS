@@ -7,20 +7,20 @@ from iris.model_wrappers.guard_models import WildGuard
 
 """
 CUDA_VISIBLE_DEVICES=? python scripts/inference_wildguard.py \
---model_name mistralai/Mistral-7B-v0.3 \
---checkpoint_path ./finetuned_models/sft_wildguard/checkpoint-1220 \
+--model_name allenai/wildguard \
 --dataset_name WildGuardMixDataset \
+--prompt_intention benign \
 --attack_engine vanilla \
 --dataset_split train \
 --save_tokens \
---output_path ./outputs/wildguard/WildGuardMixDataset/inference_wildguard.jsonl
+--output_path ./outputs/wildguard/WildGuardMixDataset/vanilla_benign_prompts.jsonl
 """
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
-    parser.add_argument("--checkpoint_path", type=str, default="./finetuned_models/sft_wildguard/checkpoint-1220")
-    parser.add_argument("--dataset_name", type=str, default="JailbreakBenchDataset")
+    parser.add_argument("--model_name", type=str, default="allenai/wildguard")
+    parser.add_argument("--checkpoint_path", type=str, default=None)
+    parser.add_argument("--dataset_name", type=str, default="WildGuardMixDataset")
     parser.add_argument("--prompt_intention", type=str, default=None)
     parser.add_argument("--attack_engine", type=str, default=None)
     parser.add_argument("--dataset_split", type=str, default="test")
