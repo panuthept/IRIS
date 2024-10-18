@@ -30,11 +30,11 @@ class IRISTrainer(SFTTrainer):
         self, 
         logitlens: LogitLens, 
         intermediate_labels: Dict[str, Dict[int, int]],
-        alpha: float = 0.5,
+        iris_alpha: float = 0.5,
         **kwargs
     ):
         super().__init__(**kwargs)
-        self.alpha = alpha
+        self.iris_alpha = iris_alpha
         self.logitlens = logitlens
         self.intermediate_labels = intermediate_labels
 
@@ -90,7 +90,7 @@ class IRISTrainer(SFTTrainer):
             # Compute intermediate loss
             intermediate_loss = self._compute_intermediate_loss(intermediate_logits, labels)
             # Compute final loss
-            loss = (1 - self.alpha) * lm_loss + self.alpha * intermediate_loss
+            loss = (1 - self.iris_alpha) * lm_loss + self.iris_alpha * intermediate_loss
         else:
             if isinstance(outputs, dict) and "loss" not in outputs:
                 raise ValueError(
@@ -448,16 +448,20 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
     def train_iris(
         self,
         train_dataset: Dataset,
+        intermediate_labels: Dict[str, Dict[int, int]],
         response_template: str,
         formatting_prompts_func: Callable,
         sft_config: SFTConfig = None,
         peft_config: LoraConfig = None,
         eval_dataset: Dataset = None,
+        iris_alpha: float = 0.5,
     ):
         self.tokenizer.padding_side = "right"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         trainer = IRISTrainer(
             logitlens=self.logitlens,
+            intermediate_labels=intermediate_labels,
+            iris_alpha=iris_alpha,
             model=self.llm,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
