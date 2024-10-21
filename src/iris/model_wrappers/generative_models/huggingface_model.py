@@ -422,15 +422,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         sft_config: SFTConfig = None,
         peft_config: LoraConfig = None,
         eval_dataset: Dataset = None,
-    ):
-        peft_config = LoraConfig(
-            r=16,
-            lora_alpha=32,
-            lora_dropout=0.05,
-            bias="none",
-            task_type="CAUSAL_LM",
-        )
-        
+    ):  
         self.tokenizer.padding_side = "right"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         trainer = SFTTrainer(
