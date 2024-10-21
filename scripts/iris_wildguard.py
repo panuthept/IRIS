@@ -46,60 +46,60 @@ if __name__ == "__main__":
 
     random.seed(args.seed)
 
-    # model = WildGuard(model_name_or_path=args.model_name)
-    # dataset = WildGuardMixDataset(attack_engine=args.attack_engine, cache_dir=args.cache_dir)
-    # samples = dataset.as_samples(split="train")
+    model = WildGuard(model_name_or_path=args.model_name)
+    dataset = WildGuardMixDataset(attack_engine=args.attack_engine, cache_dir=args.cache_dir)
+    samples = dataset.as_samples(split="train")
 
     # Load config for the intermediate_labels
     iris_config = load_iris_config(args.iris_config)
     print(iris_config)
 
-    # random.shuffle(samples)
-    # train_size = int(len(samples) * args.train_eval_split)
-    # train_samples, eval_samples = samples[:train_size], samples[train_size:]
-    # # Log the number of samples in the train and eval datasets
-    # print(f"Train size: {len(train_samples)}")
-    # print(f"Eval size: {len(eval_samples)}")
+    random.shuffle(samples)
+    train_size = int(len(samples) * args.train_eval_split)
+    train_samples, eval_samples = samples[:train_size], samples[train_size:]
+    # Log the number of samples in the train and eval datasets
+    print(f"Train size: {len(train_samples)}")
+    print(f"Eval size: {len(eval_samples)}")
 
-    # is_gpu_available = torch.cuda.is_available()
-    # if is_gpu_available or args.allow_cpu:
-    #     print(f"GPU Count: {torch.cuda.device_count()}")
-    #     do_eval = len(eval_samples) > 0
-    #     model.train_iris(
-    #         train_samples=train_samples,
-    #         eval_samples=eval_samples,
-    #         iris_config=iris_config,
-    #         sft_config=SFTConfig(
-    #             output_dir=args.output_dir, 
-    #             report_to=args.report_to,
-    #             max_seq_length=args.max_seq_length,
-    #             per_device_train_batch_size=args.batch_size,
-    #             per_device_eval_batch_size=args.batch_size,
-    #             gradient_accumulation_steps=args.gradient_accumulation_steps,
-    #             learning_rate=args.learning_rate,
-    #             weight_decay=args.weight_decay,
-    #             warmup_ratio=args.warmup_ratio,
-    #             num_train_epochs=args.epochs,
-    #             eval_strategy="steps",
-    #             logging_strategy="steps",
-    #             logging_steps=10,
-    #             eval_steps=args.eval_steps,
-    #             save_steps=args.eval_steps,
-    #             save_total_limit=args.save_total_limit,
-    #             load_best_model_at_end=True,
-    #             metric_for_best_model="eval_loss",
-    #             greater_is_better=False,
-    #             overwrite_output_dir=True,
-    #             do_train=True,
-    #             do_eval=do_eval,
-    #             do_predict=False,
-    #             seed=args.seed,
-    #         ),
-    #         peft_config=LoraConfig(
-    #             r=args.lora_rank,
-    #             lora_alpha=args.lora_alpha,
-    #             lora_dropout=args.lora_dropout,
-    #             bias="none",
-    #             task_type="CAUSAL_LM",
-    #         ) if args.use_lora else None,
-    #     )
+    is_gpu_available = torch.cuda.is_available()
+    if is_gpu_available or args.allow_cpu:
+        print(f"GPU Count: {torch.cuda.device_count()}")
+        do_eval = len(eval_samples) > 0
+        model.train_iris(
+            train_samples=train_samples,
+            eval_samples=eval_samples,
+            iris_config=iris_config,
+            sft_config=SFTConfig(
+                output_dir=args.output_dir, 
+                report_to=args.report_to,
+                max_seq_length=args.max_seq_length,
+                per_device_train_batch_size=args.batch_size,
+                per_device_eval_batch_size=args.batch_size,
+                gradient_accumulation_steps=args.gradient_accumulation_steps,
+                learning_rate=args.learning_rate,
+                weight_decay=args.weight_decay,
+                warmup_ratio=args.warmup_ratio,
+                num_train_epochs=args.epochs,
+                eval_strategy="steps",
+                logging_strategy="steps",
+                logging_steps=10,
+                eval_steps=args.eval_steps,
+                save_steps=args.eval_steps,
+                save_total_limit=args.save_total_limit,
+                load_best_model_at_end=True,
+                metric_for_best_model="eval_loss",
+                greater_is_better=False,
+                overwrite_output_dir=True,
+                do_train=True,
+                do_eval=do_eval,
+                do_predict=False,
+                seed=args.seed,
+            ),
+            peft_config=LoraConfig(
+                r=args.lora_rank,
+                lora_alpha=args.lora_alpha,
+                lora_dropout=args.lora_dropout,
+                bias="none",
+                task_type="CAUSAL_LM",
+            ) if args.use_lora else None,
+        )
