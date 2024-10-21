@@ -36,6 +36,8 @@ if __name__ == "__main__":
     parser.add_argument("--eval_steps", type=int, default=10)
     parser.add_argument("--output_dir", type=str, default="./finetuned_models/sft_wildguard")
     parser.add_argument("--report_to", type=str, default="all")
+    parser.add_argument("--bf16", action="store_true")
+    parser.add_argument("--fp16", action="store_true")
     parser.add_argument("--allow_cpu", action="store_true")
     parser.add_argument("--use_lora", action="store_true")
     parser.add_argument("--lora_rank", type=int, default=16)
@@ -94,6 +96,8 @@ if __name__ == "__main__":
                 do_eval=do_eval,
                 do_predict=False,
                 seed=args.seed,
+                bf16=args.bf16,
+                fp16=args.fp16,
             ),
             peft_config=LoraConfig(
                 r=args.lora_rank,
