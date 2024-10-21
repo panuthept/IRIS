@@ -84,6 +84,7 @@ class IRISTrainer(SFTTrainer):
             labels = inputs.pop("labels")
         else:
             labels = None
+        print(f"labels: {labels}")
         # Compute loss
         if labels is not None:
             unwrapped_model = self.accelerator.unwrap_model(model)
