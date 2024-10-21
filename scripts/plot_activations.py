@@ -1,61 +1,107 @@
 import json
+import argparse
 import numpy as np
 import seaborn as sns 
 import matplotlib.pyplot as plt 
+from tqdm import tqdm
+
+
+def load_examples(
+    load_path, 
+    k: int = 5,
+    layer_nums: int = 32,
+    max_examples: int = None,
+    correct_prediction_only: bool = False, 
+    incorrect_prediction_only: bool = False,
+    activation_template: str = "model.layers.{layer_id}",
+    ):
+    assert (correct_prediction_only and incorrect_prediction_only) == False, \
+        "Only one of correct_prediction_only and incorrect_prediction_only can be True"
+    
+    modules = set([activation_template.format(layer_id=i) for i in range(layer_nums)] + ["final_predictions"])
+
+    examples = []
+    prompts = set()
+    with open(load_path, "r") as f:
+        for line in tqdm(f):
+            example = json.loads(line)
+            if correct_prediction_only and example["response"] != example["label"]:
+                continue
+            if incorrect_prediction_only and example["response"] == example["label"]:
+                continue
+            if example["prompt"] in prompts:
+                continue
+            prompts.add(example["prompt"])
+
+            activations = {}
+            for module, activation in example["cache"]["tokens"].items():
+                if module in modules:
+                    activations[module] = activation[0][:k]
+            example = {"prompt": example["prompt"], "label": example["label"], "response": example["response"], "activations": activations}
+
+            examples.append(example)
+            if max_examples is not None and len(examples) >= max_examples:
+                break
+    return examples
 
 
 if __name__ == "__main__":
-    examples = []
-    # with open("./benign_prompts.jsonl", "r") as f:
-    #     for line in f:
-    #         example = json.loads(line)
-    #         if example["response"] == example["label"]:
-    #             examples.append(example)
-    #         # examples.append(example)
-    # examples = examples[:500]
-    # benign_count = len(examples)
-    # print(f"Benigns: {benign_count}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--load_path_1", type=str, required=True)
+    parser.add_argument("--load_path_2", type=str, default=None)
+    parser.add_argument("--correct_prediction_only", action="store_true")
+    parser.add_argument("--incorrect_prediction_only", action="store_true")
+    parser.add_argument("--max_examples", type=int, default=None)
+    parser.add_argument("--k", type=int, default=5)
+    parser.add_argument("--layer_nums", type=int, default=32)
+    parser.add_argument("--activation_template", type=str, default="model.layers.{layer_id}")
+    args = parser.parse_args()
 
-    with open("./harmful_prompts.jsonl", "r") as f:
-        for line in f:
-            example = json.loads(line)
-            if example["response"] == example["label"]:
-                examples.append(example)
-            # examples.append(example)
-    examples = examples[:500]
-
-    # with open("./adv_benign_prompts.jsonl", "r") as f:
-    #     for line in f:
-    #         example = json.loads(line)
-    #         if example["response"] != example["label"]:
-    #             examples.append(example)
-    #         # examples.append(example)
-
-    # with open("./adv_harmful_prompts.jsonl", "r") as f:
-    #     for line in f:
-    #         example = json.loads(line)
-    #         # if example["response"] == example["label"]:
-    #         #     examples.append(example)
-    #         examples.append(example)
- 
-    modules = [f"model.layers.{i}" for i in range(32)] + ["final_predictions"]
-    # modules = [f"model.layers.{i}.mlp" for i in range(32)] + ["final_predictions"]
-    # modules = [f"model.layers.{i}.self_attn" for i in range(32)] + ["final_predictions"]
+    examples = load_examples(
+        args.load_path_1,
+        k=args.k,
+        layer_nums=args.layer_nums,
+        max_examples=args.max_examples,
+        correct_prediction_only=args.correct_prediction_only,
+        incorrect_prediction_only=args.incorrect_prediction_only,
+        activation_template=args.activation_template,
+    )
+    if args.load_path_2:
+        examples += load_examples(
+            args.load_path_2,
+            k=args.k,
+            layer_nums=args.layer_nums,
+            max_examples=args.max_examples,
+            correct_prediction_only=args.correct_prediction_only,
+            incorrect_prediction_only=args.incorrect_prediction_only,
+            activation_template=args.activation_template,
+        )
 
     count = 0
     accum_activations = {}
     for example in examples:
+        # print(example["prompt"])
+        # print("=" * 100)
         activations = example["activations"]
         # if activations["model.layers.17"][0] == "▁yes":
         #     continue
         # print(example["prompt"])
         # print("-" * 100)
         for module_name, module_activations in activations.items():
-            if module_name not in modules:
-                continue
+            if module_name == "model.layers.17":
+                if (
+                    module_activations[0][0] == "▁yes" and \
+                    module_activations[1][0] == "yes" and \
+                    module_activations[2][0] == "▁Yes" and \
+                    module_activations[3][0] == "Yes" and \
+                    module_activations[4][0] == "▁outrage"
+                ):
+                    print(example["prompt"])
+                    print(module_activations)
+                    print("-" * 100)
             if module_name not in accum_activations:
                 accum_activations[module_name] = {}
-            for rank, token in enumerate(module_activations):
+            for rank, (token, logit) in enumerate(module_activations):
                 if rank not in accum_activations[module_name]:
                     accum_activations[module_name][rank] = {}
                 if token not in accum_activations[module_name][rank]:
@@ -114,3 +160,4 @@ if __name__ == "__main__":
     ) 
     plt.tight_layout()
     plt.show()
+    plt.close()

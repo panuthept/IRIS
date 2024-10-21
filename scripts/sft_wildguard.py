@@ -12,7 +12,7 @@ from iris.model_wrappers.guard_models import WildGuard
 # accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_vanilla --use_lora --attack_engine vanilla
 # accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_adversarial --use_lora --attack_engine adversarial
 ##################### SFT Full-finetune #####################
-# accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard
+# CUDA_VISIBLE_DEVICES=0,1,2 accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 4096 --batch_size 1 --gradient_accumulation_steps 42 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard
 # accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_vanilla --attack_engine vanilla
 # accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_adversarial --attack_engine adversarial
 
@@ -39,6 +39,7 @@ if __name__ == "__main__":
     parser.add_argument("--lora_rank", type=int, default=16)
     parser.add_argument("--lora_alpha", type=int, default=32)
     parser.add_argument("--lora_dropout", type=float, default=0.05)
+    parser.add_argument("--save_total_limit", type=int, default=1)
     args = parser.parse_args()
 
     random.seed(args.seed)
@@ -77,7 +78,7 @@ if __name__ == "__main__":
                 logging_steps=10,
                 eval_steps=args.eval_steps,
                 save_steps=args.eval_steps,
-                save_total_limit=12,
+                save_total_limit=args.save_total_limit,
                 load_best_model_at_end=True,
                 metric_for_best_model="eval_loss",
                 greater_is_better=False,
