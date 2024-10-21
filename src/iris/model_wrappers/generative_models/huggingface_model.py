@@ -18,6 +18,12 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from transformers.trainer import _is_peft_model, MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
 
 
+class CustomSFTTrainer(SFTTrainer):
+    def compute_loss(self, model, inputs, return_outputs=False):
+        print(inputs)
+        return super().compute_loss(model, inputs, return_outputs)
+
+
 class IRISTrainer(SFTTrainer):
     """
     Example of intermediate_labels:
@@ -70,6 +76,7 @@ class IRISTrainer(SFTTrainer):
         Subclass and override for custom behavior.
         """
         # Model forward pass
+        print(inputs)
         outputs = model(**inputs)
         # Get intermediate logits
         intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
@@ -439,7 +446,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             print("Starting FFT SFT training...")
         else:
             print("Starting PEFT SFT training...")
-        trainer = SFTTrainer(
+        trainer = CustomSFTTrainer(
             model=self.llm,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
