@@ -75,8 +75,14 @@ class IRISTrainer(SFTTrainer):
 
         Subclass and override for custom behavior.
         """
-        # Model forward pass
         print(inputs)
+        # Get labels for LabelSmoother loss
+        if self.label_smoother is not None and "labels" in inputs:
+            labels = inputs.pop("labels")
+        else:
+            labels = None
+        print(f"labels: {labels}")
+        # Model forward pass
         outputs = model(**inputs)
         # Get intermediate logits
         intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
@@ -86,12 +92,6 @@ class IRISTrainer(SFTTrainer):
         if self.args.past_index >= 0:
             self._past = outputs[self.args.past_index]
 
-        # Get labels for LabelSmoother loss
-        if self.label_smoother is not None and "labels" in inputs:
-            labels = inputs.pop("labels")
-        else:
-            labels = None
-        print(f"labels: {labels}")
         # Compute loss
         if labels is not None:
             unwrapped_model = self.accelerator.unwrap_model(model)
