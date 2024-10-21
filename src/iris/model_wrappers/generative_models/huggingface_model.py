@@ -65,6 +65,7 @@ class IRISTrainer(SFTTrainer):
                     flatten_intermediate_labels.append(intermediate_label[0])
                     flatten_intermediate_weights.append(intermediate_label[1])
         # Convert to tensors
+        print(f"flatten_intermediate_logits:\n{flatten_intermediate_logits}")
         flatten_intermediate_logits = torch.stack(flatten_intermediate_logits, dim=0)
         flatten_intermediate_labels = torch.tensor(flatten_intermediate_labels, device=final_labels.device)
         flatten_intermediate_weights = torch.tensor(flatten_intermediate_weights, device=final_labels.device)
