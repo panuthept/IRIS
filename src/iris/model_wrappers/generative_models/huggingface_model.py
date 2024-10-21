@@ -76,6 +76,7 @@ class IRISTrainer(SFTTrainer):
         Subclass and override for custom behavior.
         """
         print(inputs)
+        print(f"label_smoother: {self.label_smoother}")
         # Get labels for LabelSmoother loss
         if self.label_smoother is not None and "labels" in inputs:
             labels = inputs.pop("labels")
@@ -478,6 +479,10 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         """
         self.tokenizer.padding_side = "right"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+        if peft_config is None:
+            print("Starting FFT SFT training...")
+        else:
+            print("Starting PEFT SFT training...")
         trainer = IRISTrainer(
             logitlens=self.logitlens,
             iris_config=iris_config,
