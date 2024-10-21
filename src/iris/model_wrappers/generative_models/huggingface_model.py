@@ -21,15 +21,15 @@ class IRISTrainer(SFTTrainer):
     """
     Example of intermediate_labels:
     intermediate_labels = {
-        "model.layers.18": {label_id: token_id},
-        "model.layers.19": {label_id: token_id},
+        "model.layers.18": {label_id: (token_id, weight)},
+        "model.layers.19": {label_id: (token_id, weight)},
         ...
     }
     """
     def __init__(
         self, 
         logitlens: LogitLens, 
-        intermediate_labels: Dict[str, Dict[int, int]],
+        intermediate_labels: Dict[str, Dict[int, Dict[int, float]]],
         iris_alpha: float = 0.5,
         **kwargs
     ):
@@ -44,14 +44,21 @@ class IRISTrainer(SFTTrainer):
         final_labels: Int[Tensor, "batch"],
     ):
         flatten_intermediate_labels: Int[Tensor, "layer*batch"] = []
+        flatten_intermediate_weights: Float[Tensor, "layer*batch"] = []
         flatten_intermediate_logits: Float[Tensor, "layer*batch vocab"] = []
         for module_name in self.intermediate_labels:
             for batch_idx in range(intermediate_logits[module_name].size(0)):
                 flatten_intermediate_logits.append(intermediate_logits[module_name][batch_idx])
-                flatten_intermediate_labels.append(self.intermediate_labels[module_name][final_labels[batch_idx].item()])
+                flatten_intermediate_labels.append(self.intermediate_labels[module_name][final_labels[batch_idx].item()][0])
+                flatten_intermediate_weights.append(self.intermediate_labels[module_name][final_labels[batch_idx].item()][1])
         # Convert to tensors
         flatten_intermediate_logits = torch.stack(flatten_intermediate_logits, dim=0)
         flatten_intermediate_labels = torch.tensor(flatten_intermediate_labels, device=final_labels.device)
+        flatten_intermediate_weights = torch.tensor(flatten_intermediate_weights, device=final_labels.device)
+        print(f"flatten_intermediate_logits:\n{flatten_intermediate_logits}")
+        print(f"flatten_intermediate_labels:\n{flatten_intermediate_labels}")
+        print(f"flatten_intermediate_weights:\n{flatten_intermediate_weights}")
+        print("=" * 100)
 
     def compute_loss(self, model, inputs, return_outputs=False):
         """
@@ -63,7 +70,8 @@ class IRISTrainer(SFTTrainer):
         outputs = model(**inputs)
         # Get intermediate logits
         intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
-        print(intermediate_logits)
+        print("=" * 100)
+        print(f"intermediate_logits:\n{intermediate_logits}")
 
         # Save past state if it exists
         # TODO: this needs to be fixed and made cleaner later.
@@ -444,7 +452,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
     def train_iris(
         self,
         train_dataset: Dataset,
-        intermediate_labels: Dict[str, Dict[int, int]],
+        intermediate_labels: Dict[str, Dict[int, Tuple[int, float]]],
         response_template: str,
         formatting_prompts_func: Callable,
         sft_config: SFTConfig = None,
@@ -455,8 +463,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         """
         Example of intermediate_labels:
         intermediate_labels = {
-            "model.layers.18": {label_id: token_id},
-            "model.layers.19": {label_id: token_id},
+            "model.layers.18": {label_id: (token_id, weight)},
+            "model.layers.19": {label_id: (token_id, weight)},
             ...
         }
         """

@@ -160,7 +160,7 @@ class WildGuard(GuardLLM):
         self, 
         sft_config: SFTConfig,
         train_samples: List[Sample],
-        intermediate_labels: Dict[str, Dict[int, int]],
+        intermediate_labels: Dict[str, Dict[int, Tuple[int, float]]],
         eval_samples: List[Sample] = None,
         peft_config: LoraConfig = None,
         iris_alpha: float = 0.5,
