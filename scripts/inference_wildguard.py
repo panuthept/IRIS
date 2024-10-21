@@ -43,16 +43,36 @@ if __name__ == "__main__":
     # Create save directory
     os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
 
+    tp = 0
+    fp = 0
+    harmful_count = 0
+    benign_count = 0
     with open(args.output_path, "w") as f:
         for sample in tqdm(samples):
             prompts = sample.get_prompts()
-            labels = sample.instructions_true_label
-            for prompt, label in zip(prompts, labels):
+            gold_labels = sample.instructions_true_label
+            for prompt, gold_label in zip(prompts, gold_labels):
                 response = model.generate(prompt, return_probs=True)
+
+                classified_label = sorted(response, key=lambda x: x[1], reverse=True)[0][0]
+                if gold_label == "Harmful":
+                    harmful_count += 1
+                    if classified_label == "Harmful":
+                        tp += 1
+                else:
+                    benign_count += 1
+                    if classified_label == "Harmful":
+                        fp += 1
+
                 cache = model.model.logitlens.fetch_cache(return_tokens=args.save_tokens, return_logits=args.save_logits, return_activations=args.save_activations)
                 f.write(json.dumps({
                     "prompt": prompt,
                     "response": response,
-                    "label": label,
+                    "label": gold_label,
                     "cache": cache
                 }, ensure_ascii=False) + "\n")
+    # Calculate TPR and FPR
+    tpr = tp / (harmful_count + 1e-7)
+    fpr = fp / (benign_count + 1e-7)
+    print(f"TPR: {round(tpr, 2)}")
+    print(f"FPR: {round(fpr, 2)}")
