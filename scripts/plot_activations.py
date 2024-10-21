@@ -3,7 +3,9 @@ import argparse
 import numpy as np
 import seaborn as sns 
 import matplotlib.pyplot as plt 
+
 from tqdm import tqdm
+from transformers import AutoTokenizer
 
 
 def load_examples(
@@ -34,7 +36,7 @@ def load_examples(
             prompts.add(example["prompt"])
 
             activations = {}
-            for module, activation in example["cache"]["tokens"].items():
+            for module, activation in example["cache"]["logits"].items():
                 if module in modules:
                     activations[module] = activation[0][:k]
             example = {"prompt": example["prompt"], "label": example["label"], "response": example["response"], "activations": activations}
@@ -44,11 +46,28 @@ def load_examples(
                 break
     return examples
 
+def load_tokenizer(model_name):
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name,
+            cache_dir="./data/models",
+            local_files_only=True,
+        )
+    except:
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name,
+            cache_dir="./data/models",
+            local_files_only=False,
+        )
+    tokenizer.pad_token = tokenizer.eos_token
+    return tokenizer
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--load_path_1", type=str, required=True)
     parser.add_argument("--load_path_2", type=str, default=None)
+    parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
     parser.add_argument("--correct_prediction_only", action="store_true")
     parser.add_argument("--incorrect_prediction_only", action="store_true")
     parser.add_argument("--max_examples", type=int, default=None)
@@ -77,6 +96,8 @@ if __name__ == "__main__":
             activation_template=args.activation_template,
         )
 
+    tokenizer = load_tokenizer(args.model_name)
+
     count = 0
     accum_activations = {}
     for example in examples:
@@ -88,17 +109,17 @@ if __name__ == "__main__":
         # print(example["prompt"])
         # print("-" * 100)
         for module_name, module_activations in activations.items():
-            if module_name == "model.layers.17":
-                if (
-                    module_activations[0][0] == "▁yes" and \
-                    module_activations[1][0] == "yes" and \
-                    module_activations[2][0] == "▁Yes" and \
-                    module_activations[3][0] == "Yes" and \
-                    module_activations[4][0] == "▁outrage"
-                ):
-                    print(example["prompt"])
-                    print(module_activations)
-                    print("-" * 100)
+            # if module_name == "model.layers.17":
+            #     if (
+            #         module_activations[0][0] == "▁yes" and \
+            #         module_activations[1][0] == "yes" and \
+            #         module_activations[2][0] == "▁Yes" and \
+            #         module_activations[3][0] == "Yes" and \
+            #         module_activations[4][0] == "▁outrage"
+            #     ):
+            #         print(example["prompt"])
+            #         print(module_activations)
+            #         print("-" * 100)
             if module_name not in accum_activations:
                 accum_activations[module_name] = {}
             for rank, (token, logit) in enumerate(module_activations):
@@ -130,8 +151,9 @@ if __name__ == "__main__":
     for layer_idx, (module_name, activations) in enumerate(selected_activations.items()):
         labels = []
         for rank, (token, freq) in enumerate(activations):
+            token_str = tokenizer._convert_id_to_token(token)
             freq_matrix[rank][layer_idx] = freq
-            labels.append(f"{token}\n{freq}")
+            labels.append(f"{token_str}\n({token})\n{freq}")
         label_matrix.append(labels)
     label_matrix = np.asarray(label_matrix).T
 
