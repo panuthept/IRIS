@@ -74,16 +74,16 @@ class IRISTrainer(SFTTrainer):
             (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
         else:
             loss = super().compute_loss(model, inputs, return_outputs)
-        print(f"original loss:\n{loss}")
+        # print(f"original loss:\n{loss}")
         # Compute intermediate loss
         labels = inputs.pop("labels") if "labels" in inputs else None
         if labels is not None:
             intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
             intermediate_loss = self._compute_intermediate_loss(intermediate_logits, labels[:, -1])
-            print(f"intermediate_loss:\n{intermediate_loss}")
+            # print(f"intermediate_loss:\n{intermediate_loss}")
             loss = (1 - self.iris_alpha) * loss + self.iris_alpha * intermediate_loss
-        print(f"final loss:\n{loss}")
-        print("-" * 100)
+        # print(f"final loss:\n{loss}")
+        # print("-" * 100)
         return (loss, outputs) if return_outputs else loss
 
 
