@@ -57,6 +57,7 @@ class IRISTrainer(SFTTrainer):
         flatten_intermediate_logits = torch.stack(flatten_intermediate_logits, dim=0)
         flatten_intermediate_labels = torch.tensor(flatten_intermediate_labels, device=final_labels.device)
         flatten_intermediate_weights = torch.tensor(flatten_intermediate_weights, device=final_labels.device)
+        print("=" * 100)
         print(f"flatten_intermediate_logits:\n{flatten_intermediate_logits}")
         print(f"flatten_intermediate_labels:\n{flatten_intermediate_labels}")
         print(f"flatten_intermediate_weights:\n{flatten_intermediate_weights}")
@@ -72,8 +73,6 @@ class IRISTrainer(SFTTrainer):
         outputs = model(**inputs)
         # Get intermediate logits
         intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
-        print("=" * 100)
-        print(f"intermediate_logits:\n{intermediate_logits}")
 
         # Save past state if it exists
         # TODO: this needs to be fixed and made cleaner later.
