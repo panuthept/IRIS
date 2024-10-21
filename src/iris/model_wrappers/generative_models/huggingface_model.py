@@ -150,6 +150,17 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         max_logitlens_cache_size: int = 10,
         **kwargs,
     ):
+        """
+        params:
+            disable_logitlens: 
+                If True, the LogitLens will not be used.
+                Setting this to False will disable both fetch_intermediate_logits() and fetch_cache()
+            enable_logitlens_cache:
+                If True, the LogitLens will cache the activations and logits. 
+                Setting this to False will disable the fetch_cache(). But fetch_intermediate_logits() still works.
+            max_logitlens_cache_size: 
+                The maximum number of activations and logits to cache.
+        """
         # Load model
         if checkpoint_path:
             self.llm = self.load_finetuned_model(model_name_or_path, checkpoint_path)
