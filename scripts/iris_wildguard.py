@@ -57,8 +57,11 @@ if __name__ == "__main__":
     print(iris_config)
 
     random.shuffle(samples)
-    train_size = int(len(samples) * args.train_eval_split)
-    train_samples, eval_samples = samples[:train_size], samples[train_size:]
+    if args.train_eval_split == 1.0:
+        train_samples, eval_samples = samples, []
+    else:
+        train_size = int(len(samples) * args.train_eval_split)
+        train_samples, eval_samples = samples[:train_size], samples[train_size:]
     # Log the number of samples in the train and eval datasets
     print(f"Train size: {len(train_samples)}")
     print(f"Eval size: {len(eval_samples)}")
