@@ -22,7 +22,9 @@ class CustomSFTTrainer(SFTTrainer):
     def compute_loss(self, model, inputs, return_outputs=False):
         print(inputs)
         print(f"label_smoother: {self.label_smoother}")
-        return super().compute_loss(model, inputs, return_outputs)
+        outputs = super().compute_loss(model, inputs, return_outputs)
+        print(f"outputs:\n{outputs}")
+        return outputs
 
 
 class IRISTrainer(SFTTrainer):
