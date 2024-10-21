@@ -452,6 +452,14 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         eval_dataset: Dataset = None,
         iris_alpha: float = 0.5,
     ):
+        """
+        Example of intermediate_labels:
+        intermediate_labels = {
+            "model.layers.18": {label_id: token_id},
+            "model.layers.19": {label_id: token_id},
+            ...
+        }
+        """
         self.tokenizer.padding_side = "right"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         trainer = IRISTrainer(
