@@ -145,6 +145,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         model_name_or_path: str,  
         checkpoint_path: str = None,
         modules_to_cache: List[str] = None,
+        disable_logitlens: bool = False,
         **kwargs,
     ):
         # Load model
@@ -175,7 +176,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             tokenizer=self.tokenizer,
             module_names=modules_to_cache,
         )
-        self.logitlens.register_hooks(self.llm)
+        if not disable_logitlens:
+            self.logitlens.register_hooks(self.llm)
         self.model_name = model_name_or_path
         super().__init__(**kwargs)
 

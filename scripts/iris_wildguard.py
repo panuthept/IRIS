@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     random.seed(args.seed)
 
-    model = WildGuard(model_name_or_path=args.model_name)
+    model = WildGuard(model_name_or_path=args.model_name, disable_logitlens=True)
     dataset = WildGuardMixDataset(attack_engine=args.attack_engine, cache_dir=args.cache_dir)
     samples = dataset.as_samples(split="train")
 
