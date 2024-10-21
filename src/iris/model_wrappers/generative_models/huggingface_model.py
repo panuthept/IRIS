@@ -73,60 +73,65 @@ class IRISTrainer(SFTTrainer):
         print("=" * 100)
 
     def compute_loss(self, model, inputs, return_outputs=False):
-        """
-        How the loss is computed by Trainer. By default, all models return the loss in the first element.
+        outputs = super().compute_loss(model, inputs, return_outputs)
+        print(f"outputs:\n{outputs}")
+        return outputs
 
-        Subclass and override for custom behavior.
-        """
-        # print(inputs)
-        # print(f"label_smoother: {self.label_smoother}")
-        # Get labels for LabelSmoother loss
-        # if self.label_smoother is not None and "labels" in inputs:
-        #     labels = inputs.pop("labels")
-        # else:
-        #     labels = None
-        labels = inputs.pop("labels")
-        # print(f"labels: {labels}")
-        # Model forward pass
-        outputs = model(**inputs)
-        print(f"original loss: {outputs[0]}")
-        # Get intermediate logits
-        intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
+    # def compute_loss(self, model, inputs, return_outputs=False):
+    #     """
+    #     How the loss is computed by Trainer. By default, all models return the loss in the first element.
 
-        # Save past state if it exists
-        # TODO: this needs to be fixed and made cleaner later.
-        if self.args.past_index >= 0:
-            self._past = outputs[self.args.past_index]
+    #     Subclass and override for custom behavior.
+    #     """
+    #     # print(inputs)
+    #     # print(f"label_smoother: {self.label_smoother}")
+    #     # Get labels for LabelSmoother loss
+    #     # if self.label_smoother is not None and "labels" in inputs:
+    #     #     labels = inputs.pop("labels")
+    #     # else:
+    #     #     labels = None
+    #     labels = inputs.pop("labels")
+    #     # print(f"labels: {labels}")
+    #     # Model forward pass
+    #     outputs = model(**inputs)
+    #     print(f"original loss: {outputs[0]}")
+    #     # Get intermediate logits
+    #     intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
 
-        # Compute loss
-        if labels is not None:
-            unwrapped_model = self.accelerator.unwrap_model(model)
-            if _is_peft_model(unwrapped_model):
-                model_name = unwrapped_model.base_model.model._get_name()
-            else:
-                model_name = unwrapped_model._get_name()
-            # Compute LabelSmoother loss
-            if model_name in MODEL_FOR_CAUSAL_LM_MAPPING_NAMES.values():
-                lm_loss = self.label_smoother(outputs, labels, shift_labels=True)
-            else:
-                lm_loss = self.label_smoother(outputs, labels)
-            print(f"lm loss: {lm_loss}")
-            print("-" * 100)
-            # # Compute intermediate loss
-            # intermediate_loss = self._compute_intermediate_loss(intermediate_logits, labels)
-            # # Compute final loss
-            # loss = (1 - self.iris_alpha) * lm_loss + self.iris_alpha * intermediate_loss
-        else:
-            if isinstance(outputs, dict) and "loss" not in outputs:
-                raise ValueError(
-                    "The model did not return a loss from the inputs, only the following keys: "
-                    f"{','.join(outputs.keys())}. For reference, the inputs it received are {','.join(inputs.keys())}."
-                )
-            # We don't use .loss here since the model may return tuples instead of ModelOutput.
-            loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
-        loss = outputs["loss"]
+    #     # Save past state if it exists
+    #     # TODO: this needs to be fixed and made cleaner later.
+    #     if self.args.past_index >= 0:
+    #         self._past = outputs[self.args.past_index]
 
-        return (loss, outputs) if return_outputs else loss
+    #     # Compute loss
+    #     if labels is not None:
+    #         unwrapped_model = self.accelerator.unwrap_model(model)
+    #         if _is_peft_model(unwrapped_model):
+    #             model_name = unwrapped_model.base_model.model._get_name()
+    #         else:
+    #             model_name = unwrapped_model._get_name()
+    #         # Compute LabelSmoother loss
+    #         if model_name in MODEL_FOR_CAUSAL_LM_MAPPING_NAMES.values():
+    #             lm_loss = self.label_smoother(outputs, labels, shift_labels=True)
+    #         else:
+    #             lm_loss = self.label_smoother(outputs, labels)
+    #         print(f"lm loss: {lm_loss}")
+    #         print("-" * 100)
+    #         # # Compute intermediate loss
+    #         # intermediate_loss = self._compute_intermediate_loss(intermediate_logits, labels)
+    #         # # Compute final loss
+    #         # loss = (1 - self.iris_alpha) * lm_loss + self.iris_alpha * intermediate_loss
+    #     else:
+    #         if isinstance(outputs, dict) and "loss" not in outputs:
+    #             raise ValueError(
+    #                 "The model did not return a loss from the inputs, only the following keys: "
+    #                 f"{','.join(outputs.keys())}. For reference, the inputs it received are {','.join(inputs.keys())}."
+    #             )
+    #         # We don't use .loss here since the model may return tuples instead of ModelOutput.
+    #         loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
+    #     loss = outputs["loss"]
+
+    #     return (loss, outputs) if return_outputs else loss
 
 
 class HuggfacePipelineGenerativeLLM(GenerativeLLM):
