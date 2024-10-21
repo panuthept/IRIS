@@ -89,7 +89,7 @@ class IRISTrainer(SFTTrainer):
         # print(f"labels: {labels}")
         # Model forward pass
         outputs = model(**inputs)
-        print(f"original loss: {outputs}")
+        print(f"original loss: {outputs[0]}")
         # Get intermediate logits
         intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
 
