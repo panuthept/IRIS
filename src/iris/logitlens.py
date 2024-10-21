@@ -20,11 +20,15 @@ class LogitLens:
         lm_head: nn.Module,
         tokenizer: AutoTokenizer,
         module_names: Union[List[str], str] = None,
+        enable_cache: bool = True,
+        max_cache_size: int = 10,
         k: int = 50,
     ):
         self.k = k
         self.lm_head = lm_head
         self.tokenizer = tokenizer
+        self.enable_cache = enable_cache
+        self.max_cache_size = max_cache_size
         self.module_names = self._resolve_module_names(module_names)
 
         self.intermediate_logits: Dict[str, Tensor] = {}
@@ -57,12 +61,18 @@ class LogitLens:
             # Update intermediate logits
             self.intermediate_logits[name] = logits
 
+            if not self.enable_cache:
+                return
+
             # Update cached_activations
             activations = activations.detach().cpu().clone().tolist()
             if name not in self.cached_activations:
                 self.cached_activations[name] = activations
             else:
                 self.cached_activations[name].extend(activations)
+            # Truncate cached_activations
+            if len(self.cached_activations[name]) > self.max_cache_size:
+                self.cached_activations[name] = self.cached_activations[name][-self.max_cache_size:]
             
             # Update cached_logits
             sorted_logits, sorted_indices = torch.sort(logits, descending=True, dim=-1)
@@ -72,6 +82,9 @@ class LogitLens:
             if name not in self.cached_logits:
                 self.cached_logits[name] = []
             self.cached_logits[name].extend([list(zip(topk_indices[batch_idx], topk_logits[batch_idx])) for batch_idx in range(len(topk_logits))])
+            # Truncate cached_logits
+            if len(self.cached_logits[name]) > self.max_cache_size:
+                self.cached_logits[name] = self.cached_logits[name][-self.max_cache_size:]
         return hook
     
     def _decode(self, logits: Dict[str, List[List[Tuple[int, float]]]]) -> Dict[str, List[List[Tuple[str, float]]]]:

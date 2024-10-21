@@ -39,6 +39,8 @@ class WildGuard(GuardLLM):
             cache_path: str = "./cache",
             cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
             disable_logitlens: bool = False,
+            enable_logitlens_cache: bool = True,
+            max_logitlens_cache_size: int = 10,
     ):
         self.model_name = model_name_or_path
         self.device = None
@@ -71,6 +73,8 @@ class WildGuard(GuardLLM):
                 cache_path=cache_path,
                 cache_mode=cache_mode,
                 disable_logitlens=disable_logitlens,
+                enable_logitlens_cache=enable_logitlens_cache,
+                max_logitlens_cache_size=max_logitlens_cache_size,
             )
             self.device = self.model.llm.device
             self.response_template_ids = self._get_response_template_ids()

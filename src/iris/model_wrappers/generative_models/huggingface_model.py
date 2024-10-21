@@ -146,6 +146,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         checkpoint_path: str = None,
         modules_to_cache: List[str] = None,
         disable_logitlens: bool = False,
+        enable_logitlens_cache: bool = True,
+        max_logitlens_cache_size: int = 10,
         **kwargs,
     ):
         # Load model
@@ -175,6 +177,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             lm_head=self.llm.lm_head, 
             tokenizer=self.tokenizer,
             module_names=modules_to_cache,
+            enable_cache=enable_logitlens_cache,
+            max_cache_size=max_logitlens_cache_size,
         )
         if not disable_logitlens:
             self.logitlens.register_hooks(self.llm)
