@@ -2,6 +2,7 @@ import os
 import torch
 import transformer_lens.utils as utils
 
+from torch import nn
 from tqdm import tqdm
 from typing import Dict
 from torch import Tensor
@@ -16,15 +17,6 @@ from iris.model_wrappers.generative_models.base import GenerativeLLM
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from transformers.trainer import _is_peft_model, MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
-
-
-class CustomSFTTrainer(SFTTrainer):
-    def compute_loss(self, model, inputs, return_outputs=False):
-        print(inputs)
-        print(f"label_smoother: {self.label_smoother}")
-        outputs = super().compute_loss(model, inputs, return_outputs)
-        print(f"outputs:\n{outputs}")
-        return outputs
 
 
 class IRISTrainer(SFTTrainer):
@@ -46,6 +38,8 @@ class IRISTrainer(SFTTrainer):
         self.logitlens = logitlens
         self.iris_config = iris_config
 
+        self.intermediate_loss_fn = nn.CrossEntropyLoss(reduction="none")
+
         self.iris_alpha = self.iris_config.alpha
         self.intermediate_labels = self.iris_config.labels
 
@@ -54,15 +48,11 @@ class IRISTrainer(SFTTrainer):
         intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]], 
         final_labels: Int[Tensor, "batch"],
     ):
-        print(f"final_labels:\n{final_labels}")
         flatten_intermediate_labels: Int[Tensor, "layer*batch"] = []
         flatten_intermediate_weights: Float[Tensor, "layer*batch"] = []
         flatten_intermediate_logits: Float[Tensor, "layer*batch vocab"] = []
         for module_name in self.intermediate_labels:
             for batch_idx in range(intermediate_logits[module_name].size(0)):
-                print(final_labels[batch_idx].item())
-                print(self.intermediate_labels[module_name])
-                print("-" * 100)
                 intermediate_label = self.intermediate_labels[module_name].get(final_labels[batch_idx].item(), None)
                 if intermediate_label is not None:
                     flatten_intermediate_logits.append(intermediate_logits[module_name][batch_idx])
@@ -71,7 +61,6 @@ class IRISTrainer(SFTTrainer):
         if len(flatten_intermediate_logits) == 0:
             return torch.tensor(0.0, device=final_labels.device)
         # Convert to tensors
-        print(f"flatten_intermediate_logits:\n{flatten_intermediate_logits}")
         flatten_intermediate_logits = torch.stack(flatten_intermediate_logits, dim=0)
         flatten_intermediate_labels = torch.tensor(flatten_intermediate_labels, device=final_labels.device)
         flatten_intermediate_weights = torch.tensor(flatten_intermediate_weights, device=final_labels.device)
@@ -79,7 +68,13 @@ class IRISTrainer(SFTTrainer):
         print(f"flatten_intermediate_logits:\n{flatten_intermediate_logits}")
         print(f"flatten_intermediate_labels:\n{flatten_intermediate_labels}")
         print(f"flatten_intermediate_weights:\n{flatten_intermediate_weights}")
+        # Compute intermediate loss
+        intermediate_loss = self.intermediate_loss_fn(flatten_intermediate_logits, flatten_intermediate_labels)
+        print(f"intermediate_loss:\n{intermediate_loss}")
+        intermediate_loss = (intermediate_loss * flatten_intermediate_weights).mean()
+        print(f"intermediate_loss:\n{intermediate_loss}")
         print("=" * 100)
+        return intermediate_loss
 
     def compute_loss(self, model, inputs, return_outputs=False):
         if return_outputs:
@@ -478,7 +473,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             print("Starting FFT SFT training...")
         else:
             print("Starting PEFT SFT training...")
-        trainer = CustomSFTTrainer(
+        trainer = SFTTrainer(
             model=self.llm,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
