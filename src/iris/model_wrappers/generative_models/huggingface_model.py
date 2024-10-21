@@ -59,9 +59,11 @@ class IRISTrainer(SFTTrainer):
         flatten_intermediate_logits: Float[Tensor, "layer*batch vocab"] = []
         for module_name in self.intermediate_labels:
             for batch_idx in range(intermediate_logits[module_name].size(0)):
-                flatten_intermediate_logits.append(intermediate_logits[module_name][batch_idx])
-                flatten_intermediate_labels.append(self.intermediate_labels[module_name][final_labels[batch_idx].item()][0])
-                flatten_intermediate_weights.append(self.intermediate_labels[module_name][final_labels[batch_idx].item()][1])
+                intermediate_label = self.intermediate_labels[module_name].get(final_labels[batch_idx].item(), None)
+                if intermediate_label is not None:
+                    flatten_intermediate_logits.append(intermediate_logits[module_name][batch_idx])
+                    flatten_intermediate_labels.append(intermediate_label[0])
+                    flatten_intermediate_weights.append(intermediate_label[1])
         # Convert to tensors
         flatten_intermediate_logits = torch.stack(flatten_intermediate_logits, dim=0)
         flatten_intermediate_labels = torch.tensor(flatten_intermediate_labels, device=final_labels.device)
