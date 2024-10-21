@@ -10,6 +10,7 @@ from datasets import Dataset
 from jaxtyping import Int, Float
 from accelerate import PartialState
 from iris.logitlens import LogitLens
+from iris.data_types import IRISConfig
 from typing import List, Callable, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
@@ -29,14 +30,15 @@ class IRISTrainer(SFTTrainer):
     def __init__(
         self, 
         logitlens: LogitLens, 
-        intermediate_labels: Dict[str, Dict[int, Dict[int, float]]],
-        iris_alpha: float = 0.5,
+        iris_config: IRISConfig,
         **kwargs
     ):
         super().__init__(**kwargs)
-        self.iris_alpha = iris_alpha
         self.logitlens = logitlens
-        self.intermediate_labels = intermediate_labels
+        self.iris_config = iris_config
+
+        self.iris_alpha = self.iris_config.alpha
+        self.intermediate_labels = self.iris_config.labels
 
     def _compute_intermediate_loss(
         self, 
@@ -451,14 +453,13 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
 
     def train_iris(
         self,
+        iris_config: IRISConfig,
         train_dataset: Dataset,
-        intermediate_labels: Dict[str, Dict[int, Tuple[int, float]]],
         response_template: str,
         formatting_prompts_func: Callable,
         sft_config: SFTConfig = None,
         peft_config: LoraConfig = None,
         eval_dataset: Dataset = None,
-        iris_alpha: float = 0.5,
     ):
         """
         Example of intermediate_labels:
@@ -472,8 +473,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         trainer = IRISTrainer(
             logitlens=self.logitlens,
-            intermediate_labels=intermediate_labels,
-            iris_alpha=iris_alpha,
+            iris_config=iris_config,
             model=self.llm,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,

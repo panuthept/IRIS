@@ -3,7 +3,7 @@ from trl import SFTConfig
 from peft import LoraConfig
 from datasets import Dataset
 from iris.cache import CacheMode
-from iris.data_types import Sample
+from iris.data_types import Sample, IRISConfig
 from typing import List, Dict, Any, Tuple, Union
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
@@ -159,11 +159,10 @@ class WildGuard(GuardLLM):
     def train_iris(
         self, 
         sft_config: SFTConfig,
+        iris_config: IRISConfig,
         train_samples: List[Sample],
-        intermediate_labels: Dict[str, Dict[int, Tuple[int, float]]],
         eval_samples: List[Sample] = None,
         peft_config: LoraConfig = None,
-        iris_alpha: float = 0.5,
     ):
         """ This method prepare the training examples format for WildGuard prompt completion. """
         assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
@@ -175,12 +174,11 @@ class WildGuard(GuardLLM):
         self.model.train_iris(
             train_dataset=datasets["train"],
             eval_dataset=datasets["eval"],
-            intermediate_labels=intermediate_labels,
             response_template=self.response_template_ids, 
             formatting_prompts_func=formatting_prompts_func,
             sft_config=sft_config,
             peft_config=peft_config,
-            iris_alpha=iris_alpha,
+            iris_config=iris_config,
         )
     
 
