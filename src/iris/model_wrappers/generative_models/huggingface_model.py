@@ -77,7 +77,7 @@ class IRISTrainer(SFTTrainer):
             (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
         else:
             loss = super().compute_loss(model, inputs, return_outputs)
-        print(f"outputs:\n{outputs}")
+        print(f"loss:\n{loss}")
         # Compute intermediate loss
         labels = inputs.pop("labels") if "labels" in inputs else None
         if labels is not None:
