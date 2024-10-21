@@ -21,6 +21,7 @@ from transformers.trainer import _is_peft_model, MODEL_FOR_CAUSAL_LM_MAPPING_NAM
 class CustomSFTTrainer(SFTTrainer):
     def compute_loss(self, model, inputs, return_outputs=False):
         print(inputs)
+        print(f"label_smoother: {self.label_smoother}")
         return super().compute_loss(model, inputs, return_outputs)
 
 
