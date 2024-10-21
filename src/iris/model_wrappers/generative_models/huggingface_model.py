@@ -54,11 +54,15 @@ class IRISTrainer(SFTTrainer):
         intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]], 
         final_labels: Int[Tensor, "batch"],
     ):
+        print(f"final_labels:\n{final_labels}")
         flatten_intermediate_labels: Int[Tensor, "layer*batch"] = []
         flatten_intermediate_weights: Float[Tensor, "layer*batch"] = []
         flatten_intermediate_logits: Float[Tensor, "layer*batch vocab"] = []
         for module_name in self.intermediate_labels:
             for batch_idx in range(intermediate_logits[module_name].size(0)):
+                print(final_labels[batch_idx].item())
+                print(self.intermediate_labels[module_name])
+                print("-" * 100)
                 intermediate_label = self.intermediate_labels[module_name].get(final_labels[batch_idx].item(), None)
                 if intermediate_label is not None:
                     flatten_intermediate_logits.append(intermediate_logits[module_name][batch_idx])
