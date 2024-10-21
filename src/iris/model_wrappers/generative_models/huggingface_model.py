@@ -78,16 +78,18 @@ class IRISTrainer(SFTTrainer):
 
         Subclass and override for custom behavior.
         """
-        print(inputs)
-        print(f"label_smoother: {self.label_smoother}")
+        # print(inputs)
+        # print(f"label_smoother: {self.label_smoother}")
         # Get labels for LabelSmoother loss
-        if self.label_smoother is not None and "labels" in inputs:
-            labels = inputs.pop("labels")
-        else:
-            labels = None
-        print(f"labels: {labels}")
+        # if self.label_smoother is not None and "labels" in inputs:
+        #     labels = inputs.pop("labels")
+        # else:
+        #     labels = None
+        labels = inputs.pop("labels")
+        # print(f"labels: {labels}")
         # Model forward pass
         outputs = model(**inputs)
+        print(f"original loss: {outputs['loss']}")
         # Get intermediate logits
         intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
 
@@ -108,10 +110,12 @@ class IRISTrainer(SFTTrainer):
                 lm_loss = self.label_smoother(outputs, labels, shift_labels=True)
             else:
                 lm_loss = self.label_smoother(outputs, labels)
-            # Compute intermediate loss
-            intermediate_loss = self._compute_intermediate_loss(intermediate_logits, labels)
-            # Compute final loss
-            loss = (1 - self.iris_alpha) * lm_loss + self.iris_alpha * intermediate_loss
+            print(f"lm loss: {lm_loss}")
+            print("-" * 100)
+            # # Compute intermediate loss
+            # intermediate_loss = self._compute_intermediate_loss(intermediate_logits, labels)
+            # # Compute final loss
+            # loss = (1 - self.iris_alpha) * lm_loss + self.iris_alpha * intermediate_loss
         else:
             if isinstance(outputs, dict) and "loss" not in outputs:
                 raise ValueError(
@@ -120,6 +124,7 @@ class IRISTrainer(SFTTrainer):
                 )
             # We don't use .loss here since the model may return tuples instead of ModelOutput.
             loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
+        loss = outputs["loss"]
 
         return (loss, outputs) if return_outputs else loss
 
