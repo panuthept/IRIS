@@ -1,17 +1,17 @@
-echo "Running IRIS on WildGuard with layer 17 config"
-CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
---iris_config ./data/iris_configs/benign_only_configs/layer_17.json \
---model_name allenai/wildguard \
---train_eval_split 0.9 \
---max_seq_length 2048 \
---batch_size 1 \
---gradient_accumulation_steps 32 \
---epochs 2 \
---eval_steps 60 \
---save_total_limit 100 \
---output_dir ./finetuned_models/iris_wildguard_layer_17 \
---use_lora \
---lora_rank 128
+# echo "Running IRIS on WildGuard with layer 17 config"
+# CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
+# --iris_config ./data/iris_configs/benign_only_configs/layer_17.json \
+# --model_name allenai/wildguard \
+# --train_eval_split 0.9 \
+# --max_seq_length 2048 \
+# --batch_size 1 \
+# --gradient_accumulation_steps 32 \
+# --epochs 2 \
+# --eval_steps 60 \
+# --save_total_limit 100 \
+# --output_dir ./finetuned_models/iris_wildguard_layer_17 \
+# --use_lora \
+# --lora_rank 128
 
 echo "Running IRIS on WildGuard with layer 18 config"
 CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
