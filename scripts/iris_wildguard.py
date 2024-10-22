@@ -4,11 +4,12 @@ import argparse
 from trl import SFTConfig
 from peft import LoraConfig
 from iris.datasets import WildGuardMixDataset
+from iris.utilities.loaders import load_iris_config
 from iris.model_wrappers.guard_models import WildGuard
 
 
 ####################### SFT with LoRA #######################
-# accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard --use_lora
+# CUDA_VISIBLE_DEVICES=0,1 accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard --use_lora
 # accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_vanilla --use_lora --attack_engine vanilla
 # accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_adversarial --use_lora --attack_engine adversarial
 ##################### SFT Full-finetune #####################
@@ -19,6 +20,7 @@ from iris.model_wrappers.guard_models import WildGuard
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--iris_config", type=str, default="./data/iris_configs/benign_only_configs/layer_17.json")
     parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
     parser.add_argument("--attack_engine", type=str, default=None)
     parser.add_argument("--cache_dir", type=str, default="./data/datasets/wildguardmix")
@@ -46,13 +48,24 @@ if __name__ == "__main__":
 
     random.seed(args.seed)
 
-    model = WildGuard(model_name_or_path=args.model_name, disable_logitlens=True)
+    model = WildGuard(
+        model_name_or_path=args.model_name, 
+        disable_logitlens=False,
+        enable_logitlens_cache=False,
+    )
     dataset = WildGuardMixDataset(attack_engine=args.attack_engine, cache_dir=args.cache_dir)
     samples = dataset.as_samples(split="train")
 
+    # Load config for the intermediate_labels
+    iris_config = load_iris_config(args.iris_config)
+    print(iris_config)
+
     random.shuffle(samples)
-    train_size = int(len(samples) * args.train_eval_split)
-    train_samples, eval_samples = samples[:train_size], samples[train_size:]
+    if args.train_eval_split == 1.0:
+        train_samples, eval_samples = samples, []
+    else:
+        train_size = int(len(samples) * args.train_eval_split)
+        train_samples, eval_samples = samples[:train_size], samples[train_size:]
     # Log the number of samples in the train and eval datasets
     print(f"Train size: {len(train_samples)}")
     print(f"Eval size: {len(eval_samples)}")
@@ -61,9 +74,10 @@ if __name__ == "__main__":
     if is_gpu_available or args.allow_cpu:
         print(f"GPU Count: {torch.cuda.device_count()}")
         do_eval = len(eval_samples) > 0
-        model.train_sft(
+        model.train_iris(
             train_samples=train_samples,
             eval_samples=eval_samples,
+            iris_config=iris_config,
             sft_config=SFTConfig(
                 output_dir=args.output_dir, 
                 report_to=args.report_to,

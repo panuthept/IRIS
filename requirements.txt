@@ -1,5 +1,7 @@
 trl
 tqdm
+peft
+seaborn
 datasets
 jaxtyping
 transformers

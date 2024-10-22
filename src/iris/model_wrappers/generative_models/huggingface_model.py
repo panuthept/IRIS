@@ -2,24 +2,89 @@ import os
 import torch
 import transformer_lens.utils as utils
 
+from torch import nn
 from tqdm import tqdm
+from typing import Dict
 from torch import Tensor
-from jaxtyping import Int
+from peft import LoraConfig
 from datasets import Dataset
+from jaxtyping import Int, Float
 from accelerate import PartialState
+from iris.logitlens import LogitLens
+from iris.data_types import IRISConfig
 from typing import List, Callable, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers.trainer import _is_peft_model, MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
 
 
 class IRISTrainer(SFTTrainer):
+    """
+    Example of intermediate_labels:
+    intermediate_labels = {
+        "model.layers.18": {label_id: (token_id, weight)},
+        "model.layers.19": {label_id: (token_id, weight)},
+        ...
+    }
+    """
+    def __init__(
+        self, 
+        logitlens: LogitLens, 
+        iris_config: IRISConfig,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.logitlens = logitlens
+        self.iris_config = iris_config
+
+        self.intermediate_loss_fn = nn.CrossEntropyLoss(reduction="none")
+
+        self.iris_alpha = self.iris_config.alpha
+        self.intermediate_labels = self.iris_config.labels
+
+    def _compute_intermediate_loss(
+        self, 
+        intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]], 
+        final_labels: Int[Tensor, "batch"],
+    ):
+        flatten_intermediate_labels: Int[Tensor, "layer*batch"] = []
+        flatten_intermediate_weights: Float[Tensor, "layer*batch"] = []
+        flatten_intermediate_logits: Float[Tensor, "layer*batch vocab"] = []
+        for module_name in self.intermediate_labels:
+            for batch_idx in range(intermediate_logits[module_name].size(0)):
+                intermediate_label = self.intermediate_labels[module_name].get(final_labels[batch_idx].item(), None)
+                if intermediate_label is not None:
+                    flatten_intermediate_logits.append(intermediate_logits[module_name][batch_idx])
+                    flatten_intermediate_labels.append(intermediate_label[0])
+                    flatten_intermediate_weights.append(intermediate_label[1])
+        if len(flatten_intermediate_logits) == 0:
+            return torch.tensor(0.0, device=final_labels.device)
+        # Convert to tensors
+        flatten_intermediate_logits = torch.stack(flatten_intermediate_logits, dim=0)
+        flatten_intermediate_labels = torch.tensor(flatten_intermediate_labels, device=final_labels.device)
+        flatten_intermediate_weights = torch.tensor(flatten_intermediate_weights, device=final_labels.device)
+        # Compute intermediate loss
+        intermediate_loss = self.intermediate_loss_fn(flatten_intermediate_logits, flatten_intermediate_labels)
+        intermediate_loss = (intermediate_loss * flatten_intermediate_weights).mean()
+        return intermediate_loss
+
     def compute_loss(self, model, inputs, return_outputs=False):
-        print(inputs)
-        outputs = super().compute_loss(model, inputs, return_outputs=return_outputs)
-        print(outputs)
-        print("*" * 100)
-        return outputs
+        if return_outputs:
+            (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
+        else:
+            loss = super().compute_loss(model, inputs, return_outputs)
+        # print(f"original loss:\n{loss}")
+        # Compute intermediate loss
+        labels = inputs.pop("labels") if "labels" in inputs else None
+        if labels is not None:
+            intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
+            intermediate_loss = self._compute_intermediate_loss(intermediate_logits, labels[:, -1])
+            # print(f"intermediate_loss:\n{intermediate_loss}")
+            loss = (1 - self.iris_alpha) * loss + self.iris_alpha * intermediate_loss
+        # print(f"final loss:\n{loss}")
+        # print("-" * 100)
+        return (loss, outputs) if return_outputs else loss
 
 
 class HuggfacePipelineGenerativeLLM(GenerativeLLM):
@@ -79,41 +144,29 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         self, 
         model_name_or_path: str,  
         checkpoint_path: str = None,
-        from_pretrained_kwargs: dict = {},  # This cannot be None
-        pipeline_kwargs: dict = None,
+        modules_to_cache: List[str] = None,
+        disable_logitlens: bool = False,
+        enable_logitlens_cache: bool = True,
+        max_logitlens_cache_size: int = 10,
         **kwargs,
     ):
-        # TODO: Delete this after the deprecation period
-        if pipeline_kwargs is not None:
-            raise ValueError("pipeline_kwargs is not deprecated, please use from_pretrained_kwargs instead.")
-
+        """
+        params:
+            disable_logitlens: 
+                If True, the LogitLens will not be used.
+                Setting this to False will disable both fetch_intermediate_logits() and fetch_cache()
+            enable_logitlens_cache:
+                If True, the LogitLens will cache the activations and logits. 
+                Setting this to False will disable the fetch_cache(). But fetch_intermediate_logits() still works.
+            max_logitlens_cache_size: 
+                The maximum number of activations and logits to cache.
+        """
         # Load model
         if checkpoint_path:
-            self.llm = AutoModelForCausalLM.from_pretrained(
-                checkpoint_path,
-                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
-                local_files_only=True,
-            )
-            print(f"Loaded model from checkpoint: {checkpoint_path} successfully.")
+            self.llm = self.load_finetuned_model(model_name_or_path, checkpoint_path)
         else:
-            try:
-                self.llm = AutoModelForCausalLM.from_pretrained(
-                    model_name_or_path,
-                    cache_dir="./data/models",
-                    device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
-                    local_files_only=True,
-                )
-            except:
-                self.llm = AutoModelForCausalLM.from_pretrained(
-                    model_name_or_path,
-                    cache_dir="./data/models",
-                    device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
-                    local_files_only=False,
-                )
-        self.cached_activations = {}
-        for name, module in self.llm.named_modules():
-            module.register_forward_hook(self.cache_activation(name))
-
+            self.llm = self.load_pretrained_model(model_name_or_path)
+            
         # Load tokenizer
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(
@@ -128,13 +181,58 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 local_files_only=False,
             )
         self.tokenizer.pad_token = self.tokenizer.eos_token
+
+        # Add hooks to cache activations
+        modules_to_cache = model_name_or_path if modules_to_cache is None else modules_to_cache
+        self.logitlens = LogitLens(
+            lm_head=self.llm.lm_head, 
+            tokenizer=self.tokenizer,
+            module_names=modules_to_cache,
+            enable_cache=enable_logitlens_cache,
+            max_cache_size=max_logitlens_cache_size,
+        )
+        if not disable_logitlens:
+            self.logitlens.register_hooks(self.llm)
         self.model_name = model_name_or_path
         super().__init__(**kwargs)
 
-    def cache_activation(self, name):
-        def hook(model, input, output):
-            self.cached_activations[name] = output
-        return hook
+    def load_pretrained_model(self, model_name_or_path: str) -> AutoModelForCausalLM:
+        try:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name_or_path,
+                cache_dir="./data/models",
+                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                local_files_only=True,
+            )
+        except:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name_or_path,
+                cache_dir="./data/models",
+                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                local_files_only=False,
+            )
+        return model
+
+    def load_finetuned_model(self, model_name, checkpoint_path: str) -> AutoModelForCausalLM:
+        if os.path.exists(os.path.join(checkpoint_path, "adapter_model.safetensors")):
+            from peft import PeftModel # Lazy import
+            # Load base model
+            model = self.load_pretrained_model(model_name)
+            # Load PEFT model (finetuned)
+            peft_model = PeftModel.from_pretrained(model, checkpoint_path)
+            # Merge and unload the PEFT model
+            model = peft_model.merge_and_unload()
+            print(f"Loaded model from PEFT checkpoint: {checkpoint_path} successfully.")
+        elif os.path.exists(os.path.join(checkpoint_path, "model.safetensors")):
+            model = AutoModelForCausalLM.from_pretrained(
+                checkpoint_path,
+                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                local_files_only=True,
+            )
+            print(f"Loaded model from full checkpoint: {checkpoint_path} successfully.")
+        else:
+            raise ValueError(f"Full and LoRA models not found at {checkpoint_path}")
+        return model
 
     def get_model_name(self) -> str:
         # TODO: Add a better way to get the model name. the current way is not reliable as the model_name_or_path can be a path
@@ -194,6 +292,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             for index in tqdm(range(max_new_tokens), disable=not verbose):
                 # Forward pass
                 final_logits = self.llm(tokens, attention_mask).logits[:, -1, :]
+                self.logitlens.cache_logits(final_logits, "final_predictions")
 
                 if do_sample:
                     sampled_tokens = utils.sample_logits(
@@ -277,6 +376,12 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 return_tensors="pt",
             )
         return encoded_texts
+    
+    def id_to_token(self, token_id: int):
+        # NOTE: This implementation is to ensure that the spaces are not removed from the tokens
+        token1 = self.tokenizer.decode(token_id)
+        token2 = self.tokenizer.convert_ids_to_tokens([token_id])[0]
+        return f" {token1}" if token1 != token2 and token2.endswith(token1) else token1
 
     def _complete(
         self, 
@@ -307,9 +412,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         sorted_indices = sorted_indices[:, :self.top_logprobs]
         # Decode the response
         answer = self.tokenizer.decode(pred_ids, skip_special_tokens=True)
-        # NOTE: This implementation is to ensure that the spaces are not removed from the tokens
-        logprobs = [[(self.tokenizer.convert_ids_to_tokens([token_id])[0], self.tokenizer.decode(token_id), logprob.item()) for token_id, logprob in zip(top_indices, top_logprobs)] for top_indices, top_logprobs in zip(sorted_indices, sorted_logprobs)]
-        logprobs = [[(f" {token2}" if token1 != token2 and token1.endswith(token2) else token2, logprob) for token1, token2, logprob in logprob_list] for logprob_list in logprobs]
+        logprobs = [[(self.id_to_token(token_id), logprob.item()) for token_id, logprob in zip(top_indices, top_logprobs)] for top_indices, top_logprobs in zip(sorted_indices, sorted_logprobs)]
         return answer, logprobs
     
     def train_sft(
@@ -318,10 +421,15 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         response_template: str,
         formatting_prompts_func: Callable,
         sft_config: SFTConfig = None,
+        peft_config: LoraConfig = None,
         eval_dataset: Dataset = None,
-    ):
+    ):  
         self.tokenizer.padding_side = "right"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+        if peft_config is None:
+            print("Starting FFT SFT training...")
+        else:
+            print("Starting PEFT SFT training...")
         trainer = SFTTrainer(
             model=self.llm,
             train_dataset=train_dataset,
@@ -330,20 +438,40 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             tokenizer=self.tokenizer,
             formatting_func=formatting_prompts_func,
             data_collator=collator,
+            peft_config=peft_config,
         )
         trainer.train()
 
     def train_iris(
         self,
+        iris_config: IRISConfig,
         train_dataset: Dataset,
         response_template: str,
         formatting_prompts_func: Callable,
         sft_config: SFTConfig = None,
+        peft_config: LoraConfig = None,
         eval_dataset: Dataset = None,
     ):
+        """
+        Example of intermediate_labels:
+        intermediate_labels = {
+            "model.layers.18": {label_id: (token_id, weight)},
+            "model.layers.19": {label_id: (token_id, weight)},
+            ...
+        }
+        """
+        # Freeze LM head
+        self.llm.lm_head.requires_grad_(False)
+
         self.tokenizer.padding_side = "right"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+        if peft_config is None:
+            print("Starting FFT SFT training...")
+        else:
+            print("Starting PEFT SFT training...")
         trainer = IRISTrainer(
+            logitlens=self.logitlens,
+            iris_config=iris_config,
             model=self.llm,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
@@ -351,6 +479,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             tokenizer=self.tokenizer,
             formatting_func=formatting_prompts_func,
             data_collator=collator,
+            peft_config=peft_config,
         )
         trainer.train()
     
