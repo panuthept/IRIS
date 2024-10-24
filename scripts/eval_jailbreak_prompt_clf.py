@@ -30,6 +30,7 @@ if __name__ == "__main__":
     parser.add_argument("--artifact_dir", type=str, default="./jailbreak_artifacts")
     parser.add_argument("--dataset_name", type=str, default="JailbreakBenchDataset")
     parser.add_argument("--prompt_intention", type=str, default=None)
+    parser.add_argument("--attack_engine", type=str, default=None)
     parser.add_argument("--dataset_split", type=str, default="test")
     args = parser.parse_args()
 
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     target_model = load_guard(args.guard_name, args.model_name, args.checkpoint_path, args.api_key, args.api_base)
-    dataset = load_dataset(args.dataset_name, args.prompt_intention)
+    dataset = load_dataset(args.dataset_name, args.prompt_intention, args.attack_engine)
     samples = dataset.as_samples(split=args.dataset_split)
 
     samples = target_model.prompt_classify_batch(samples)
