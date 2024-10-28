@@ -38,10 +38,14 @@ class IRISTrainer(SFTTrainer):
         self.logitlens = logitlens
         self.iris_config = iris_config
 
-        self.intermediate_loss_fn = nn.CrossEntropyLoss(reduction="none")
-
         self.iris_alpha = self.iris_config.alpha
         self.intermediate_labels = self.iris_config.labels
+        self.label_smoothing = self.iris_config.label_smoothing
+
+        self.intermediate_loss_fn = nn.CrossEntropyLoss(
+            reduction="none",
+            label_smoothing=self.label_smoothing,
+        )
 
     def _compute_intermediate_loss(
         self, 
