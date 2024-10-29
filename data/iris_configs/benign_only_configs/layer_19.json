@@ -1,6 +1,10 @@
 {
-    "iris_alpha": 0.1,
-    "intermediate_labels": {
-        "model.layers.19": {"1476": [7315, 1.0]}
+    "mode": "fixed",
+    "alpha": 0.1,
+    "layer_labels": {
+        "model.layers.19": {"1476": 7315}
+    },
+    "layer_weights": {
+        "model.layers.19": {"1476": 1.0}
     }
 }

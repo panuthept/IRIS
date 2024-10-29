@@ -2,17 +2,16 @@ import os
 import torch
 import transformer_lens.utils as utils
 
-from torch import nn
 from tqdm import tqdm
 from typing import Dict
-from torch import Tensor
 from peft import LoraConfig
+from torch import nn, Tensor
 from datasets import Dataset
 from jaxtyping import Int, Float
 from accelerate import PartialState
 from iris.logitlens import LogitLens
 from iris.data_types import IRISConfig
-from typing import List, Callable, Tuple, Optional
+from typing import List, Callable, Union, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
@@ -38,39 +37,67 @@ class IRISTrainer(SFTTrainer):
         self.logitlens = logitlens
         self.iris_config = iris_config
 
-        self.iris_alpha = self.iris_config.alpha
-        self.intermediate_labels = self.iris_config.labels
+        self.mode = self.iris_config.mode
+        self.alpha = self.iris_config.alpha
+        self.ema_alpha = self.iris_config.ema_alpha
+        self.sma_window_size = self.iris_config.sma_window_size
+        self.intermediate_labels = self.iris_config.layer_labels
+        self.intermediate_weights = self.iris_config.layer_weights
         self.label_smoothing = self.iris_config.label_smoothing
 
-        self.intermediate_loss_fn = nn.CrossEntropyLoss(
-            reduction="none",
-            label_smoothing=self.label_smoothing,
-        )
+        self
+
+        if self.mode == "fixed":
+            self.loss_fn = nn.CrossEntropyLoss(
+                reduction="none",
+                label_smoothing=self.label_smoothing,
+            )
+        else:
+            self.loss_fn = nn.KLDivLoss(
+                reduction="none",
+                log_target=False,
+            )
+
+    def _get_intermediate_label(
+        self, 
+        module_name: str, 
+        batch_idx: int
+    ) -> Optional[Union[int, Int[Tensor, "vocab"]]]:
+        if self.mode == "fixed":
+            return self.intermediate_labels[module_name].get(batch_idx, None)
+        else:
+            pass
 
     def _compute_intermediate_loss(
         self, 
         intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]], 
         final_labels: Int[Tensor, "batch"],
     ):
-        flatten_intermediate_labels: Int[Tensor, "layer*batch"] = []
-        flatten_intermediate_weights: Float[Tensor, "layer*batch"] = []
-        flatten_intermediate_logits: Float[Tensor, "layer*batch vocab"] = []
-        for module_name in self.intermediate_labels:
+        flatten_weights: Float[Tensor, "layer*batch"] = []
+        flatten_logits: Float[Tensor, "layer*batch vocab"] = []
+        flatten_labels: Union[Int[Tensor, "layer*batch"], Int[Tensor, "layer*batch vocab"]] = []
+        for module_name in self.intermediate_weights:
             for batch_idx in range(intermediate_logits[module_name].size(0)):
-                intermediate_label = self.intermediate_labels[module_name].get(final_labels[batch_idx].item(), None)
+                intermediate_label = self._get_intermediate_label(module_name, final_labels[batch_idx].item())
+                intermediate_weight = self.intermediate_weights[module_name].get(final_labels[batch_idx].item(), 0.0)
                 if intermediate_label is not None:
-                    flatten_intermediate_logits.append(intermediate_logits[module_name][batch_idx])
-                    flatten_intermediate_labels.append(intermediate_label[0])
-                    flatten_intermediate_weights.append(intermediate_label[1])
-        if len(flatten_intermediate_logits) == 0:
+                    flatten_labels.append(intermediate_label)
+                    flatten_weights.append(intermediate_weight)
+                    flatten_logits.append(intermediate_logits[module_name][batch_idx])
+        if len(flatten_logits) == 0:
             return torch.tensor(0.0, device=final_labels.device)
         # Convert to tensors
-        flatten_intermediate_logits = torch.stack(flatten_intermediate_logits, dim=0)
-        flatten_intermediate_labels = torch.tensor(flatten_intermediate_labels, device=final_labels.device)
-        flatten_intermediate_weights = torch.tensor(flatten_intermediate_weights, device=final_labels.device)
+        flatten_logits = torch.stack(flatten_logits, dim=0)
+        flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)
+        if self.mode == "fixed":
+            flatten_labels = torch.tensor(flatten_labels, device=final_labels.device)   # shape: (layer*batch)
+        else:
+            flatten_labels = torch.stack(flatten_labels, dim=0)                         # shape: (layer*batch, vocab)
+            flatten_logits = nn.functional.log_softmax(flatten_logits, dim=1)
         # Compute intermediate loss
-        intermediate_loss = self.intermediate_loss_fn(flatten_intermediate_logits, flatten_intermediate_labels)
-        intermediate_loss = (intermediate_loss * flatten_intermediate_weights).mean()
+        intermediate_loss = self.loss_fn(flatten_logits, flatten_labels)
+        print(f"intermediate_loss: {intermediate_loss.size()}")
+        intermediate_loss = (intermediate_loss * flatten_weights).mean()
         return intermediate_loss
 
     def compute_loss(self, model, inputs, return_outputs=False):
@@ -78,16 +105,12 @@ class IRISTrainer(SFTTrainer):
             (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
         else:
             loss = super().compute_loss(model, inputs, return_outputs)
-        # print(f"original loss:\n{loss}")
         # Compute intermediate loss
         labels = inputs.pop("labels") if "labels" in inputs else None
         if labels is not None:
             intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
             intermediate_loss = self._compute_intermediate_loss(intermediate_logits, labels[:, -1])
-            # print(f"intermediate_loss:\n{intermediate_loss}")
-            loss = (1 - self.iris_alpha) * loss + self.iris_alpha * intermediate_loss
-        # print(f"final loss:\n{loss}")
-        # print("-" * 100)
+            loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
         return (loss, outputs) if return_outputs else loss
 
 
