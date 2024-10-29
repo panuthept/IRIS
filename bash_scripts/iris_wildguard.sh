@@ -1,3 +1,78 @@
+echo "Running WildGuard-IRIS on layer 19 with Random #1"
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
+--iris_config ./data/iris_configs/benign_only_configs/layer_19_rand_1.json \
+--model_name allenai/wildguard \
+--train_eval_split 0.9 \
+--max_seq_length 2048 \
+--batch_size 1 \
+--gradient_accumulation_steps 32 \
+--epochs 2 \
+--eval_steps 60 \
+--save_total_limit 1 \
+--output_dir ./finetuned_models/iris_wildguard_layer_19_rand_1 \
+--use_lora \
+--lora_rank 128
+
+echo "Running WildGuard-IRIS on layer 19 with Random #2"
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
+--iris_config ./data/iris_configs/benign_only_configs/layer_19_rand_2.json \
+--model_name allenai/wildguard \
+--train_eval_split 0.9 \
+--max_seq_length 2048 \
+--batch_size 1 \
+--gradient_accumulation_steps 32 \
+--epochs 2 \
+--eval_steps 60 \
+--save_total_limit 1 \
+--output_dir ./finetuned_models/iris_wildguard_layer_19_rand_2 \
+--use_lora \
+--lora_rank 128
+
+echo "Running WildGuard-IRIS on layer 19 with Random #3"
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
+--iris_config ./data/iris_configs/benign_only_configs/layer_19_rand_3.json \
+--model_name allenai/wildguard \
+--train_eval_split 0.9 \
+--max_seq_length 2048 \
+--batch_size 1 \
+--gradient_accumulation_steps 32 \
+--epochs 2 \
+--eval_steps 60 \
+--save_total_limit 1 \
+--output_dir ./finetuned_models/iris_wildguard_layer_19_rand_3 \
+--use_lora \
+--lora_rank 128
+
+echo "Running WildGuard-IRIS on layer 19 with Random #4"
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
+--iris_config ./data/iris_configs/benign_only_configs/layer_19_rand_4.json \
+--model_name allenai/wildguard \
+--train_eval_split 0.9 \
+--max_seq_length 2048 \
+--batch_size 1 \
+--gradient_accumulation_steps 32 \
+--epochs 2 \
+--eval_steps 60 \
+--save_total_limit 1 \
+--output_dir ./finetuned_models/iris_wildguard_layer_19_rand_4 \
+--use_lora \
+--lora_rank 128
+
+echo "Running WildGuard-IRIS on layer 19 with Negative token"
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
+--iris_config ./data/iris_configs/benign_only_configs/layer_19_negative.json \
+--model_name allenai/wildguard \
+--train_eval_split 0.9 \
+--max_seq_length 2048 \
+--batch_size 1 \
+--gradient_accumulation_steps 32 \
+--epochs 2 \
+--eval_steps 60 \
+--save_total_limit 1 \
+--output_dir ./finetuned_models/iris_wildguard_layer_19_negative \
+--use_lora \
+--lora_rank 128
+
 # echo "Running IRIS on WildGuard with layer 17 config"
 # CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
 # --iris_config ./data/iris_configs/benign_only_configs/layer_17.json \
@@ -163,31 +238,31 @@
 # --use_lora \
 # --lora_rank 128
 
-echo "Running IRIS on WildGuard with layer 28 config"
-CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
---iris_config ./data/iris_configs/benign_only_configs/layer_28.json \
---model_name allenai/wildguard \
---train_eval_split 0.9 \
---max_seq_length 2048 \
---batch_size 1 \
---gradient_accumulation_steps 32 \
---epochs 2 \
---eval_steps 60 \
---save_total_limit 100 \
---output_dir ./finetuned_models/iris_wildguard_layer_28 \
---use_lora \
---lora_rank 128
+# echo "Running IRIS on WildGuard with layer 28 config"
+# CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
+# --iris_config ./data/iris_configs/benign_only_configs/layer_28.json \
+# --model_name allenai/wildguard \
+# --train_eval_split 0.9 \
+# --max_seq_length 2048 \
+# --batch_size 1 \
+# --gradient_accumulation_steps 32 \
+# --epochs 2 \
+# --eval_steps 60 \
+# --save_total_limit 100 \
+# --output_dir ./finetuned_models/iris_wildguard_layer_28 \
+# --use_lora \
+# --lora_rank 128
 
-echo "Running SFT on WildGuard (control experiment)"
-CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/sft_wildguard.py \
---model_name allenai/wildguard \
---train_eval_split 0.9 \
---max_seq_length 2048 \
---batch_size 1 \
---gradient_accumulation_steps 32 \
---epochs 2 \
---eval_steps 60 \
---save_total_limit 100 \
---output_dir ./finetuned_models/sft_wildguard \
---use_lora \
---lora_rank 128
+# echo "Running SFT on WildGuard (control experiment)"
+# CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/sft_wildguard.py \
+# --model_name allenai/wildguard \
+# --train_eval_split 0.9 \
+# --max_seq_length 2048 \
+# --batch_size 1 \
+# --gradient_accumulation_steps 32 \
+# --epochs 2 \
+# --eval_steps 60 \
+# --save_total_limit 100 \
+# --output_dir ./finetuned_models/sft_wildguard \
+# --use_lora \
+# --lora_rank 128
