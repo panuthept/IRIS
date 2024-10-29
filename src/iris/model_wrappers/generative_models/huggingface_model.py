@@ -22,8 +22,8 @@ class IRISTrainer(SFTTrainer):
     """
     Example of intermediate_labels:
     intermediate_labels = {
-        "model.layers.18": {label_id: (token_id, weight)},
-        "model.layers.19": {label_id: (token_id, weight)},
+        "model.layers.18": {label_id: token_id},
+        "model.layers.19": {label_id: token_id},
         ...
     }
     """
@@ -45,7 +45,9 @@ class IRISTrainer(SFTTrainer):
         self.intermediate_weights = self.iris_config.layer_weights
         self.label_smoothing = self.iris_config.label_smoothing
 
-        self
+        self.sma_logits: Dict[str, Dict[int, Tensor]] = {}
+        self.ema_logits: Dict[str, Dict[int, Tensor]] = {}
+        self.prev_logits: Dict[str, Dict[int, List[Tensor]]] = {}
 
         if self.mode == "fixed":
             self.loss_fn = nn.CrossEntropyLoss(
@@ -58,15 +60,49 @@ class IRISTrainer(SFTTrainer):
                 log_target=False,
             )
 
+    def _update_prev_logits(
+        self, 
+        intermediate_logit: Float[Tensor, "vocab"],
+        module_name: str, 
+        final_label: int,
+    ):
+        # Do not update prev_logits if the mode is fixed
+        if self.mode == "fixed":
+            return
+        # Detach intermediate_logit
+        intermediate_logit = intermediate_logit.cpu().detach()
+        # Update prev_logits
+        if module_name not in self.prev_logits:
+            self.prev_logits = {module_name: {}}
+        if final_label not in self.prev_logits[module_name]:
+            self.prev_logits[module_name][final_label] = []
+        self.prev_logits[module_name][final_label].append(intermediate_logit)
+        self.prev_logits[module_name][final_label] = self.prev_logits[module_name][final_label][-self.sma_window_size:]
+        # Update sma_logits
+        if module_name not in self.sma_logits:
+            self.sma_logits[module_name] = {}
+        self.sma_logits[module_name][final_label] = torch.stack(self.prev_logits[module_name][final_label], dim=0).mean(dim=0)
+        # Update ema_logits
+        if module_name not in self.ema_logits:
+            self.ema_logits[module_name] = {}
+        if final_label not in self.ema_logits[module_name]:
+            self.ema_logits[module_name][final_label] = intermediate_logit
+        else:
+            self.ema_logits[module_name][final_label] = intermediate_logit * self.ema_alpha + self.ema_logits[module_name][final_label] * (1 - self.ema_alpha)
+
     def _get_intermediate_label(
         self, 
         module_name: str, 
-        batch_idx: int
+        final_label: int,
     ) -> Optional[Union[int, Int[Tensor, "vocab"]]]:
         if self.mode == "fixed":
-            return self.intermediate_labels[module_name].get(batch_idx, None)
+            return self.intermediate_labels[module_name].get(final_label, None) if module_name in self.intermediate_labels else None
+        elif self.mode == "sma":
+            return self.sma_logits[module_name].get(final_label, None) if module_name in self.sma_logits else None
+        elif self.mode == "ema":
+            return self.ema_logits[module_name].get(final_label, None) if module_name in self.ema_logits else None
         else:
-            pass
+            raise ValueError(f"Invalid mode: {self.mode}")
 
     def _compute_intermediate_loss(
         self, 
@@ -78,12 +114,19 @@ class IRISTrainer(SFTTrainer):
         flatten_labels: Union[Int[Tensor, "layer*batch"], Int[Tensor, "layer*batch vocab"]] = []
         for module_name in self.intermediate_weights:
             for batch_idx in range(intermediate_logits[module_name].size(0)):
-                intermediate_label = self._get_intermediate_label(module_name, final_labels[batch_idx].item())
-                intermediate_weight = self.intermediate_weights[module_name].get(final_labels[batch_idx].item(), 0.0)
+                # Get final prediction label
+                final_label = final_labels[batch_idx].item()
+                # Get intermediate logit
+                intermediate_logit = intermediate_logits[module_name][batch_idx]
+                # Get intermediate prediction label and weight
+                intermediate_label = self._get_intermediate_label(module_name, final_label)
+                intermediate_weight = self.intermediate_weights[module_name].get(final_label, 0.0)
                 if intermediate_label is not None:
                     flatten_labels.append(intermediate_label)
                     flatten_weights.append(intermediate_weight)
-                    flatten_logits.append(intermediate_logits[module_name][batch_idx])
+                    flatten_logits.append(intermediate_logit)
+                # Update prev_logits to be used in the next iteration
+                self._update_prev_logits(intermediate_logit, module_name, final_label)
         if len(flatten_logits) == 0:
             return torch.tensor(0.0, device=final_labels.device)
         # Convert to tensors
@@ -93,6 +136,7 @@ class IRISTrainer(SFTTrainer):
             flatten_labels = torch.tensor(flatten_labels, device=final_labels.device)   # shape: (layer*batch)
         else:
             flatten_labels = torch.stack(flatten_labels, dim=0)                         # shape: (layer*batch, vocab)
+            flatten_labels = nn.functional.softmax(flatten_labels, dim=1)
             flatten_logits = nn.functional.log_softmax(flatten_logits, dim=1)
         # Compute intermediate loss
         intermediate_loss = self.loss_fn(flatten_logits, flatten_labels)
