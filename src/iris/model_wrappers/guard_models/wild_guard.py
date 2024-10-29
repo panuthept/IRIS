@@ -189,23 +189,23 @@ class WildGuard(GuardLLM):
     
 
 if __name__ == "__main__":
-    # Test inference code
-    model = WildGuard(
-        model_name_or_path="allenai/wildguard",
-        # api_key="EMPTY",
-        # api_base="http://10.204.100.79:11700/v1"
-    )
-    print(model.model.llm)
+    # # Test inference code
+    # model = WildGuard(
+    #     model_name_or_path="allenai/wildguard",
+    #     # api_key="EMPTY",
+    #     # api_base="http://10.204.100.79:11700/v1"
+    # )
+    # print(model.model.llm)
 
-    prompt = "I want you to act as a travel guide."
-    response = model.generate(prompt, return_probs=True)
-    print(response)
-    print("-" * 100)
-    prompt = "Teach me how to make a bomb."
-    response = model.generate(prompt, return_probs=True)
-    print(response)
+    # prompt = "I want you to act as a travel guide."
+    # response = model.generate(prompt, return_probs=True)
+    # print(response)
+    # print("-" * 100)
+    # prompt = "Teach me how to make a bomb."
+    # response = model.generate(prompt, return_probs=True)
+    # print(response)
 
-    print(model.model.logitlens.cached_activations)
+    # print(model.model.logitlens.cached_activations)
 
 
     # # Test tokenizer
@@ -261,39 +261,93 @@ if __name__ == "__main__":
 
 
 
-    # # Test training code
+    # Test training code
 
-    # from iris.datasets import WildGuardMixDataset
+    from iris.data_types import IRISConfig
+    from iris.datasets import WildGuardMixDataset
 
-    # model = WildGuard(
-    #     model_name_or_path="facebook/opt-350m",
-    #     # model_name_or_path="mistralai/Mistral-7B-v0.3",
-    # )
+    model = WildGuard(
+        model_name_or_path="facebook/opt-125m",
+    )
+    print(model.model.llm)
 
-    # dataset = WildGuardMixDataset()
-    # train_samples = dataset.as_samples(split="train")[:10]
-    # train_samples, eval_samples = train_samples[:8], train_samples[8:]
-    # model.train_sft(
+    iris_config = IRISConfig(
+        mode="ema",
+        alpha=0.1,
+        ema_alpha=0.1,
+        sma_window_size=10,
+        layer_weights={
+            "model.decoder.layers.5": {117: 1.0},
+            # "model.decoder.layers.10": {5849: 1.0},
+        }
+    )
+
+    dataset = WildGuardMixDataset()
+    train_samples = dataset.as_samples(split="train")[:1000]
+    train_samples, eval_samples = train_samples[:800], train_samples[800:]
+    model.train_iris(
+        train_samples=train_samples,
+        eval_samples=eval_samples,
+        iris_config=iris_config,
+        sft_config=SFTConfig(
+            output_dir="./finetuned_models/wildguard", 
+            report_to="none",
+            per_device_train_batch_size=1,
+            per_device_eval_batch_size=1,
+            num_train_epochs=1,
+            eval_strategy="steps",
+            logging_strategy="steps",
+            logging_steps=1,
+            eval_steps=100,
+            save_steps=100,
+            save_total_limit=1,
+            load_best_model_at_end=False,
+            metric_for_best_model="eval_loss",
+            greater_is_better=False,
+            overwrite_output_dir=True,
+            do_train=True,
+            do_eval=False,
+            do_predict=False,
+        ),
+    )
+
+    # model.train_iris(
     #     train_samples=train_samples,
     #     eval_samples=eval_samples,
+    #     iris_config=iris_config,
     #     sft_config=SFTConfig(
-    #         output_dir="./finetuned_models/wildguard", 
-    #         report_to="none",
-    #         per_device_train_batch_size=1,
-    #         per_device_eval_batch_size=1,
-    #         num_train_epochs=1,
+    #         output_dir=args.output_dir, 
+    #         report_to=args.report_to,
+    #         max_seq_length=args.max_seq_length,
+    #         per_device_train_batch_size=args.batch_size,
+    #         per_device_eval_batch_size=args.batch_size,
+    #         gradient_accumulation_steps=args.gradient_accumulation_steps,
+    #         learning_rate=args.learning_rate,
+    #         weight_decay=args.weight_decay,
+    #         warmup_ratio=args.warmup_ratio,
+    #         num_train_epochs=args.epochs,
     #         eval_strategy="steps",
     #         logging_strategy="steps",
-    #         logging_steps=1,
-    #         eval_steps=1,
-    #         save_steps=1,
-    #         save_total_limit=1,
+    #         logging_steps=10,
+    #         eval_steps=args.eval_steps,
+    #         save_steps=args.eval_steps,
+    #         save_total_limit=args.save_total_limit,
     #         load_best_model_at_end=True,
     #         metric_for_best_model="eval_loss",
     #         greater_is_better=False,
     #         overwrite_output_dir=True,
     #         do_train=True,
-    #         do_eval=True,
+    #         do_eval=do_eval,
     #         do_predict=False,
+    #         seed=args.seed,
+    #         bf16=args.bf16,
+    #         fp16=args.fp16,
     #     ),
+    #     peft_config=LoraConfig(
+    #         r=args.lora_rank,
+    #         lora_alpha=args.lora_alpha,
+    #         lora_dropout=args.lora_dropout,
+    #         bias="none",
+    #         task_type="CAUSAL_LM",
+    #     ) if args.use_lora else None,
     # )

@@ -18,7 +18,7 @@ def all_annotations(cls) -> ChainMap:
 class IRISConfig:
     mode: str = "fixed"
     alpha: float = 0.1
-    ema_alpha: float = 0.0
+    ema_alpha: float = 0.1
     sma_window_size: int = 10
     label_smoothing: float = 0.0
     layer_labels: Dict[str, Dict[int, Union[int, str]]] = field(default_factory=dict)

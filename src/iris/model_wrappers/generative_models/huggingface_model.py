@@ -57,7 +57,7 @@ class IRISTrainer(SFTTrainer):
         else:
             self.loss_fn = nn.KLDivLoss(
                 reduction="none",
-                log_target=False,
+                log_target=True,
             )
 
     def _update_prev_logits(
@@ -136,11 +136,13 @@ class IRISTrainer(SFTTrainer):
             flatten_labels = torch.tensor(flatten_labels, device=final_labels.device)   # shape: (layer*batch)
         else:
             flatten_labels = torch.stack(flatten_labels, dim=0)                         # shape: (layer*batch, vocab)
-            flatten_labels = nn.functional.softmax(flatten_labels, dim=1)
+            flatten_labels = nn.functional.log_softmax(flatten_labels, dim=1)
+            flatten_labels = flatten_labels.to(flatten_logits.device)
             flatten_logits = nn.functional.log_softmax(flatten_logits, dim=1)
         # Compute intermediate loss
         intermediate_loss = self.loss_fn(flatten_logits, flatten_labels)
-        print(f"intermediate_loss: {intermediate_loss.size()}")
+        if len(intermediate_loss.size()) == 2:
+            intermediate_loss = intermediate_loss.sum(dim=1)
         intermediate_loss = (intermediate_loss * flatten_weights).mean()
         return intermediate_loss
 
