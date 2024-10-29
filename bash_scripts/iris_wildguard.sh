@@ -7,8 +7,8 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wi
 --batch_size 1 \
 --gradient_accumulation_steps 32 \
 --epochs 2 \
---eval_steps 600 \
---save_total_limit 1 \
+--eval_steps 60 \
+--save_total_limit 100 \
 --output_dir ./finetuned_models/iris_wildguard_layer_19_rand_1 \
 --use_lora \
 --lora_rank 128
@@ -22,8 +22,8 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wi
 --batch_size 1 \
 --gradient_accumulation_steps 32 \
 --epochs 2 \
---eval_steps 600 \
---save_total_limit 1 \
+--eval_steps 60 \
+--save_total_limit 100 \
 --output_dir ./finetuned_models/iris_wildguard_layer_19_rand_2 \
 --use_lora \
 --lora_rank 128
@@ -37,8 +37,8 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wi
 --batch_size 1 \
 --gradient_accumulation_steps 32 \
 --epochs 2 \
---eval_steps 600 \
---save_total_limit 1 \
+--eval_steps 60 \
+--save_total_limit 100 \
 --output_dir ./finetuned_models/iris_wildguard_layer_19_rand_3 \
 --use_lora \
 --lora_rank 128
@@ -52,8 +52,8 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wi
 --batch_size 1 \
 --gradient_accumulation_steps 32 \
 --epochs 2 \
---eval_steps 600 \
---save_total_limit 1 \
+--eval_steps 60 \
+--save_total_limit 100 \
 --output_dir ./finetuned_models/iris_wildguard_layer_19_rand_4 \
 --use_lora \
 --lora_rank 128
@@ -67,8 +67,8 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wi
 --batch_size 1 \
 --gradient_accumulation_steps 32 \
 --epochs 2 \
---eval_steps 600 \
---save_total_limit 1 \
+--eval_steps 60 \
+--save_total_limit 100 \
 --output_dir ./finetuned_models/iris_wildguard_layer_19_negative \
 --use_lora \
 --lora_rank 128
