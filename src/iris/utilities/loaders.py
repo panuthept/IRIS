@@ -38,4 +38,8 @@ def load_iris_config(path) -> IRISConfig:
     intermediate_labels = config["intermediate_labels"]
     # Ensure that the intermediate_labels are in the correct format and type
     config["intermediate_labels"] = {module_name: {int(final_label): (intermediate_label, weight) for final_label, (intermediate_label, weight) in intermediate_labels[module_name].items()} for module_name in intermediate_labels}
-    return IRISConfig(alpha=config["iris_alpha"], labels=config["intermediate_labels"])
+    return IRISConfig(
+        alpha=config["iris_alpha"], 
+        label_smoothing=config["label_smoothing"],
+        labels=config["intermediate_labels"],
+    )
