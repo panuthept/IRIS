@@ -456,6 +456,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         sft_config: SFTConfig = None,
         peft_config: LoraConfig = None,
         eval_dataset: Dataset = None,
+        freeze_modules: List[str] = None,
     ):
         """
         Example of intermediate_labels:
@@ -483,9 +484,14 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             data_collator=collator,
             peft_config=peft_config,
         )
-        # Freeze LM head
-        self.llm.lm_head.requires_grad_(False)
-
+        # Freeze some modules
+        if freeze_modules is not None:
+            for name, param in self.llm.named_parameters():
+                for module_name in freeze_modules:
+                    if module_name in name:
+                        param.requires_grad_(False)
+                        break
+        # self.llm.lm_head.requires_grad_(False)
         self.report_trainable_params()
         trainer.train()
 
@@ -494,10 +500,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         for name, param in self.llm.named_parameters():
             if param.requires_grad:
                 trainable_params.append(param.numel())
-                print(f"{name}: {param.requires_grad}")
-        # for name, module in self.llm.named_modules():
-        #     if module.requires_grad_():
-        #         print(f"{name}: {module.requires_grad_()}")
+                print(f"{name}: {param.numel()}")
         trainable_params = sum(trainable_params)
         print(f"Trainable parameters: {trainable_params}")
     
