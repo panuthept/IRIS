@@ -465,9 +465,6 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             ...
         }
         """
-        # Freeze LM head
-        self.llm.lm_head.requires_grad_(False)
-
         self.tokenizer.padding_side = "right"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         if peft_config is None:
@@ -486,6 +483,9 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             data_collator=collator,
             peft_config=peft_config,
         )
+        # Freeze LM head
+        self.llm.lm_head.requires_grad_(False)
+        
         self.report_trainable_params()
         trainer.train()
 
