@@ -490,7 +490,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         trainer.train()
 
     def report_trainable_params(self):
-        for name, module in model.named_modules():
+        for name, module in self.llm.named_modules():
             if module.requires_grad:
                 print(f"{name}: {module.requires_grad}")
         trainable_params = sum(p.numel() for p in self.llm.parameters() if p.requires_grad)
