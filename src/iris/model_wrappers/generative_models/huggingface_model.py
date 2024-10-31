@@ -444,6 +444,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             data_collator=collator,
             peft_config=peft_config,
         )
+        self.report_trainable_params()
         trainer.train()
 
     def train_iris(
@@ -485,7 +486,15 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             data_collator=collator,
             peft_config=peft_config,
         )
+        self.report_trainable_params()
         trainer.train()
+
+    def report_trainable_params(self):
+        for name, module in model.named_modules():
+            if module.requires_grad:
+                print(f"{name}: {module.requires_grad}")
+        trainable_params = sum(p.numel() for p in self.llm.parameters() if p.requires_grad)
+        print(f"Trainable parameters: {trainable_params}")
     
 
 if __name__ == "__main__":
