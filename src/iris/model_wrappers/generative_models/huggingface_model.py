@@ -16,7 +16,6 @@ from typing import List, Callable, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-from transformers.trainer import _is_peft_model, MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
 
 
 class IRISTrainer(SFTTrainer):
@@ -456,7 +455,6 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         sft_config: SFTConfig = None,
         peft_config: LoraConfig = None,
         eval_dataset: Dataset = None,
-        freeze_modules: List[str] = None,
     ):
         """
         Example of intermediate_labels:
@@ -484,14 +482,13 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             data_collator=collator,
             peft_config=peft_config,
         )
-        # Freeze some modules
-        if freeze_modules is not None:
+        # Freeze layers
+        if iris_config.freeze_layers is not None:
             for name, param in self.llm.named_parameters():
-                for module_name in freeze_modules:
+                for module_name in iris_config.freeze_layers:
                     if module_name in name:
                         param.requires_grad_(False)
                         break
-        # self.llm.lm_head.requires_grad_(False)
         self.report_trainable_params()
         trainer.train()
 

@@ -169,7 +169,6 @@ class WildGuard(GuardLLM):
         train_samples: List[Sample],
         eval_samples: List[Sample] = None,
         peft_config: LoraConfig = None,
-        freeze_modules: List[str] = None,
     ):
         """ This method prepare the training examples format for WildGuard prompt completion. """
         assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
@@ -186,7 +185,6 @@ class WildGuard(GuardLLM):
             sft_config=sft_config,
             peft_config=peft_config,
             iris_config=iris_config,
-            freeze_modules=freeze_modules,
         )
     
 
