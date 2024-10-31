@@ -485,14 +485,14 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         )
         # Freeze LM head
         self.llm.lm_head.requires_grad_(False)
-        
+
         self.report_trainable_params()
         trainer.train()
 
     def report_trainable_params(self):
         for name, module in self.llm.named_modules():
-            if module.requires_grad_:
-                print(f"{name}: {module.requires_grad_}")
+            if module.requires_grad_():
+                print(f"{name}: {module.requires_grad_()}")
         trainable_params = sum(p.numel() for p in self.llm.parameters() if p.requires_grad)
         print(f"Trainable parameters: {trainable_params}")
     
