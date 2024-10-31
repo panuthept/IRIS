@@ -70,8 +70,6 @@ if __name__ == "__main__":
     print(f"Train size: {len(train_samples)}")
     print(f"Eval size: {len(eval_samples)}")
 
-    freeze_modules = [f"model.layers.{layer_idx}" for layer_idx in range(20, 33)]
-
     is_gpu_available = torch.cuda.is_available()
     if is_gpu_available or args.allow_cpu:
         print(f"GPU Count: {torch.cuda.device_count()}")
@@ -115,5 +113,4 @@ if __name__ == "__main__":
                 bias="none",
                 task_type="CAUSAL_LM",
             ) if args.use_lora else None,
-            freeze_modules=freeze_modules,
         )
