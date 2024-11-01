@@ -1,0 +1,13 @@
+pip install trl
+pip install tqdm
+pip install datasets
+pip install jaxtyping
+pip install transformers
+pip install easyjailbreak
+pip install transformer-lens
+pip install accelerate
+pip install rouge-score
+pip install llama-index
+pip install llama-index-llms-openai
+pip install llama-index-llms-together
+pip install llama-index-llms-openai-like

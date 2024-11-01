@@ -35,13 +35,12 @@ class MultiLingualJailbreaking(Jailbreaking):
         target_model: ModelBase, 
         evaluator: Callable = None,
         include_failed_cases: bool = False,
-        apply_jailbreak_template: bool = True,
         translate_answer_to_en: bool = True,
         use_cache: bool = True,
         cache_path: str = "./cache",
         **kwargs,
     ):
-        self.apply_jailbreak_template = apply_jailbreak_template
+        self.apply_jailbreak_template = False
         self.translate_answer_to_en = translate_answer_to_en
 
         self.mutations = [
@@ -69,6 +68,9 @@ class MultiLingualJailbreaking(Jailbreaking):
             evaluator=evaluator,
             include_failed_cases=include_failed_cases
         )
+
+    def get_attack_model_name(self) -> str:
+        return "google_translator_api"
 
     @staticmethod
     def _translate_to_en(text, src_lang='auto'):
@@ -105,6 +107,12 @@ class MultiLingualJailbreaking(Jailbreaking):
             target_response = self._translate_to_en(target_response) if self.translate_answer_to_en else target_response
             attack_results.append((jailbreak_prompt, target_response))
         return attack_results
+    
+
+class MultiLingualJailbreakingPlus(MultiLingualJailbreaking):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.apply_jailbreak_template = True
 
 
 if __name__ == "__main__":
@@ -128,7 +136,6 @@ if __name__ == "__main__":
     augmentation = MultiLingualJailbreaking(
         target_model=target_model, 
         evaluator=evaluator,
-        apply_jailbreak_template=False,
         translate_answer_to_en=False,
         cache_path="./cache",
     )
@@ -137,10 +144,9 @@ if __name__ == "__main__":
     print(f"ASR on Harmful prompts with MultiLingualJailbreaking: {augmentation.attack_success_rate}")
 
     # Test without jailbreak_template
-    augmentation = MultiLingualJailbreaking(
+    augmentation = MultiLingualJailbreakingPlus(
         target_model=target_model, 
         evaluator=evaluator,
-        apply_jailbreak_template=True,
         translate_answer_to_en=False,
         cache_path="./cache",
     )
@@ -154,7 +160,6 @@ if __name__ == "__main__":
     augmentation = MultiLingualJailbreaking(
         target_model=target_model, 
         evaluator=evaluator,
-        apply_jailbreak_template=False,
         translate_answer_to_en=False,
         cache_path="./cache",
     )
@@ -163,10 +168,9 @@ if __name__ == "__main__":
     print(f"ASR on Benign prompts with MultiLingualJailbreaking: {augmentation.attack_success_rate}")
 
     # Test without jailbreak_template
-    augmentation = MultiLingualJailbreaking(
+    augmentation = MultiLingualJailbreakingPlus(
         target_model=target_model, 
         evaluator=evaluator,
-        apply_jailbreak_template=True,
         translate_answer_to_en=False,
         cache_path="./cache",
     )

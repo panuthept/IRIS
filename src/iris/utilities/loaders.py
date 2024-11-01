@@ -1,6 +1,6 @@
 import json
 from typing import List
-from iris.data_types import Sample, ModelResponse
+from iris.data_types import Sample, ModelResponse, IRISConfig
 
 
 def save_samples(samples: List[Sample], path: str):
@@ -31,3 +31,11 @@ def load_responses(path) -> List[ModelResponse]:
             data = json.loads(line)
             responses.append(ModelResponse.from_dict(data))
     return responses
+
+
+def load_iris_config(path) -> IRISConfig:
+    config = json.load(open(path, "r"))
+    intermediate_labels = config["labels"]
+    # Ensure that the intermediate_labels are in the correct format and type
+    config["labels"] = {module_name: {int(final_label): (intermediate_label, weight) for final_label, (intermediate_label, weight) in intermediate_labels[module_name].items()} for module_name in intermediate_labels}
+    return IRISConfig(**config)

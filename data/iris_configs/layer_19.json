@@ -1,0 +1,9 @@
+{
+    "iris_alpha": 0.1,
+    "intermediate_labels": {
+        "model.layers.19": {
+            "1476": [7315, 1.0],
+            "5849": [5849, 1.0]
+        }
+    }
+}

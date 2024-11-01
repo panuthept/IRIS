@@ -1,6 +1,11 @@
+trl
 tqdm
+peft
+seaborn
 datasets
+jaxtyping
 transformers
+easyjailbreak
 transformer-lens
 accelerate
 rouge-score

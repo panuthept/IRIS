@@ -15,6 +15,14 @@ def all_annotations(cls) -> ChainMap:
 
 
 @dataclass
+class IRISConfig:
+    alpha: float = 0.1
+    label_smoothing: float = 0.0
+    labels: Dict[str, Dict[int, Dict[int, float]]] = field(default_factory=dict)
+    freeze_layers: List[str] = field(default_factory=list)
+
+
+@dataclass
 class Sample:
     query: str = None
     instructions: List[str] = field(default_factory=list)

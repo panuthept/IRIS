@@ -43,20 +43,15 @@ class GenerativeLLM(LLM):
                 suffix_prompt=suffix_prompt,
                 return_logprobs=self.logprobs,
             )
-        if answer is None or (self.logprobs and logprobs is None):
-            for _ in range(max_trials):
-                try:                
-                    answer, logprobs = self._complete(
-                        prompt, 
-                        ref_prompt=ref_prompt, 
-                        suffix_prompt=suffix_prompt,
-                        apply_chat_template=apply_chat_template, 
-                        **kwargs
-                    )
-                    break
-                except Exception as e:
-                    print(f"Failed to generate response: {e}")
-                    time.sleep(failure_sleep_time)
+        if answer is None or (self.logprobs and logprobs is None):             
+            answer, logprobs = self._complete(
+                prompt, 
+                ref_prompt=ref_prompt, 
+                suffix_prompt=suffix_prompt,
+                apply_chat_template=apply_chat_template, 
+                **kwargs
+            )
+        if self.use_cache:
             # Cache the answer
             self.cache_storage.cache(
                 answer, 

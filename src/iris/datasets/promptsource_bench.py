@@ -117,7 +117,7 @@ class PromptSourceDataset(Dataset):
             sub_task_name: str = None,
             prompt_name: List[str] = None,
             path: str = "./data/datasets/promptsource/promptsource/templates",
-            cache_dir: str = None,
+            cache_dir: str = "./data/datasets/promptsource/promptsource/templates",
     ):  
         from promptsource.templates import DatasetTemplates
         

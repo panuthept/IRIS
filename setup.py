@@ -13,6 +13,6 @@ setup(
     author='',
     author_email='',
     description='Improving Robustness of LLMs on Input Variations by Mitigating Spurious Intermediate States.',
-    python_requires='==3.11.4',
+    # python_requires='==3.11.4',
     install_requires=dependencies
 )

@@ -19,6 +19,9 @@ class Jailbreaking(InstructionAugmentation):
         self.include_failed_cases = include_failed_cases
         self.attack_success_rate = None
 
+    def get_attack_model_name(self) -> str:
+        raise NotImplementedError
+
     def _attack(self, instruction: str, reference_answers: List[str] = None) -> List[Tuple[str, str]]:
         """
         Return a list of tuples, each containing the jailbreak instruction and the target response.
@@ -56,6 +59,9 @@ class DummyJailbreaking(Jailbreaking):
             evaluator=evaluator,
             include_failed_cases=include_failed_cases
         )
+    
+    def get_attack_model_name(self) -> str:
+        return "null"
 
     def _attack(self, instruction: str, reference_answers: List[str] = None) -> List[Tuple[str, str]]:
         """

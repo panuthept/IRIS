@@ -1,0 +1,6 @@
+{
+    "iris_alpha": 0.1,
+    "intermediate_labels": {
+        "model.layers.26": {"1476": [1476, 1.0]}
+    }
+}

@@ -14,7 +14,7 @@ class AwesomePromptsDataset(JailbreakDataset):
             intention: str = None,
             attack_engine: str = None,
             path: str = "./data/datasets/awesome_prompts",
-            cache_dir: str = None,
+            cache_dir: str = "./data/datasets/awesome_prompts",
     ):
         self.cache_dir = cache_dir
         super().__init__(
