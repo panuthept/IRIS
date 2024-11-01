@@ -38,12 +38,14 @@ class IRISTrainer(SFTTrainer):
 
         self.mode = self.iris_config.mode
         self.alpha = self.iris_config.alpha
+        self.wait_steps = self.iris_config.wait_steps
         self.ema_alpha = self.iris_config.ema_alpha
         self.sma_window_size = self.iris_config.sma_window_size
         self.intermediate_labels = self.iris_config.layer_labels
         self.intermediate_weights = self.iris_config.layer_weights
         self.label_smoothing = self.iris_config.label_smoothing
 
+        self.training_step = 0
         self.sma_logits: Dict[str, Dict[int, Tensor]] = {}
         self.ema_logits: Dict[str, Dict[int, Tensor]] = {}
         self.prev_logits: Dict[str, Dict[int, List[Tensor]]] = {}
@@ -126,7 +128,7 @@ class IRISTrainer(SFTTrainer):
                     flatten_logits.append(intermediate_logit)
                 # Update prev_logits to be used in the next iteration
                 self._update_prev_logits(intermediate_logit, module_name, final_label)
-        if len(flatten_logits) == 0:
+        if len(flatten_logits) == 0 or self.training_step < self.wait_steps:
             return torch.tensor(0.0, device=final_labels.device)
         # Convert to tensors
         flatten_logits = torch.stack(flatten_logits, dim=0)
@@ -156,6 +158,8 @@ class IRISTrainer(SFTTrainer):
             intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
             intermediate_loss = self._compute_intermediate_loss(intermediate_logits, labels[:, -1])
             loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
+        # Update training step
+        self.training_step += 1
         return (loss, outputs) if return_outputs else loss
 
 
