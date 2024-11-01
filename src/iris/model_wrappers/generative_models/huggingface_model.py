@@ -56,6 +56,8 @@ class IRISTrainer(SFTTrainer):
                 label_smoothing=self.label_smoothing,
             )
         else:
+            if self.label_smoothing > 0.0:
+                print("[WARNING] Label smoothing is not supported with KLDivLoss. Setting label_smoothing to 0.0.")
             self.loss_fn = nn.KLDivLoss(
                 reduction="none",
                 log_target=True,
