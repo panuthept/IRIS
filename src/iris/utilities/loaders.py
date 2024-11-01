@@ -35,7 +35,9 @@ def load_responses(path) -> List[ModelResponse]:
 
 def load_iris_config(path) -> IRISConfig:
     config = json.load(open(path, "r"))
-    intermediate_labels = config["labels"]
-    # Ensure that the intermediate_labels are in the correct format and type
-    config["labels"] = {module_name: {int(final_label): (intermediate_label, weight) for final_label, (intermediate_label, weight) in intermediate_labels[module_name].items()} for module_name in intermediate_labels}
+    layer_labels = config.pop("layer_labels")
+    layer_weights = config.pop("layer_weights")
+    # Ensure that the layer_labels are in the correct format and type
+    config["layer_labels"] = {module_name: {int(final_label): layer_label for final_label, layer_label in layer_labels[module_name].items()} for module_name in layer_labels}
+    config["layer_weights"] = {module_name: {int(final_label): layer_weight for final_label, layer_weight in layer_weights[module_name].items()} for module_name in layer_weights}
     return IRISConfig(**config)

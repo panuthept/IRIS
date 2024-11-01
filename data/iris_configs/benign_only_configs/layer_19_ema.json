@@ -1,0 +1,9 @@
+{
+    "mode": "ema",
+    "alpha": 0.1,
+    "wait_steps": 10,
+    "ema_alpha": 0.1,
+    "layer_weights": {
+        "model.layers.19": {"1476": 1.0}
+    }
+}

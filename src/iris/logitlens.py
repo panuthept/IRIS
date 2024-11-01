@@ -11,6 +11,8 @@ DEFAULT_MODULE_NAMES = {
     "mistralai/Mistral-7B-v0.3": [f"model.layers.{layer_idx}.self_attn" for layer_idx in range(32)] + 
         [f"model.layers.{layer_idx}.mlp" for layer_idx in range(32)] + \
         [f"model.layers.{layer_idx}" for layer_idx in range(32)],
+    "facebook/opt-125m": [f"model.decoder.layers.{layer_idx}.self_attn" for layer_idx in range(24)] +
+        [f"model.decoder.layers.{layer_idx}" for layer_idx in range(24)],
 }
 
 
