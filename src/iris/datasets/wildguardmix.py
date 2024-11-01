@@ -59,8 +59,11 @@ class WildGuardMixDataset(JailbreakDataset):
         for sample in test_dataset["test"]:
             if sample["prompt_harm_label"] is None:
                 continue
-            if self.attack_engine is not None and self.attack_engine == "adversarial" and not sample["adversarial"]:
-                continue
+            if self.attack_engine is not None:
+                if self.attack_engine == "vanilla" and sample["adversarial"]:
+                    continue
+                if self.attack_engine == "adversarial" and not sample["adversarial"]:
+                    continue
 
             intention = "benign" if sample["prompt_harm_label"] == "unharmful" else "harmful"
             if self.intention is not None and intention != self.intention:

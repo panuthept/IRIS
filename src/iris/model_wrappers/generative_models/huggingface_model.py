@@ -15,7 +15,6 @@ from typing import List, Callable, Union, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-from transformers.trainer import _is_peft_model, MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
 
 
 class IRISTrainer(SFTTrainer):
@@ -513,6 +512,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             data_collator=collator,
             peft_config=peft_config,
         )
+        self.report_trainable_params()
         trainer.train()
 
     def train_iris(
@@ -533,9 +533,6 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             ...
         }
         """
-        # Freeze LM head
-        self.llm.lm_head.requires_grad_(False)
-
         self.tokenizer.padding_side = "right"
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
         if peft_config is None:
@@ -554,7 +551,24 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             data_collator=collator,
             peft_config=peft_config,
         )
+        # Freeze layers
+        if iris_config.freeze_layers is not None:
+            for name, param in self.llm.named_parameters():
+                for module_name in iris_config.freeze_layers:
+                    if module_name in name:
+                        param.requires_grad_(False)
+                        break
+        self.report_trainable_params()
         trainer.train()
+
+    def report_trainable_params(self):
+        trainable_params = []
+        for name, param in self.llm.named_parameters():
+            if param.requires_grad:
+                trainable_params.append(param.numel())
+                print(f"{name}: {param.numel()}")
+        trainable_params = sum(trainable_params)
+        print(f"Trainable parameters: {trainable_params}")
     
 
 if __name__ == "__main__":

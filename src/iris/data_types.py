@@ -23,6 +23,7 @@ class IRISConfig:
     label_smoothing: float = 0.0
     layer_labels: Dict[str, Dict[int, Union[int, str]]] = field(default_factory=dict)
     layer_weights: Dict[str, Dict[int, float]] = field(default_factory=dict)
+    freeze_layers: List[str] = field(default_factory=list)
 
 
 @dataclass

@@ -1,0 +1,20 @@
+{
+    "alpha": 0.1,
+    "labels": {
+        "model.layers.19": {"1476": [7315, 1.0]}
+    },
+    "freeze_layers": [
+        "model.layers.20",
+        "model.layers.21",
+        "model.layers.22",
+        "model.layers.23",
+        "model.layers.24",
+        "model.layers.25",
+        "model.layers.26",
+        "model.layers.27",
+        "model.layers.28",
+        "model.layers.29",
+        "model.layers.30",
+        "model.layers.31"
+    ]
+}
