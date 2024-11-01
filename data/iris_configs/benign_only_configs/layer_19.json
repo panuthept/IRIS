@@ -6,8 +6,5 @@
     },
     "layer_weights": {
         "model.layers.19": {"1476": 1.0}
-    "alpha": 0.1,
-    "labels": {
-        "model.layers.19": {"1476": [7315, 1.0]}
     }
 }

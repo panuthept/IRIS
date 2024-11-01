@@ -21,7 +21,7 @@ class IRISConfig:
     ema_alpha: float = 0.1
     sma_window_size: int = 10
     label_smoothing: float = 0.0
-    layer_labels: Dict[str, Dict[int, Union[int, str]]] = field(default_factory=dict)
+    layer_labels: Dict[str, Dict[int, int]] = field(default_factory=dict)
     layer_weights: Dict[str, Dict[int, float]] = field(default_factory=dict)
     freeze_layers: List[str] = field(default_factory=list)
 
