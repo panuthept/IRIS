@@ -1,6 +1,6 @@
-echo "Running WildGuard-IRIS on layer 19 (freeze above layers)"
+echo "Running WildGuard-IRIS-SMA on layer 19"
 CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
---iris_config ./data/iris_configs/benign_only_configs/layer_19_freeze.json \
+--iris_config ./data/iris_configs/benign_only_configs/layer_19_sma_10.json \
 --model_name allenai/wildguard \
 --train_eval_split 0.9 \
 --max_seq_length 2048 \
@@ -9,9 +9,69 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wi
 --epochs 2 \
 --eval_steps 60 \
 --save_total_limit 100 \
---output_dir ./finetuned_models/iris_wildguard_layer_19_freeze \
+--output_dir ./finetuned_models/iris_wildguard_layer_19_sma_10 \
 --use_lora \
 --lora_rank 128
+
+echo "Running WildGuard-IRIS-SMA on layer 19"
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
+--iris_config ./data/iris_configs/benign_only_configs/layer_19_sma_25.json \
+--model_name allenai/wildguard \
+--train_eval_split 0.9 \
+--max_seq_length 2048 \
+--batch_size 1 \
+--gradient_accumulation_steps 32 \
+--epochs 2 \
+--eval_steps 60 \
+--save_total_limit 100 \
+--output_dir ./finetuned_models/iris_wildguard_layer_19_sma_25 \
+--use_lora \
+--lora_rank 128
+
+echo "Running WildGuard-IRIS-SMA on layer 19"
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
+--iris_config ./data/iris_configs/benign_only_configs/layer_19_sma_50.json \
+--model_name allenai/wildguard \
+--train_eval_split 0.9 \
+--max_seq_length 2048 \
+--batch_size 1 \
+--gradient_accumulation_steps 32 \
+--epochs 2 \
+--eval_steps 60 \
+--save_total_limit 100 \
+--output_dir ./finetuned_models/iris_wildguard_layer_19_sma_50 \
+--use_lora \
+--lora_rank 128
+
+echo "Running WildGuard-IRIS-SMA on layer 19"
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
+--iris_config ./data/iris_configs/benign_only_configs/layer_19_sma_100.json \
+--model_name allenai/wildguard \
+--train_eval_split 0.9 \
+--max_seq_length 2048 \
+--batch_size 1 \
+--gradient_accumulation_steps 32 \
+--epochs 2 \
+--eval_steps 60 \
+--save_total_limit 100 \
+--output_dir ./finetuned_models/iris_wildguard_layer_19_sma_100 \
+--use_lora \
+--lora_rank 128
+
+# echo "Running WildGuard-IRIS on layer 19 (freeze above layers)"
+# CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
+# --iris_config ./data/iris_configs/benign_only_configs/layer_19_freeze.json \
+# --model_name allenai/wildguard \
+# --train_eval_split 0.9 \
+# --max_seq_length 2048 \
+# --batch_size 1 \
+# --gradient_accumulation_steps 32 \
+# --epochs 2 \
+# --eval_steps 60 \
+# --save_total_limit 100 \
+# --output_dir ./finetuned_models/iris_wildguard_layer_19_freeze \
+# --use_lora \
+# --lora_rank 128
 
 # echo "Running WildGuard-IRIS on layer 19 with label smoothing 0.01"
 # CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_wildguard.py \
