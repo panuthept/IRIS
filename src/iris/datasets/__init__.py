@@ -1,4 +1,5 @@
 from typing import Optional
+from iris.datasets.squad import SquadDataset
 from iris.datasets.xstest import XSTestDataset
 from iris.datasets.tydiqa import TyDiQADataset
 from iris.datasets.toxic_chat import ToxicChatDataset
@@ -13,6 +14,7 @@ from iris.datasets.beavertails import BeaverTails330kDataset, BeaverTails30kData
 
 
 AVAILABLE_DATASETS = {
+    "SquadDataset": SquadDataset,
     "XSTestDataset": XSTestDataset,
     "TyDiQADataset": TyDiQADataset,
     "ToxicChatDataset": ToxicChatDataset,
