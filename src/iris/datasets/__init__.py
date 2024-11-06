@@ -1,5 +1,6 @@
 from typing import Optional
 from iris.datasets.xstest import XSTestDataset
+from iris.datasets.tydiqa import TyDiQADataset
 from iris.datasets.toxic_chat import ToxicChatDataset
 from iris.datasets.base import Dataset, JailbreakDataset
 from iris.datasets.wildguardmix import WildGuardMixDataset
@@ -13,6 +14,7 @@ from iris.datasets.beavertails import BeaverTails330kDataset, BeaverTails30kData
 
 AVAILABLE_DATASETS = {
     "XSTestDataset": XSTestDataset,
+    "TyDiQADataset": TyDiQADataset,
     "ToxicChatDataset": ToxicChatDataset,
     "WildGuardMixDataset": WildGuardMixDataset,
     "JailbreaKV28kDataset": JailbreaKV28kDataset,
