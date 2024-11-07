@@ -35,13 +35,13 @@ class WildChatDataset(JailbreakDataset):
         dataset = load_dataset("allenai/WildChat-1M-Full", cache_dir=self.cache_dir)
         dataset = dataset.shuffle(seed=42)
         # Read train dataset
-        for i, sample in enumerate(dataset["train"]):
+        for sample in dataset["train"]:
             if sample["language"] != "English":
                 continue
             if sample["turn"] > 1:
                 continue
             intention = "harmful" if sample["conversation"][0]["toxic"] else "benign"
-            if i < 332205:
+            if len(data["train"]) < 332205:
                 data["train"].append({
                     "instructions": [sample["conversation"][0]["content"]],
                     "instructions_true_label": [intention.capitalize()],
