@@ -41,14 +41,17 @@ class WildChatDataset(JailbreakDataset):
             if sample["turn"] > 1:
                 continue
             intention = "harmful" if sample["conversation"][0]["toxic"] else "benign"
+            content = sample["conversation"][0]["content"]
+            if len(content.split()) > 4000:
+                continue
             if len(data["train"]) < 365425:
                 data["train"].append({
-                    "instructions": [sample["conversation"][0]["content"]],
+                    "instructions": [content],
                     "instructions_true_label": [intention.capitalize()],
                 })
             else:
                 data["test"].append({
-                    "instructions": [sample["conversation"][0]["content"]],
+                    "instructions": [content],
                     "instructions_true_label": [intention.capitalize()],
                 })
         return data
