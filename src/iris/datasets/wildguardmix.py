@@ -102,7 +102,7 @@ class WildGuardMixDataset(JailbreakDataset):
                     
                 ]
                 for augmented_prompt in augmented_prompts:
-                    data["train"].append({
+                    data["test"].append({
                         "instructions": [augmented_prompt],
                         "instructions_true_label": [intention.capitalize()],
                     })
