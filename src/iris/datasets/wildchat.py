@@ -23,7 +23,7 @@ class WildChatDataset(JailbreakDataset):
 
     @classmethod
     def split_available(cls) -> List[str]:
-        return ["train"]
+        return ["train", "test"]
     
     @classmethod
     def intentions_available(cls) -> List[str]:
@@ -33,8 +33,9 @@ class WildChatDataset(JailbreakDataset):
         data: Dict[str, List] = defaultdict(list)
         # Load train dataset
         dataset = load_dataset("allenai/WildChat-1M-Full", cache_dir=self.cache_dir)
+        dataset = dataset.shuffle(seed=42)
         # Read train dataset
-        for sample in dataset["train"]:
+        for sample in dataset["train"][:332205]:
             if sample["language"] != "English":
                 continue
             if sample["turn"] > 1:
@@ -44,16 +45,27 @@ class WildChatDataset(JailbreakDataset):
                 "instructions": [sample["conversation"][0]["content"]],
                 "instructions_true_label": [intention.capitalize()],
             })
+        # Read test dataset
+        for sample in dataset["train"][332205:]:
+            if sample["language"] != "English":
+                continue
+            if sample["turn"] > 1:
+                continue
+            intention = "harmful" if sample["conversation"][0]["toxic"] else "benign"
+            data["test"].append({
+                "instructions": [sample["conversation"][0]["content"]],
+                "instructions_true_label": [intention.capitalize()],
+            })
         return data
 
 
 if __name__ == "__main__":
     dataset = WildChatDataset()
-    # samples = dataset.as_samples(split="test")
-    # print(len(samples))
-    # print(samples[0].get_prompts()[0])
-    # print(samples[0].instructions_true_label[0])
-    # print("-" * 100)
+    samples = dataset.as_samples(split="test")
+    print(len(samples))
+    print(samples[0].get_prompts()[0])
+    print(samples[0].instructions_true_label[0])
+    print("-" * 100)
 
     samples = dataset.as_samples(split="train")
     print(len(samples))
