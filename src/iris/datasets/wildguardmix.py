@@ -29,6 +29,10 @@ class WildGuardMixDataset(JailbreakDataset):
     def attack_engines_available(cls) -> List[str]:
         return ["vanilla", "adversarial"]
     
+    @classmethod
+    def intentions_available(cls) -> List[str]:
+        return ["harmful", "benign", "pseudo_benign"]
+    
     def _load_dataset(self, path: str) -> Dict[str, List]:
         data: Dict[str, List] = defaultdict(list)
         # Load train dataset
@@ -44,8 +48,15 @@ class WildGuardMixDataset(JailbreakDataset):
                     continue
 
             intention = "benign" if sample["prompt_harm_label"] == "unharmful" else "harmful"
-            if self.intention is not None and intention != self.intention:
-                continue
+            if self.intention == "pseudo_benign":
+                if intention == "benign":
+                    # Skip benign samples
+                    continue
+                intention = "benign"    # Change harmful to benign
+                sample["prompt"] = 'Repharse the following text:\n\n"{text}"'.format(text=sample["prompt"])
+            else:
+                if self.intention is not None and intention != self.intention:
+                    continue
 
             data["train"].append({
                 "instructions": [sample["prompt"]],
@@ -66,8 +77,15 @@ class WildGuardMixDataset(JailbreakDataset):
                     continue
 
             intention = "benign" if sample["prompt_harm_label"] == "unharmful" else "harmful"
-            if self.intention is not None and intention != self.intention:
-                continue
+            if self.intention == "pseudo_benign":
+                if intention == "benign":
+                    # Skip benign samples
+                    continue
+                intention = "benign"    # Change harmful to benign
+                sample["prompt"] = 'Repharse the following text:\n\n"{text}"'.format(text=sample["prompt"])
+            else:
+                if self.intention is not None and intention != self.intention:
+                    continue
 
             data["test"].append({
                 "instructions": [sample["prompt"]],
@@ -79,19 +97,19 @@ class WildGuardMixDataset(JailbreakDataset):
 
 if __name__ == "__main__":
     dataset = WildGuardMixDataset(
-        intention="harmful",
+        intention="pseudo_benign",
         cache_dir="./data/datasets/wildguardmix",
     )
     samples = dataset.as_samples(split="test")
     print(len(samples))
     print(samples[0].get_prompts()[0])
-    print(samples[0].reference_answers[0])
+    # print(samples[0].reference_answers[0])
     print(samples[0].instructions_true_label[0])
     print("-" * 100)
 
     samples = dataset.as_samples(split="train")
     print(len(samples))
     print(samples[0].get_prompts()[0])
-    print(samples[0].reference_answers[0])
+    # print(samples[0].reference_answers[0])
     print(samples[0].instructions_true_label[0])
     print("=" * 100)
