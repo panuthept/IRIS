@@ -2,6 +2,7 @@ from typing import Optional
 from iris.datasets.squad import SquadDataset
 from iris.datasets.xstest import XSTestDataset
 from iris.datasets.tydiqa import TyDiQADataset
+from iris.datasets.wildchat import WildChatDataset
 from iris.datasets.toxic_chat import ToxicChatDataset
 from iris.datasets.base import Dataset, JailbreakDataset
 from iris.datasets.wildguardmix import WildGuardMixDataset
@@ -17,6 +18,7 @@ AVAILABLE_DATASETS = {
     "SquadDataset": SquadDataset,
     "XSTestDataset": XSTestDataset,
     "TyDiQADataset": TyDiQADataset,
+    "WildChatDataset": WildChatDataset,
     "ToxicChatDataset": ToxicChatDataset,
     "WildGuardMixDataset": WildGuardMixDataset,
     "JailbreaKV28kDataset": JailbreaKV28kDataset,
