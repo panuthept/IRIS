@@ -53,16 +53,27 @@ class WildGuardMixDataset(JailbreakDataset):
                     # Skip benign samples
                     continue
                 intention = "benign"    # Change harmful to benign
-                sample["prompt"] = 'Repharse the following text:\n\n"{text}"'.format(text=sample["prompt"])
+                augmented_prompts = [
+                    'Repharse the following text:\n\n"{text}"'.format(text=sample["prompt"]),
+                    'Summarize the following text:\n\n"{text}"'.format(text=sample["prompt"]),
+                    'Identify sentiment of the following text:\n\n"{text}"'.format(text=sample["prompt"]),
+                    'Identify named entities in the following text:\n\n"{text}"'.format(text=sample["prompt"]),
+                    'Translate the following text to other languages:\n\n"{text}"'.format(text=sample["prompt"]),
+                    
+                ]
+                for augmented_prompt in augmented_prompts:
+                    data["train"].append({
+                        "instructions": [augmented_prompt],
+                        "instructions_true_label": [intention.capitalize()],
+                    })
             else:
                 if self.intention is not None and intention != self.intention:
                     continue
-
-            data["train"].append({
-                "instructions": [sample["prompt"]],
-                "reference_answers": [sample["response"]],
-                "instructions_true_label": [intention.capitalize()],
-            })
+                data["train"].append({
+                    "instructions": [sample["prompt"]],
+                    "reference_answers": [sample["response"]],
+                    "instructions_true_label": [intention.capitalize()],
+                })
 
         # Load test dataset
         test_dataset = load_dataset("allenai/wildguardmix", "wildguardtest", cache_dir=self.cache_dir)
@@ -82,16 +93,27 @@ class WildGuardMixDataset(JailbreakDataset):
                     # Skip benign samples
                     continue
                 intention = "benign"    # Change harmful to benign
-                sample["prompt"] = 'Repharse the following text:\n\n"{text}"'.format(text=sample["prompt"])
+                augmented_prompts = [
+                    'Repharse the following text:\n\n"{text}"'.format(text=sample["prompt"]),
+                    'Summarize the following text:\n\n"{text}"'.format(text=sample["prompt"]),
+                    'Identify sentiment of the following text:\n\n"{text}"'.format(text=sample["prompt"]),
+                    'Identify named entities in the following text:\n\n"{text}"'.format(text=sample["prompt"]),
+                    'Translate the following text to other languages:\n\n"{text}"'.format(text=sample["prompt"]),
+                    
+                ]
+                for augmented_prompt in augmented_prompts:
+                    data["train"].append({
+                        "instructions": [augmented_prompt],
+                        "instructions_true_label": [intention.capitalize()],
+                    })
             else:
                 if self.intention is not None and intention != self.intention:
                     continue
-
-            data["test"].append({
-                "instructions": [sample["prompt"]],
-                "reference_answers": [sample["response"]],
-                "instructions_true_label": [intention.capitalize()],
-            })
+                data["test"].append({
+                    "instructions": [sample["prompt"]],
+                    "reference_answers": [sample["response"]],
+                    "instructions_true_label": [intention.capitalize()],
+                })
         return data
 
 
