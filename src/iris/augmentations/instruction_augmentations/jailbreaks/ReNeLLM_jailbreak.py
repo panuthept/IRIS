@@ -14,7 +14,7 @@ from easyjailbreak.datasets import JailbreakDataset, Instance
 from easyjailbreak.loggers.logger import Logger
 from easyjailbreak.mutation.generation import (AlterSentenceStructure, ChangeStyle, Rephrase,
     InsertMeaninglessCharacters, MisspellSensitiveWords, Translation)
-from src.iris.augmentations.instruction_augmentations.jailbreaks.base import Jailbreaking
+from iris.augmentations.instruction_augmentations.jailbreaks.base import Jailbreaking
 
 __all__ = ["ReNeLLM"]
 
@@ -52,14 +52,6 @@ class ReNeLLM(Jailbreaking):
             if os.environ.get("OPENAI_API_KEY") is None:
                 raise ValueError("Please provide OPENAI_API_KEY in the environment variables.")
             attack_model = OpenaiModel(model_name='gpt-4o', api_keys=os.environ.get("OPENAI_API_KEY"))
-
-
-        for k,instance in enumerate(self.jailbreak_datasets):
-            instance.index = k
-        self.current_query: int = 0
-        self.current_jailbreak: int = 0
-        self.current_reject: int = 0
-        self.logger = Logger()
 
         self.Mutations = [
             AlterSentenceStructure(self.attack_model, attr_name='query'),
