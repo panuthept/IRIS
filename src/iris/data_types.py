@@ -1,8 +1,8 @@
 import numpy as np
 from collections import ChainMap
 from dataclasses import dataclass, field
-from typing import Tuple, List, Dict, Any
 from iris.prompt_template import PromptTemplate
+from typing import Union, Tuple, List, Dict, Any
 
 
 def all_annotations(cls) -> ChainMap:
@@ -16,9 +16,14 @@ def all_annotations(cls) -> ChainMap:
 
 @dataclass
 class IRISConfig:
+    mode: str = "fixed"
     alpha: float = 0.1
+    wait_steps: int = 0
+    ema_alpha: float = 0.1
+    sma_window_size: int = 10
     label_smoothing: float = 0.0
-    labels: Dict[str, Dict[int, Dict[int, float]]] = field(default_factory=dict)
+    layer_labels: Dict[str, Dict[int, int]] = field(default_factory=dict)
+    layer_weights: Dict[str, Dict[int, float]] = field(default_factory=dict)
     freeze_layers: List[str] = field(default_factory=list)
 
 

@@ -1,0 +1,9 @@
+{
+    "mode": "sma",
+    "alpha": 0.1,
+    "wait_steps": 10,
+    "sma_window_size": 25,
+    "layer_weights": {
+        "model.layers.19": {"1476": 1.0}
+    }
+}

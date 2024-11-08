@@ -13,6 +13,7 @@ def load_examples(
     k: int = 5,
     layer_nums: int = 32,
     max_examples: int = None,
+    prompt_intention: str = "Harmful",
     correct_prediction_only: bool = False, 
     incorrect_prediction_only: bool = False,
     activation_template: str = "model.layers.{layer_id}",
@@ -27,6 +28,8 @@ def load_examples(
     with open(load_path, "r") as f:
         for line in tqdm(f):
             example = json.loads(line)
+            if example["label"] != prompt_intention:
+                continue
             if correct_prediction_only and example["response"] != example["label"]:
                 continue
             if incorrect_prediction_only and example["response"] == example["label"]:
@@ -67,7 +70,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--load_path_1", type=str, required=True)
     parser.add_argument("--load_path_2", type=str, default=None)
-    parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
+    parser.add_argument("--prompt_intention", type=str, default="Harmful")
+    parser.add_argument("--model_name", type=str, default="allenai/wildguard")
     parser.add_argument("--correct_prediction_only", action="store_true")
     parser.add_argument("--incorrect_prediction_only", action="store_true")
     parser.add_argument("--max_examples", type=int, default=None)
@@ -81,6 +85,7 @@ if __name__ == "__main__":
         k=args.k,
         layer_nums=args.layer_nums,
         max_examples=args.max_examples,
+        prompt_intention=args.prompt_intention,
         correct_prediction_only=args.correct_prediction_only,
         incorrect_prediction_only=args.incorrect_prediction_only,
         activation_template=args.activation_template,
@@ -91,6 +96,7 @@ if __name__ == "__main__":
             k=args.k,
             layer_nums=args.layer_nums,
             max_examples=args.max_examples,
+            prompt_intention=args.prompt_intention,
             correct_prediction_only=args.correct_prediction_only,
             incorrect_prediction_only=args.incorrect_prediction_only,
             activation_template=args.activation_template,
