@@ -7,6 +7,18 @@ from iris.datasets import WildGuardMixDataset
 from iris.model_wrappers.guard_models import WildGuard
 
 
+"""
+CUDA_VISIBLE_DEVICES=0 python scripts/layer_search.py \
+--model_name allenai/wildguard \
+--save_path ./layer_search_outputs/wildguard/responses.jsonl
+
+CUDA_VISIBLE_DEVICES=1 python scripts/layer_search.py \
+--model_name allenai/wildguard \
+--checkpoint_path ./finetuned_models/iris_wildguard_layer_19/checkpoint-1220 \
+--save_path ./layer_search_outputs/iris_wildguard_layer_19/responses.jsonl
+"""
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="allenai/wildguard")
@@ -25,7 +37,7 @@ if __name__ == "__main__":
     )
     
     # Load dataset
-    dataset = WildGuardMixDataset(attack_engine=args.attack_engine, cache_dir=args.cache_dir)
+    dataset = WildGuardMixDataset(attack_engine="vanilla")
     samples = dataset.as_samples(split="train")
 
     # Get development set
