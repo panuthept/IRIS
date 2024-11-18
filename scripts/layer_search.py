@@ -93,6 +93,8 @@ if __name__ == "__main__":
                         return_logits=args.save_logits, 
                         return_activations=args.save_activations,
                     )
+                    # Remove self_attn and mlp
+                    cache = {k: {module_name: activation for module_name, activation in v.items() if "self_attn" in module_name or "mlp" in module_name} for k, v in cache.items()}
                     f.write(json.dumps({
                         "prompt": prompt,
                         "response": response,
@@ -103,7 +105,7 @@ if __name__ == "__main__":
                         break
                 if benign_count > args.max_benign and harmful_count > args.max_harmful:
                     break
-                
+
     responses = []
     with open(args.save_path, "r") as f:
         for line in open(args.save_path):
