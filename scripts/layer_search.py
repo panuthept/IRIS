@@ -50,7 +50,7 @@ if __name__ == "__main__":
     print(f"Dev size: {len(eval_samples)}")
 
     os.makedirs(os.path.dirname(args.save_path), exist_ok=True)
-    if os.path.exists(args.save_path):
+    if not os.path.exists(args.save_path):
         with open(args.save_path, "w") as f:
             for sample in tqdm(samples):
                 prompts = sample.get_prompts()
