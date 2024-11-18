@@ -10,12 +10,14 @@ from iris.model_wrappers.guard_models import WildGuard
 """
 CUDA_VISIBLE_DEVICES=0 python scripts/layer_search.py \
 --model_name allenai/wildguard \
---save_path ./layer_search_outputs/wildguard/responses.jsonl
+--save_logits \
+--save_path ./layer_search_outputs/wildguard/logits.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/layer_search.py \
 --model_name allenai/wildguard \
 --checkpoint_path ./finetuned_models/iris_wildguard_layer_19/checkpoint-1220 \
---save_path ./layer_search_outputs/iris_wildguard_layer_19/responses.jsonl
+--save_logits \
+--save_path ./layer_search_outputs/iris_wildguard_layer_19/logits.jsonl
 """
 
 
@@ -25,6 +27,8 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--train_eval_split", type=float, default=0.9)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--save_logits", action="store_true")
+    parser.add_argument("--save_activations", action="store_true")
     parser.add_argument("--save_path", type=str, default="./layer_search_outputs/wildguard/responses.jsonl")
     args = parser.parse_args()
 
@@ -59,8 +63,8 @@ if __name__ == "__main__":
                     response = model.generate(prompt, return_probs=True)
                     cache = model.model.logitlens.fetch_cache(
                         return_tokens=False, 
-                        return_logits=True, 
-                        return_activations=True,
+                        return_logits=args.save_logits, 
+                        return_activations=args.save_activations,
                     )
                     f.write(json.dumps({
                         "prompt": prompt,
