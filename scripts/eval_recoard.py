@@ -1,8 +1,6 @@
 import json
 import argparse
-import numpy as np
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 from iris.metrics.safeguard_metrics import SafeGuardMetric
 
 
@@ -27,6 +25,7 @@ if __name__ == "__main__":
     parser.add_argument("--load_path_b1", type=str, required=True)
     parser.add_argument("--load_path_b2", type=str, default=None)
     parser.add_argument("--load_path_b3", type=str, default=None)
+    parser.add_argument("--dataset_name", type=str, required=True)
     args = parser.parse_args()
 
     all_gold_labels, all_pred_scores = load_examples(args.load_path_a1)
@@ -60,7 +59,7 @@ if __name__ == "__main__":
     metrics_b = SafeGuardMetric()
     metrics_b.update(all_gold_labels, all_pred_scores)
 
-    metrics_b.plot_comparison(metrics_a, "WildGuard", "JailbreakBench Dataset")
+    metrics_b.plot_comparison(metrics_a, "WildGuard", args.dataset_name)
 
     # best_index = np.argmax(metrics_b.f1s)
     # best_f1_b = metrics_b.f1s[best_index]

@@ -24,7 +24,6 @@ class SafeGuardMetric:
         # Compute ROC curve and ROC area
         self.fprs, self.tprs, self.thresholds = roc_curve(gold_labels, pred_scores)
         self.auc = auc(self.fprs, self.tprs)
-        print(self.fprs)
         # Compute F1 score
         self.recalls = self.tprs
         self.precisions = np.where(self.tprs + self.fprs > 0, self.tprs / (self.tprs + self.fprs), 0)
