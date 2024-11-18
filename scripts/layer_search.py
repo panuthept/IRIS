@@ -103,5 +103,8 @@ if __name__ == "__main__":
                         break
                 if benign_count > args.max_benign and harmful_count > args.max_harmful:
                     break
-    else:
-        pass
+    responses = []
+    with open(args.save_path, "w") as f:
+        for line in open(args.save_path):
+            responses.append(json.loads(line))
+    print(responses[0]["cache"]["activations"].keys())
