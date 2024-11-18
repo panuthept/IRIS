@@ -37,6 +37,7 @@ if __name__ == "__main__":
         train_samples, eval_samples = samples[:train_size], samples[train_size:]
     print(f"Dev size: {len(eval_samples)}")
 
+    os.makedirs(os.path.dirname(args.save_path), exist_ok=True)
     if os.path.exists(args.save_path):
         with open(args.save_path, "w") as f:
             for sample in tqdm(samples):
