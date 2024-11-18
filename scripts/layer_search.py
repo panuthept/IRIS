@@ -52,7 +52,7 @@ if __name__ == "__main__":
     os.makedirs(os.path.dirname(args.save_path), exist_ok=True)
     if not os.path.exists(args.save_path):
         with open(args.save_path, "w") as f:
-            for sample in tqdm(samples):
+            for sample in tqdm(eval_samples):
                 prompts = sample.get_prompts()
                 gold_labels = sample.instructions_true_label
                 for prompt, gold_label in zip(prompts, gold_labels):
