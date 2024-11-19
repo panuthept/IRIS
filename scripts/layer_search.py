@@ -36,11 +36,9 @@ CUDA_VISIBLE_DEVICES=1 python scripts/layer_search.py \
 
 def distance_function(activations, centroids, distance_function):
     if distance_function == "L2":
-        return np.linalg.norm(activations - centroids)
-    elif distance_function == "Dot":
-        return np.dot(activations, centroids)
+        return np.linalg.norm(activations - centroids, axis=-1)
     elif distance_function == "Cosine":
-        return np.dot(activations, centroids) / (np.linalg.norm(activations) * np.linalg.norm(centroids))
+        return 1 - np.matmul(activations, centroids.T).squeeze() / (np.linalg.norm(activations, axis=-1) * np.linalg.norm(centroids, axis=-1))
 
 
 if __name__ == "__main__":
@@ -49,7 +47,7 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--train_eval_split", type=float, default=0.9)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--distance_function", type=str, default="L2", choices=["L2", "Dot", "Cosine"])
+    parser.add_argument("--distance_function", type=str, default="L2", choices=["L2", "Cosine"])
     parser.add_argument("--max_benign", type=int, default=1000)
     parser.add_argument("--max_harmful", type=int, default=1000)
     parser.add_argument("--save_logits", action="store_true")
@@ -126,43 +124,73 @@ if __name__ == "__main__":
     layer_names = list(responses[0]["cache"]["activations"].keys())
     print(layer_names)
 
-    # Get centroids
-    centroids = {
+    # Get mean and std
+    activations = {
         "Harmful": {layer_name: [] for layer_name in layer_names}, 
         "Benign": {layer_name: [] for layer_name in layer_names},
+    }
+    centroids = {
+        "Harmful": {layer_name: [] for layer_name in layer_names},
+        "Benign": {layer_name: [] for layer_name in layer_names},
+        "Any": {layer_name: [] for layer_name in layer_names},
+    }
+    distances = {
+        "Harmful_Harmful": {layer_name: [] for layer_name in layer_names},
+        "Harmful_Benign": {layer_name: [] for layer_name in layer_names}, 
+        "Benign_Benign": {layer_name: [] for layer_name in layer_names}, 
+        "Benign_Harmful": {layer_name: [] for layer_name in layer_names}, 
+        "Any": {layer_name: [] for layer_name in layer_names},
     }
     for layer_name in layer_names:
         for response in responses:
             label = response["label"]
             activation = response["cache"]["activations"][layer_name][0]
-            centroids[label][layer_name].append(activation)
-        centroids[label][layer_name] = np.array(centroids[label][layer_name]).mean(axis=0)
+            activations[label][layer_name].append(activation)
+        # Convert to numpy array
+        activations["Harmful"][layer_name] = np.array(activations["Harmful"][layer_name])
+        activations["Benign"][layer_name] = np.array(activations["Benign"][layer_name])
+        # Get centroids
+        centroids["Harmful"][layer_name] = activations["Harmful"][layer_name].mean(axis=0, keepdims=True)
+        centroids["Benign"][layer_name] = activations["Benign"][layer_name].mean(axis=0, keepdims=True)
+        centroids["Any"][layer_name] = np.concatenate([activations["Harmful"][layer_name], activations["Benign"][layer_name]]).mean(axis=0, keepdims=True)
+        # Get distances
+        distances["Harmful_Harmful"][layer_name] = distance_function(activations["Harmful"][layer_name], centroids["Harmful"][layer_name], args.distance_function)
+        distances["Harmful_Benign"][layer_name] = distance_function(activations["Harmful"][layer_name], centroids["Benign"][layer_name], args.distance_function)
+        distances["Benign_Benign"][layer_name] = distance_function(activations["Benign"][layer_name], centroids["Benign"][layer_name], args.distance_function)
+        distances["Benign_Harmful"][layer_name] = distance_function(activations["Benign"][layer_name], centroids["Harmful"][layer_name], args.distance_function)
+        distances["Any"][layer_name] = distance_function(np.concatenate([activations["Harmful"][layer_name], activations["Benign"][layer_name]]), centroids["Any"][layer_name], args.distance_function)
 
-    # Get variations
-    variations = {
-        "Interclass": {layer_name: [] for layer_name in layer_names},
-        "Intraclass": {layer_name: [] for layer_name in layer_names},
+    colors = {
+        "Harmful_Harmful": "red",
+        "Harmful_Benign": "orange",
+        "Benign_Benign": "green",
+        "Benign_Harmful": "blue",
     }
-    for layer_name in layer_names:
-        for reseponse in responses:
-            label = response["label"]
-            activation = response["cache"]["activations"][layer_name][0]
-            distance = distance_function(activation, centroids[label][layer_name], args.distance_function)
-            for centroid_label in centroids.keys():
-                if label == centroid_label:
-                    variations["Intraclass"][layer_name].append(distance)
-                else:
-                    variations["Interclass"][layer_name].append(distance)
-        variations["Intraclass"][layer_name] = np.array(variations["Intraclass"][layer_name])
-        variations["Interclass"][layer_name] = np.array(variations["Interclass"][layer_name])
+    variations = {
+        "Harmful_Harmful": None,
+        "Harmful_Benign": None,
+        "Benign_Benign": None,
+        "Benign_Harmful": None,
+    }
 
     # Plot (x-axis: layer_name, y-axis: variations)
-    for class_name, class_variation in variations.items():
-        xs = list(range(len(class_variation)))
-        ys = [layer_variation for layer_variation in class_variation.values()]
-        plt.plot(xs, ys, label=class_name)
-        plt.xticks(xs, list(class_variation.keys()), rotation=90)
-        plt.xlabel("Layer")
-        plt.ylabel("Inter/Intra Variations")
-        plt.legend()
+    xs = list(range(len(layer_names)))
+    for name in variations:
+        variations[name] = np.array([distances[name][layer_name].mean() / distances["Any"][layer_name].mean() for layer_name in layer_names])
+        plt.plot(xs, variations[name], label=name, color=colors[name])
+    plt.plot(xs, [1.0] * len(xs), label="Any", linestyle="--", color="black")
+    plt.xlabel("Layer")
+    plt.ylabel("Normalized Variation")
+    plt.legend()
+    plt.show()
+
+    diffs = {
+        "Harmful": variations["Harmful_Harmful"] - variations["Harmful_Benign"],
+        "Benign": variations["Benign_Benign"] - variations["Benign_Harmful"],
+    }
+    for label in diffs:
+        plt.plot(xs, diffs[label], label=label)
+    plt.xlabel("Layer")
+    plt.ylabel("Normalized Variation")
+    plt.legend()
     plt.show()
