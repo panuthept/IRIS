@@ -1,4 +1,5 @@
 import numpy as np
+from torch import Tensor
 from collections import ChainMap
 from dataclasses import dataclass, field
 from iris.prompt_template import PromptTemplate
@@ -23,6 +24,14 @@ class IRISConfig:
     sma_window_size: int = 10
     label_smoothing: float = 0.0
     layer_labels: Dict[str, Dict[int, int]] = field(default_factory=dict)
+    layer_weights: Dict[str, Dict[int, float]] = field(default_factory=dict)
+    freeze_layers: List[str] = field(default_factory=list)
+
+
+@dataclass
+class IRISL2Config:
+    alpha: float = 0.1
+    layer_labels: Dict[str, Dict[int, Tensor]] = field(default_factory=dict)
     layer_weights: Dict[str, Dict[int, float]] = field(default_factory=dict)
     freeze_layers: List[str] = field(default_factory=list)
 
