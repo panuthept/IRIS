@@ -14,7 +14,7 @@ if __name__ == "__main__":
     parser.add_argument("--load_path", type=str, default="./data/activations/activations_and_logits.jsonl")
     parser.add_argument("--save_path", type=str, default="./data/activations")
     parser.add_argument("--token_depth", type=int, default=1)
-    parser.add_argument("--plot_layer_name", type=str, default="model.layers.19")
+    parser.add_argument("--plot_layer_name", type=str, default=None)
     parser.add_argument("--plot", action="store_true")
     args = parser.parse_args()
 
@@ -93,8 +93,35 @@ if __name__ == "__main__":
 
     # Plot activations
     if args.plot:
-        for layer_num in range(32):
-            layer_name = f"model.layers.{layer_num}"
+        if args.plot_layer_name is None:
+            for layer_num in range(32):
+                layer_name = f"model.layers.{layer_num}"
+                print(majority_tokens[layer_name])
+                # Convert global_activations and class_activations to Numpy array
+                plot_global_activations = {module_name: {label: np.array(activations) for label, activations in label_activations.items()} for module_name, label_activations in global_activations.items()}[layer_name]
+                plot_class_activations = {module_name: {label: np.array(activations) for label, activations in label_activations.items()} for module_name, label_activations in class_activations.items()}[layer_name]
+                # Reduce activations dimension to 2D
+                pca = PCA(n_components=2)
+                pca.fit(np.concatenate([activations for activations in plot_class_activations.values()], axis=0))
+                plot_global_activations = {label: pca.transform(activations) for label, activations in plot_global_activations.items()}
+                plot_class_activations = {label: pca.transform(activations) for label, activations in plot_class_activations.items()}
+                # Plot activations
+                plt.subplot(4, 8, layer_num + 1)
+                for label, activations in plot_class_activations.items():
+                    plt.scatter(activations[:, 0], activations[:, 1], label=label, alpha=0.2, marker="o", color="orange" if label == "Harmful" else "green")
+                for label, activations in plot_global_activations.items():
+                    plt.scatter(activations[:, 0], activations[:, 1], label=f"{label} (Global)", s=30, alpha=1.0, marker="^", color="red" if label == "Harmful" else "blue")
+                for label, activations in plot_class_activations.items():
+                    plt.scatter(activations[:, 0].mean(axis=0, keepdims=True), activations[:, 1].mean(axis=0, keepdims=True), label=f"{label} (Mean)", s=30, alpha=1.0, marker="s", color="red" if label == "Harmful" else "blue")
+                # plt.legend()
+                plt.title(layer_name, fontsize=9)
+                # No axis 
+                plt.xticks([])
+                plt.yticks([])
+            plt.tight_layout()
+            plt.show()
+        else:
+            layer_name = args.plot_layer_name
             print(majority_tokens[layer_name])
             # Convert global_activations and class_activations to Numpy array
             plot_global_activations = {module_name: {label: np.array(activations) for label, activations in label_activations.items()} for module_name, label_activations in global_activations.items()}[layer_name]
@@ -105,7 +132,6 @@ if __name__ == "__main__":
             plot_global_activations = {label: pca.transform(activations) for label, activations in plot_global_activations.items()}
             plot_class_activations = {label: pca.transform(activations) for label, activations in plot_class_activations.items()}
             # Plot activations
-            plt.subplot(4, 8, layer_num + 1)
             for label, activations in plot_class_activations.items():
                 plt.scatter(activations[:, 0], activations[:, 1], label=label, alpha=0.2, marker="o", color="orange" if label == "Harmful" else "green")
             for label, activations in plot_global_activations.items():
@@ -113,9 +139,9 @@ if __name__ == "__main__":
             for label, activations in plot_class_activations.items():
                 plt.scatter(activations[:, 0].mean(axis=0, keepdims=True), activations[:, 1].mean(axis=0, keepdims=True), label=f"{label} (Mean)", s=30, alpha=1.0, marker="s", color="red" if label == "Harmful" else "blue")
             # plt.legend()
-            plt.title(layer_name, fontsize=9)
+            plt.title(layer_name)
             # No axis 
             plt.xticks([])
             plt.yticks([])
-        plt.tight_layout()
-        plt.show()
+            plt.tight_layout()
+            plt.show()
