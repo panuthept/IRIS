@@ -72,7 +72,7 @@ if __name__ == "__main__":
         )
         
         # Load dataset
-        dataset = WildGuardMixDataset(attack_engine="vanilla")
+        dataset = WildGuardMixDataset()
         samples = dataset.as_samples(split="train")
 
         # Get development set
