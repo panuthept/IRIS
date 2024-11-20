@@ -1,6 +1,6 @@
 import json
 from typing import List
-from iris.data_types import Sample, ModelResponse, IRISConfig
+from iris.data_types import Sample, ModelResponse, IRISConfig, IRISL2Config
 
 
 def save_samples(samples: List[Sample], path: str):
@@ -42,3 +42,11 @@ def load_iris_config(path) -> IRISConfig:
         layer_weights = config.pop("layer_weights")
         config["layer_weights"] = {module_name: {int(final_label): layer_weight for final_label, layer_weight in layer_weights[module_name].items()} for module_name in layer_weights}
     return IRISConfig(**config)
+
+
+def load_iris_l2_config(path) -> IRISL2Config:
+    config = json.load(open(path, "r"))
+    if "layer_weights" in config:
+        layer_weights = config.pop("layer_weights")
+        config["layer_weights"] = {module_name: {int(final_label): layer_weight for final_label, layer_weight in layer_weights[module_name].items()} for module_name in layer_weights}
+    return IRISL2Config(**config)

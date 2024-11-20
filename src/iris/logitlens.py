@@ -34,11 +34,15 @@ class LogitLens:
         self.module_names = self._resolve_module_names(module_names)
 
         self.intermediate_logits: Dict[str, Tensor] = {}
+        self.intermediate_activations: Dict[str, Tensor] = {}
         self.cached_activations: Dict[str, List[List[float]]] = {}
         self.cached_logits: Dict[str, List[List[Tuple[int, float]]]] = {}
 
     def _clear_intermediate_logits(self):
         self.intermediate_logits: Dict[str, Tensor] = {}
+
+    def _clear_intermediate_activations(self):
+        self.intermediate_activations: Dict[str, Tensor] = {}
 
     def _clear_cache(self):
         self.cached_activations: Dict[str, List[List[float]]] = {}
@@ -60,8 +64,9 @@ class LogitLens:
             activations = output[:, -1]  # (batch_size, hidden_size)
             logits = self.lm_head(activations)  # (batch_size, vocab_size)
             
-            # Update intermediate logits
+            # Update intermediate logits and activations
             self.intermediate_logits[name] = logits
+            self.intermediate_activations[name] = activations
 
             if not self.enable_cache:
                 return
@@ -117,7 +122,14 @@ class LogitLens:
     def fetch_intermediate_logits(self):
         intermediate_logits = self.intermediate_logits
         self._clear_intermediate_logits()
+        self._clear_intermediate_activations()
         return intermediate_logits
+    
+    def fetch_intermediate_activations(self):
+        intermediate_activations = self.intermediate_activations
+        self._clear_intermediate_logits()
+        self._clear_intermediate_activations()
+        return intermediate_activations
     
     def fetch_cache(
         self, 
