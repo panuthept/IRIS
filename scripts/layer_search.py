@@ -20,6 +20,12 @@ CUDA_VISIBLE_DEVICES=0 python scripts/layer_search.py \
 --save_activations \
 --save_path ./layer_search_outputs/wildguard/activations.jsonl
 
+CUDA_VISIBLE_DEVICES=0 python scripts/layer_search.py \
+--model_name allenai/wildguard \
+--save_logits \
+--save_activations \
+--save_path ./layer_search_outputs/wildguard/activations_and_logits.jsonl
+
 CUDA_VISIBLE_DEVICES=1 python scripts/layer_search.py \
 --model_name allenai/wildguard \
 --checkpoint_path ./finetuned_models/iris_wildguard_layer_19/checkpoint-1220 \
@@ -52,6 +58,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_harmful", type=int, default=1000)
     parser.add_argument("--save_logits", action="store_true")
     parser.add_argument("--save_activations", action="store_true")
+    parser.add_argument("--plot", action="store_true")
     parser.add_argument("--save_path", type=str, default="./activations.jsonl")
     args = parser.parse_args()
 
@@ -115,82 +122,82 @@ if __name__ == "__main__":
                         break
                 if benign_count > args.max_benign and harmful_count > args.max_harmful:
                     break
+    if args.plot:
+        responses = []
+        with open(args.save_path, "r") as f:
+            for line in tqdm(open(args.save_path)):
+                data = json.loads(line)
+                responses.append(data)
+        layer_names = list(responses[0]["cache"]["activations"].keys())
+        print(layer_names)
 
-    responses = []
-    with open(args.save_path, "r") as f:
-        for line in tqdm(open(args.save_path)):
-            data = json.loads(line)
-            responses.append(data)
-    layer_names = list(responses[0]["cache"]["activations"].keys())
-    print(layer_names)
+        # Get mean and std
+        activations = {
+            "Harmful": {layer_name: [] for layer_name in layer_names}, 
+            "Benign": {layer_name: [] for layer_name in layer_names},
+        }
+        centroids = {
+            "Harmful": {layer_name: [] for layer_name in layer_names},
+            "Benign": {layer_name: [] for layer_name in layer_names},
+            "Any": {layer_name: [] for layer_name in layer_names},
+        }
+        distances = {
+            "Harmful_Harmful": {layer_name: [] for layer_name in layer_names},
+            "Harmful_Benign": {layer_name: [] for layer_name in layer_names}, 
+            "Benign_Benign": {layer_name: [] for layer_name in layer_names}, 
+            "Benign_Harmful": {layer_name: [] for layer_name in layer_names}, 
+            "Any": {layer_name: [] for layer_name in layer_names},
+        }
+        for layer_name in layer_names:
+            for response in responses:
+                label = response["label"]
+                activation = response["cache"]["activations"][layer_name][0]
+                activations[label][layer_name].append(activation)
+            # Convert to numpy array
+            activations["Harmful"][layer_name] = np.array(activations["Harmful"][layer_name])
+            activations["Benign"][layer_name] = np.array(activations["Benign"][layer_name])
+            # Get centroids
+            centroids["Harmful"][layer_name] = activations["Harmful"][layer_name].mean(axis=0, keepdims=True)
+            centroids["Benign"][layer_name] = activations["Benign"][layer_name].mean(axis=0, keepdims=True)
+            centroids["Any"][layer_name] = np.concatenate([activations["Harmful"][layer_name], activations["Benign"][layer_name]]).mean(axis=0, keepdims=True)
+            # Get distances
+            distances["Harmful_Harmful"][layer_name] = distance_function(activations["Harmful"][layer_name], centroids["Harmful"][layer_name], args.distance_function)
+            distances["Harmful_Benign"][layer_name] = distance_function(activations["Harmful"][layer_name], centroids["Benign"][layer_name], args.distance_function)
+            distances["Benign_Benign"][layer_name] = distance_function(activations["Benign"][layer_name], centroids["Benign"][layer_name], args.distance_function)
+            distances["Benign_Harmful"][layer_name] = distance_function(activations["Benign"][layer_name], centroids["Harmful"][layer_name], args.distance_function)
+            distances["Any"][layer_name] = distance_function(np.concatenate([activations["Harmful"][layer_name], activations["Benign"][layer_name]]), centroids["Any"][layer_name], args.distance_function)
 
-    # Get mean and std
-    activations = {
-        "Harmful": {layer_name: [] for layer_name in layer_names}, 
-        "Benign": {layer_name: [] for layer_name in layer_names},
-    }
-    centroids = {
-        "Harmful": {layer_name: [] for layer_name in layer_names},
-        "Benign": {layer_name: [] for layer_name in layer_names},
-        "Any": {layer_name: [] for layer_name in layer_names},
-    }
-    distances = {
-        "Harmful_Harmful": {layer_name: [] for layer_name in layer_names},
-        "Harmful_Benign": {layer_name: [] for layer_name in layer_names}, 
-        "Benign_Benign": {layer_name: [] for layer_name in layer_names}, 
-        "Benign_Harmful": {layer_name: [] for layer_name in layer_names}, 
-        "Any": {layer_name: [] for layer_name in layer_names},
-    }
-    for layer_name in layer_names:
-        for response in responses:
-            label = response["label"]
-            activation = response["cache"]["activations"][layer_name][0]
-            activations[label][layer_name].append(activation)
-        # Convert to numpy array
-        activations["Harmful"][layer_name] = np.array(activations["Harmful"][layer_name])
-        activations["Benign"][layer_name] = np.array(activations["Benign"][layer_name])
-        # Get centroids
-        centroids["Harmful"][layer_name] = activations["Harmful"][layer_name].mean(axis=0, keepdims=True)
-        centroids["Benign"][layer_name] = activations["Benign"][layer_name].mean(axis=0, keepdims=True)
-        centroids["Any"][layer_name] = np.concatenate([activations["Harmful"][layer_name], activations["Benign"][layer_name]]).mean(axis=0, keepdims=True)
-        # Get distances
-        distances["Harmful_Harmful"][layer_name] = distance_function(activations["Harmful"][layer_name], centroids["Harmful"][layer_name], args.distance_function)
-        distances["Harmful_Benign"][layer_name] = distance_function(activations["Harmful"][layer_name], centroids["Benign"][layer_name], args.distance_function)
-        distances["Benign_Benign"][layer_name] = distance_function(activations["Benign"][layer_name], centroids["Benign"][layer_name], args.distance_function)
-        distances["Benign_Harmful"][layer_name] = distance_function(activations["Benign"][layer_name], centroids["Harmful"][layer_name], args.distance_function)
-        distances["Any"][layer_name] = distance_function(np.concatenate([activations["Harmful"][layer_name], activations["Benign"][layer_name]]), centroids["Any"][layer_name], args.distance_function)
+        colors = {
+            "Harmful_Harmful": "red",
+            "Harmful_Benign": "orange",
+            "Benign_Benign": "green",
+            "Benign_Harmful": "blue",
+        }
+        variations = {
+            "Harmful_Harmful": None,
+            "Harmful_Benign": None,
+            "Benign_Benign": None,
+            "Benign_Harmful": None,
+        }
 
-    colors = {
-        "Harmful_Harmful": "red",
-        "Harmful_Benign": "orange",
-        "Benign_Benign": "green",
-        "Benign_Harmful": "blue",
-    }
-    variations = {
-        "Harmful_Harmful": None,
-        "Harmful_Benign": None,
-        "Benign_Benign": None,
-        "Benign_Harmful": None,
-    }
+        # Plot (x-axis: layer_name, y-axis: variations)
+        xs = list(range(len(layer_names)))
+        for name in variations:
+            variations[name] = np.array([distances[name][layer_name].mean() / distances["Any"][layer_name].mean() for layer_name in layer_names])
+            plt.plot(xs, variations[name], label=name, color=colors[name])
+        plt.plot(xs, [1.0] * len(xs), label="Any", linestyle="--", color="black")
+        plt.xlabel("Layer")
+        plt.ylabel("Normalized Variation")
+        plt.legend()
+        plt.show()
 
-    # Plot (x-axis: layer_name, y-axis: variations)
-    xs = list(range(len(layer_names)))
-    for name in variations:
-        variations[name] = np.array([distances[name][layer_name].mean() / distances["Any"][layer_name].mean() for layer_name in layer_names])
-        plt.plot(xs, variations[name], label=name, color=colors[name])
-    plt.plot(xs, [1.0] * len(xs), label="Any", linestyle="--", color="black")
-    plt.xlabel("Layer")
-    plt.ylabel("Normalized Variation")
-    plt.legend()
-    plt.show()
-
-    diffs = {
-        "Harmful": variations["Harmful_Harmful"] - variations["Harmful_Benign"],
-        "Benign": variations["Benign_Benign"] - variations["Benign_Harmful"],
-    }
-    for label in diffs:
-        plt.plot(xs, diffs[label], label=label)
-    plt.xlabel("Layer")
-    plt.ylabel("Normalized Variation")
-    plt.legend()
-    plt.show()
+        diffs = {
+            "Harmful": variations["Harmful_Harmful"] - variations["Harmful_Benign"],
+            "Benign": variations["Benign_Benign"] - variations["Benign_Harmful"],
+        }
+        for label in diffs:
+            plt.plot(xs, diffs[label], label=label)
+        plt.xlabel("Layer")
+        plt.ylabel("Normalized Variation")
+        plt.legend()
+        plt.show()
