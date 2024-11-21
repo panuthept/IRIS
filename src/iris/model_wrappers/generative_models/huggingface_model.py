@@ -234,8 +234,6 @@ class IRISL2Trainer(SFTTrainer):
             intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]] = self.logitlens.fetch_intermediate_activations()
             intermediate_loss = self._compute_intermediate_loss(intermediate_activations, labels[:, -1])
             loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
-        # Update current_step
-        self.current_step += 1
         return (loss, outputs) if return_outputs else loss
 
 
