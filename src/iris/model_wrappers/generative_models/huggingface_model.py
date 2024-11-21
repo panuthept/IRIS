@@ -286,13 +286,17 @@ class IRISCLTrainer(SFTTrainer):
             return torch.tensor(0.0, device=final_labels.device)
         # Convert to tensors
         flatten_activations = torch.stack(flatten_activations, dim=0).unsqueeze(-1)     # shape: (layer*batch, embedding_dim, 1)
+        print(f"flatten_activations: {flatten_activations.size()}")
         flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)     # shape: (layer*batch, )
         flatten_labels = torch.tensor(flatten_labels, device=final_labels.device)       # shape: (layer*batch, )
+        print(f"flatten_labels: {flatten_labels}")
         flatten_label_activations = torch.stack(flatten_label_activations, dim=0)       # shape: (layer*batch, class_num, embedding_dim)
+        print(f"flatten_label_activations: {flatten_label_activations.size()}")
         # Ensure that the flatten_label_activations are on the same device and has the same type as flatten_activations
         flatten_label_activations = flatten_label_activations.to(device=flatten_activations.device, dtype=flatten_activations.dtype)
         # Compute logits
         flatten_logits = torch.einsum("ikj,ijk->ik", flatten_label_activations, flatten_activations) # shape: (layer*batch, class_num)
+        print(f"flatten_logits: {flatten_logits}")
         # Compute intermediate loss
         intermediate_loss = self.loss_fn(flatten_logits, flatten_labels)                # shape: (layer*batch, )
         intermediate_loss = (intermediate_loss * flatten_weights).mean()
