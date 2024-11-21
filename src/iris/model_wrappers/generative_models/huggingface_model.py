@@ -211,13 +211,14 @@ class IRISL2Trainer(SFTTrainer):
         flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)
         print(f"flatten_weights: {flatten_weights.size()}")
         flatten_labels = torch.stack(flatten_labels, dim=0)                         # shape: (layer*batch, embedding_dim)
-        flatten_labels = flatten_labels.to(flatten_activations.device)
+        # Ensure that the flatten_labels are on the same device and has the same type as flatten_activations
+        flatten_labels = flatten_labels.to(device=flatten_activations.device, dtype=flatten_activations.dtype)
         print(f"flatten_labels: {flatten_labels.size()}")
         # Compute intermediate loss
         intermediate_loss = self.loss_fn(flatten_activations, flatten_labels)
         print(f"intermediate_loss: {intermediate_loss.size()}")
         if len(intermediate_loss.size()) == 2:
-            intermediate_loss = intermediate_loss.sum(dim=1)
+            intermediate_loss = intermediate_loss.mean(dim=1)
         print(f"intermediate_loss: {intermediate_loss.size()}\n{intermediate_loss}")
         print("-" * 100)
         intermediate_loss = (intermediate_loss * flatten_weights).mean()
