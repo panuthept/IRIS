@@ -205,6 +205,10 @@ class IRISL2Trainer(SFTTrainer):
                     flatten_labels.append(torch.from_numpy(intermediate_label).squeeze())
                     flatten_weights.append(intermediate_weight)
                     flatten_activations.append(intermediate_activation)
+        # Return 0.0 if there are no flatten_activations
+        if len(flatten_activations) == 0:
+            print("[Warning] No intermediate activations found.")
+            return torch.tensor(0.0, device=final_labels.device)
         # Convert to tensors
         flatten_activations = torch.stack(flatten_activations, dim=0)
         flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)
