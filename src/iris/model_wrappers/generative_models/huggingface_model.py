@@ -295,6 +295,7 @@ class IRISCLTrainer(SFTTrainer):
         # Compute logits
         flatten_logits = torch.einsum("ikj,ijk->ik", flatten_label_activations, flatten_activations) # shape: (layer*batch, class_num)
         print(f"flatten_logits: {flatten_logits}")
+        print(f"flatten_softmax: {flatten_logits.softmax(-1)}")
         # Compute intermediate loss
         intermediate_loss = self.loss_fn(flatten_logits, flatten_labels)                # shape: (layer*batch, )
         print(f"intermediate_loss: {intermediate_loss}")
