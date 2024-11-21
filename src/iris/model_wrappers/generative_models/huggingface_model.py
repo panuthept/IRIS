@@ -218,7 +218,7 @@ class IRISL2Trainer(SFTTrainer):
         print(f"intermediate_loss: {intermediate_loss.size()}")
         if len(intermediate_loss.size()) == 2:
             intermediate_loss = intermediate_loss.sum(dim=1)
-        print(f"intermediate_loss: {intermediate_loss.size()}")
+        print(f"intermediate_loss: {intermediate_loss.size()}\n{intermediate_loss}")
         print("-" * 100)
         intermediate_loss = (intermediate_loss * flatten_weights).mean()
         return intermediate_loss
