@@ -202,7 +202,7 @@ class IRISL2Trainer(SFTTrainer):
                 intermediate_label = self.intermediate_labels[module_name].get(final_label, None)
                 intermediate_weight = self.intermediate_weights[module_name].get(final_label, 0.0)
                 if intermediate_label is not None:
-                    flatten_labels.append(intermediate_label.tolist())
+                    flatten_labels.append(torch.from_numpy(intermediate_label))
                     flatten_weights.append(intermediate_weight)
                     flatten_activations.append(intermediate_activation)
         # Convert to tensors
