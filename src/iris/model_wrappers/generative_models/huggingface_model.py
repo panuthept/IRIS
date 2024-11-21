@@ -295,13 +295,12 @@ class IRISCLTrainer(SFTTrainer):
         # Compute activation diff (layer*batch, class_num)
         flatten_activation_diffs = (flatten_label_activations - flatten_activations).norm(dim=-1, p=2)
         print(f"flatten_activation_diffs: {flatten_activation_diffs}")
-        flatten_activation_diffs = flatten_activation_diffs / flatten_activation_diffs.sum(dim=-1, keepdim=True)
-        print(f"flatten_activation_diffs: {flatten_activation_diffs}")
+        intermediate_loss = torch.log(flatten_activation_diffs / flatten_activation_diffs.sum(dim=-1, keepdim=True))
         # flatten_logits = torch.einsum("ikj,ijk->ik", flatten_label_activations, flatten_activations) # shape: (layer*batch, class_num)
         # print(f"flatten_logits: {flatten_logits}")
         # print(f"flatten_softmax: {flatten_logits.softmax(-1)}")
         # Compute intermediate loss
-        intermediate_loss = -self.loss_fn(flatten_activation_diffs, flatten_labels)                # shape: (layer*batch, )
+        # intermediate_loss = -self.loss_fn(flatten_activation_diffs, flatten_labels)                # shape: (layer*batch, )
         print(f"intermediate_loss: {intermediate_loss}")
         intermediate_loss = (intermediate_loss * flatten_weights).mean()
         return intermediate_loss
