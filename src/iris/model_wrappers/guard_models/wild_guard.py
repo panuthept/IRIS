@@ -6,7 +6,7 @@ from iris.cache import CacheMode
 from typing import List, Dict, Any, Tuple, Union
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
-from iris.data_types import Sample, IRISConfig, IRISL2Config
+from iris.data_types import Sample, IRISConfig, IRISL2Config, IRISCLConfig
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
 
 
@@ -203,6 +203,31 @@ class WildGuard(GuardLLM):
         formatting_prompts_func = lambda x: [f'{x["instruction"][i]}{x["answer"][i]}' for i in range(len(x["instruction"]))]
         # Train model
         self.model.train_iris_l2(
+            train_dataset=datasets["train"],
+            eval_dataset=datasets["eval"],
+            response_template=self.response_template_ids, 
+            formatting_prompts_func=formatting_prompts_func,
+            sft_config=sft_config,
+            peft_config=peft_config,
+            iris_config=iris_config,
+        )
+
+    def train_iris_cl(
+        self, 
+        sft_config: SFTConfig,
+        iris_config: IRISCLConfig,
+        train_samples: List[Sample],
+        eval_samples: List[Sample] = None,
+        peft_config: LoraConfig = None,
+    ):
+        """ This method prepare the training examples format for WildGuard prompt completion. """
+        assert isinstance(self.model, HuggfaceGenerativeLLM), f"You are using an API. To train the model you need to use a HuggfaceGenerativeLLM instance."
+        # Prepare train and evaluation datasets
+        datasets = self._prepare_datasets(train_samples, eval_samples)
+        # Create formatting prompts function
+        formatting_prompts_func = lambda x: [f'{x["instruction"][i]}{x["answer"][i]}' for i in range(len(x["instruction"]))]
+        # Train model
+        self.model.train_iris_cl(
             train_dataset=datasets["train"],
             eval_dataset=datasets["eval"],
             response_template=self.response_template_ids, 

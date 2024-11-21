@@ -1,5 +1,6 @@
 import os
 import torch
+import numpy as np
 import transformer_lens.utils as utils
 
 from tqdm import tqdm
@@ -10,8 +11,8 @@ from datasets import Dataset
 from jaxtyping import Int, Float
 from accelerate import PartialState
 from iris.logitlens import LogitLens
-from iris.data_types import IRISConfig, IRISL2Config
 from typing import List, Callable, Union, Tuple, Optional
+from iris.data_types import IRISConfig, IRISL2Config, IRISCLConfig
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
@@ -191,7 +192,7 @@ class IRISL2Trainer(SFTTrainer):
     ):
         flatten_weights: Float[Tensor, "layer*batch"] = []
         flatten_activations: Float[Tensor, "layer*batch embedding_dim"] = []
-        flatten_labels: Union[Int[Tensor, "layer*batch"], Int[Tensor, "layer*batch embedding_dim"]] = []
+        flatten_labels: Float[Tensor, "layer*batch embedding_dim"] = []
         for module_name in self.intermediate_weights:
             for batch_idx in range(intermediate_activations[module_name].size(0)):
                 # Get final prediction label
@@ -219,6 +220,81 @@ class IRISL2Trainer(SFTTrainer):
         intermediate_loss = self.loss_fn(flatten_activations, flatten_labels)
         if len(intermediate_loss.size()) == 2:
             intermediate_loss = intermediate_loss.mean(dim=1)
+        intermediate_loss = (intermediate_loss * flatten_weights).mean()
+        return intermediate_loss
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        if return_outputs:
+            (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
+        else:
+            loss = super().compute_loss(model, inputs, return_outputs)
+        # Compute intermediate loss
+        labels = inputs.pop("labels") if "labels" in inputs else None
+        if labels is not None:
+            intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]] = self.logitlens.fetch_intermediate_activations()
+            intermediate_loss = self._compute_intermediate_loss(intermediate_activations, labels[:, -1])
+            loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
+        return (loss, outputs) if return_outputs else loss
+    
+
+class IRISCLTrainer(SFTTrainer):
+    def __init__(
+        self, 
+        logitlens: LogitLens, 
+        iris_config: IRISCLConfig,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.logitlens = logitlens
+        self.iris_config = iris_config
+
+        self.alpha = self.iris_config.alpha
+        self.intermediate_labels = self.iris_config.layer_labels
+        self.intermediate_weights = self.iris_config.layer_weights
+
+        self.loss_fn = nn.CrossEntropyLoss(
+            reduction="none",
+        )
+
+    def _compute_intermediate_loss(
+        self, 
+        intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]], 
+        final_labels: Int[Tensor, "batch"],
+    ):
+        flatten_labels: Int[Tensor, "layer*batch"] = []
+        flatten_weights: Float[Tensor, "layer*batch"] = []
+        flatten_activations: Float[Tensor, "layer*batch embedding_dim"] = []
+        flatten_label_activations: Float[Tensor, "layer*batch class_num embedding_dim"] = []
+        for module_name in self.intermediate_weights:
+            for batch_idx in range(intermediate_activations[module_name].size(0)):
+                # Get final prediction label
+                final_label = final_labels[batch_idx].item()
+                # Get intermediate activation
+                intermediate_activation = intermediate_activations[module_name][batch_idx]
+                # Get intermediate prediction label and weight
+                intermediate_label_activations = np.concatenate([activation for activation in self.intermediate_labels[module_name].values()], axis=0)
+                intermediate_label = [idx for idx, label in enumerate(self.intermediate_labels[module_name].keys()) if label == final_label][0]
+                intermediate_weight = self.intermediate_weights[module_name].get(final_label, 0.0)
+                if intermediate_label is not None:
+                    flatten_labels.append(intermediate_label)
+                    flatten_weights.append(intermediate_weight)
+                    flatten_activations.append(intermediate_activation)
+                    flatten_label_activations.append(torch.from_numpy(intermediate_label_activations).squeeze())
+        # Return 0.0 if there are no flatten_activations
+        if len(flatten_activations) == 0:
+            print("[Warning] No intermediate activations found.")
+            return torch.tensor(0.0, device=final_labels.device)
+        # Convert to tensors
+        flatten_activations = torch.stack(flatten_activations, dim=0).unsqueeze(-1)     # shape: (layer*batch, embedding_dim, 1)
+        flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)     # shape: (layer*batch, )
+        flatten_labels = torch.tensor(flatten_labels, device=final_labels.device)       # shape: (layer*batch, )
+        flatten_label_activations = torch.stack(flatten_label_activations, dim=0)       # shape: (layer*batch, class_num, embedding_dim)
+        # Ensure that the flatten_label_activations are on the same device and has the same type as flatten_activations
+        flatten_label_activations = flatten_label_activations.to(device=flatten_activations.device, dtype=flatten_activations.dtype)
+        # Compute logits
+        flatten_logits = torch.einsum("ikj,ijk->ik", flatten_label_activations, flatten_activations) # shape: (layer*batch, class_num)
+        # Compute intermediate loss
+        intermediate_loss = self.loss_fn(flatten_logits, flatten_labels)                # shape: (layer*batch, )
         intermediate_loss = (intermediate_loss * flatten_weights).mean()
         return intermediate_loss
 
@@ -655,6 +731,44 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         else:
             print("Starting PEFT SFT training...")
         trainer = IRISL2Trainer(
+            logitlens=self.logitlens,
+            iris_config=iris_config,
+            model=self.llm,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            args=sft_config,
+            tokenizer=self.tokenizer,
+            formatting_func=formatting_prompts_func,
+            data_collator=collator,
+            peft_config=peft_config,
+        )
+        # Freeze layers
+        if iris_config.freeze_layers is not None:
+            for name, param in self.llm.named_parameters():
+                for module_name in iris_config.freeze_layers:
+                    if module_name in name:
+                        param.requires_grad_(False)
+                        break
+        self.report_trainable_params()
+        trainer.train()
+
+    def train_iris_cl(
+        self,
+        iris_config: IRISCLConfig,
+        train_dataset: Dataset,
+        response_template: str,
+        formatting_prompts_func: Callable,
+        sft_config: SFTConfig = None,
+        peft_config: LoraConfig = None,
+        eval_dataset: Dataset = None,
+    ):
+        self.tokenizer.padding_side = "right"
+        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+        if peft_config is None:
+            print("Starting FFT SFT training...")
+        else:
+            print("Starting PEFT SFT training...")
+        trainer = IRISCLTrainer(
             logitlens=self.logitlens,
             iris_config=iris_config,
             model=self.llm,

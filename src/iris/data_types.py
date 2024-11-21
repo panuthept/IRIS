@@ -37,6 +37,11 @@ class IRISL2Config:
 
 
 @dataclass
+class IRISCLConfig(IRISL2Config):
+    pass
+
+
+@dataclass
 class Sample:
     query: str = None
     instructions: List[str] = field(default_factory=list)
