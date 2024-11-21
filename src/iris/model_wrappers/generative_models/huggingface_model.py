@@ -292,8 +292,10 @@ class IRISCLTrainer(SFTTrainer):
         flatten_label_activations = torch.stack(flatten_label_activations, dim=0)       # shape: (layer*batch, class_num, embedding_dim)
         # Ensure that the flatten_label_activations are on the same device and has the same type as flatten_activations
         flatten_label_activations = flatten_label_activations.to(device=flatten_activations.device, dtype=flatten_activations.dtype)
-        # Compute activation diff
+        # Compute activation diff (layer*batch, class_num)
         flatten_activation_diffs = (flatten_label_activations - flatten_activations).norm(dim=-1, p=2)
+        print(f"flatten_activation_diffs: {flatten_activation_diffs}")
+        flatten_activation_diffs = flatten_activation_diffs / flatten_activation_diffs.sum(dim=-1, keepdim=True)
         print(f"flatten_activation_diffs: {flatten_activation_diffs}")
         # flatten_logits = torch.einsum("ikj,ijk->ik", flatten_label_activations, flatten_activations) # shape: (layer*batch, class_num)
         # print(f"flatten_logits: {flatten_logits}")
