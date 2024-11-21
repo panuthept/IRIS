@@ -202,14 +202,14 @@ class IRISL2Trainer(SFTTrainer):
                 intermediate_label = self.intermediate_labels[module_name].get(final_label, None)
                 intermediate_weight = self.intermediate_weights[module_name].get(final_label, 0.0)
                 if intermediate_label is not None:
-                    flatten_labels.append(intermediate_label)
+                    flatten_labels.append(intermediate_label.tolist())
                     flatten_weights.append(intermediate_weight)
                     flatten_activations.append(intermediate_activation)
         # Convert to tensors
         flatten_activations = torch.stack(flatten_activations, dim=0)
         print(f"flatten_activations: {flatten_activations.size()}")
         flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)
-        print(f"flatten_activations: {flatten_activations.size()}")
+        print(f"flatten_weights: {flatten_weights.size()}")
         flatten_labels = torch.stack(flatten_labels, dim=0)                         # shape: (layer*batch, embedding_dim)
         flatten_labels = flatten_labels.to(flatten_activations.device)
         print(f"flatten_labels: {flatten_labels.size()}")
