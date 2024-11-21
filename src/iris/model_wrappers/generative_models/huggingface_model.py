@@ -288,21 +288,13 @@ class IRISCLTrainer(SFTTrainer):
         flatten_activations = torch.stack(flatten_activations, dim=0).unsqueeze(1)      # shape: (layer*batch, 1, embedding_dim)
         flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)     # shape: (layer*batch, )
         flatten_labels = torch.tensor(flatten_labels, device=final_labels.device)       # shape: (layer*batch, )
-        print(f"flatten_labels: {flatten_labels}")
         flatten_label_activations = torch.stack(flatten_label_activations, dim=0)       # shape: (layer*batch, class_num, embedding_dim)
         # Ensure that the flatten_label_activations are on the same device and has the same type as flatten_activations
         flatten_label_activations = flatten_label_activations.to(device=flatten_activations.device, dtype=flatten_activations.dtype)
         # Compute activation diff (layer*batch, class_num)
         flatten_activation_diffs = -(flatten_label_activations - flatten_activations).norm(dim=-1, p=2)
-        print(f"flatten_activation_diffs: {flatten_activation_diffs}")
-        print(f"flatten_activation_diffs: {flatten_activation_diffs.softmax(-1)}")
-        # intermediate_loss = torch.log(flatten_activation_diffs / flatten_activation_diffs.sum(dim=-1, keepdim=True))
-        # flatten_logits = torch.einsum("ikj,ijk->ik", flatten_label_activations, flatten_activations) # shape: (layer*batch, class_num)
-        # print(f"flatten_logits: {flatten_logits}")
-        # print(f"flatten_softmax: {flatten_logits.softmax(-1)}")
         # Compute intermediate loss
-        intermediate_loss = self.loss_fn(flatten_activation_diffs, flatten_labels)                # shape: (layer*batch, )
-        print(f"intermediate_loss: {intermediate_loss}")
+        intermediate_loss = self.loss_fn(flatten_activation_diffs, flatten_labels)     # shape: (layer*batch, )
         intermediate_loss = (intermediate_loss * flatten_weights).mean()
         return intermediate_loss
 
