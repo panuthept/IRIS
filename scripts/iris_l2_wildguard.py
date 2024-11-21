@@ -64,7 +64,8 @@ if __name__ == "__main__":
     iris_config = load_iris_l2_config(args.iris_config)
     with open(args.global_activation_path, "rb") as f:
         global_activations = pickle.load(f)
-        global_activations = {module_name: {label_mapper[label]: activations for label, activations in label_activations.items()} for module_name, label_activations in global_activations.items()}
+        global_activations = {module_name: {label_mapper[label]: activations for label, activations in global_activations[module_name].items()} for module_name in iris_config.layer_weights.keys()}
+        # global_activations = {module_name: {label_mapper[label]: activations for label, activations in label_activations.items()} for module_name, label_activations in global_activations.items()}
     iris_config.layer_labels = global_activations
     print(iris_config)
 
