@@ -273,10 +273,10 @@ class IRISCLTrainer(SFTTrainer):
                 intermediate_activation = intermediate_activations[module_name][batch_idx]
                 # Get intermediate prediction label and weight
                 intermediate_label_activations = np.concatenate([activation for activation in self.intermediate_labels[module_name].values()], axis=0)
-                intermediate_label = [idx for idx, label in enumerate(self.intermediate_labels[module_name].keys()) if label == final_label][0]
+                intermediate_label = [idx for idx, label in enumerate(self.intermediate_labels[module_name].keys()) if label == final_label]
                 intermediate_weight = self.intermediate_weights[module_name].get(final_label, 0.0)
-                if intermediate_label is not None:
-                    flatten_labels.append(intermediate_label)
+                if len(intermediate_label) > 0:
+                    flatten_labels.append(intermediate_label[0])
                     flatten_weights.append(intermediate_weight)
                     flatten_activations.append(intermediate_activation)
                     flatten_label_activations.append(torch.from_numpy(intermediate_label_activations).squeeze())
