@@ -6,14 +6,85 @@ from iris.datasets import load_dataset
 from iris.model_wrappers.guard_models import WildGuard
 
 """
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_benign_only/checkpoint-1220 \
+--dataset_name ORBenchDataset \
+--dataset_split test \
+--prompt_intention hard_benign \
+--save_tokens \
+--save_activations \
+--output_path ./outputs/iris_l2_wildguard_layer_19_benign_only/ORBenchDataset/test/hard_benign_prompts.jsonl
+
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
 --checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19/checkpoint-1220 \
---dataset_name WildGuardMixDataset \
+--dataset_name ORBenchDataset \
 --dataset_split test \
+--prompt_intention hard_benign \
 --save_tokens \
 --save_activations \
---output_path ./outputs/iris_l2_wildguard_layer_19/WildGuardMixDataset/test/all_prompts.jsonl
+--output_path ./outputs/iris_l2_wildguard_layer_19/ORBenchDataset/test/hard_benign_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--checkpoint_path ./finetuned_models/iris_cl_wildguard_layer_19_benign_only/checkpoint-1220 \
+--dataset_name ORBenchDataset \
+--dataset_split test \
+--prompt_intention hard_benign \
+--save_tokens \
+--save_activations \
+--output_path ./outputs/iris_cl_wildguard_layer_19_benign_only/ORBenchDataset/test/hard_benign_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=3 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--checkpoint_path ./finetuned_models/iris_cl_wildguard_layer_19/checkpoint-1220 \
+--dataset_name ORBenchDataset \
+--dataset_split test \
+--prompt_intention hard_benign \
+--save_tokens \
+--save_activations \
+--output_path ./outputs/iris_cl_wildguard_layer_19/ORBenchDataset/test/hard_benign_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_benign_only_v2/checkpoint-1220 \
+--dataset_name ORBenchDataset \
+--dataset_split test \
+--prompt_intention harmful \
+--save_tokens \
+--save_activations \
+--output_path ./outputs/iris_l2_wildguard_layer_19_benign_only_v2/ORBenchDataset/test/harmful_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_v2/checkpoint-1220 \
+--dataset_name ORBenchDataset \
+--dataset_split test \
+--prompt_intention harmful \
+--save_tokens \
+--save_activations \
+--output_path ./outputs/iris_l2_wildguard_layer_19_v2/ORBenchDataset/test/harmful_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_benign_only_v2/checkpoint-1220 \
+--dataset_name ORBenchDataset \
+--dataset_split test \
+--prompt_intention hard_benign \
+--save_tokens \
+--save_activations \
+--output_path ./outputs/iris_l2_wildguard_layer_19_benign_only_v2/ORBenchDataset/test/hard_benign_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=3 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_v2/checkpoint-1220 \
+--dataset_name ORBenchDataset \
+--dataset_split test \
+--prompt_intention hard_benign \
+--save_tokens \
+--save_activations \
+--output_path ./outputs/iris_l2_wildguard_layer_19_v2/ORBenchDataset/test/hard_benign_prompts.jsonl
 """
 
 if __name__ == "__main__":
