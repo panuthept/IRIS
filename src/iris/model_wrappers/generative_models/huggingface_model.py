@@ -181,9 +181,13 @@ class IRISL2Trainer(SFTTrainer):
         self.intermediate_labels = self.iris_config.layer_labels
         self.intermediate_weights = self.iris_config.layer_weights
 
-        self.loss_fn = nn.MSELoss(
-            reduction="none",
-        )
+        # self.loss_fn = nn.MSELoss(
+        #     reduction="none",
+        # )
+
+    @staticmethod
+    def loss_fn(inputs, targets):
+        return (targets - inputs).norm(dim=-1, p=2)
 
     def _compute_intermediate_loss(
         self, 
@@ -218,8 +222,6 @@ class IRISL2Trainer(SFTTrainer):
         flatten_labels = flatten_labels.to(device=flatten_activations.device, dtype=flatten_activations.dtype)
         # Compute intermediate loss
         intermediate_loss = self.loss_fn(flatten_activations, flatten_labels)
-        if len(intermediate_loss.size()) == 2:
-            intermediate_loss = intermediate_loss.mean(dim=1)
         intermediate_loss = (intermediate_loss * flatten_weights).mean()
         return intermediate_loss
 
