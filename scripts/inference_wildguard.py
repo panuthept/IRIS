@@ -8,12 +8,12 @@ from iris.model_wrappers.guard_models import WildGuard
 """
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
+--checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19/checkpoint-1220 \
 --dataset_name WildGuardMixDataset \
---prompt_intention harmful \
---attack_engine vanilla \
---dataset_split train \
+--dataset_split test \
 --save_tokens \
---output_path ./outputs/wildguard/WildGuardMixDataset/train/vanilla_harmful_prompts.jsonl
+--save_activations \
+--output_path ./outputs/iris_l2_wildguard_layer_19/WildGuardMixDataset/test/all_prompts.jsonl
 """
 
 if __name__ == "__main__":
@@ -65,6 +65,7 @@ if __name__ == "__main__":
                         fp += 1
 
                 cache = model.model.logitlens.fetch_cache(return_tokens=args.save_tokens, return_logits=args.save_logits, return_activations=args.save_activations)
+                cache = {key: {module_name: activation for module_name, activation in activations.items() if "self_attn" not in module_name and "mlp" not in module_name} for key, activations in cache.items()}
                 f.write(json.dumps({
                     "prompt": prompt,
                     "response": response,
