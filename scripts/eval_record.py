@@ -8,8 +8,8 @@ from iris.metrics.safeguard_metrics import SafeGuardMetric
 python scripts/eval_record.py \
 --load_path_a1 ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts.jsonl \
 --load_path_a2 ./outputs/wildguard/ORBenchDataset/test/harmful_prompts.jsonl \
---load_path_b1 ./outputs/iris_wildguard_layer_19/ORBenchDataset/test/hard_benign_prompts.jsonl \
---load_path_b2 ./outputs/iris_wildguard_layer_19/ORBenchDataset/test/harmful_prompts.jsonl \
+--load_path_b1 ./outputs/iris_l2_wildguard_layer_19_benign_only_v2/ORBenchDataset/test/hard_benign_prompts.jsonl \
+--load_path_b2 ./outputs/iris_l2_wildguard_layer_19_benign_only_v2/ORBenchDataset/test/harmful_prompts.jsonl \
 --dataset_name ORBench
 """
 

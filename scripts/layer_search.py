@@ -34,9 +34,10 @@ CUDA_VISIBLE_DEVICES=1 python scripts/layer_search.py \
 
 CUDA_VISIBLE_DEVICES=1 python scripts/layer_search.py \
 --model_name allenai/wildguard \
---checkpoint_path ./finetuned_models/iris_wildguard_layer_19/checkpoint-1220 \
+--checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_benign_only_v2/checkpoint-1220 \
+--save_logits \
 --save_activations \
---save_path ./layer_search_outputs/iris_wildguard_layer_19/activations.jsonl
+--save_path ./layer_search_outputs/iris_l2_wildguard_layer_19_benign_only_v2/activations_and_logits.jsonl
 """
 
 
