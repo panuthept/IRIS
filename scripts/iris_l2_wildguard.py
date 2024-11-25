@@ -31,6 +31,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_seq_length", type=int, default=8192)
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
+    parser.add_argument("--label_smoothing_factor", type=float, default=0.00)
     parser.add_argument("--learning_rate", type=float, default=2e-6)
     parser.add_argument("--weight_decay", type=float, default=0.00)
     parser.add_argument("--warmup_ratio", type=float, default=0.03)
@@ -93,6 +94,7 @@ if __name__ == "__main__":
                 per_device_train_batch_size=args.batch_size,
                 per_device_eval_batch_size=args.batch_size,
                 gradient_accumulation_steps=args.gradient_accumulation_steps,
+                label_smoothing_factor=args.label_smoothing_factor,
                 learning_rate=args.learning_rate,
                 weight_decay=args.weight_decay,
                 warmup_ratio=args.warmup_ratio,
