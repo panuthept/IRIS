@@ -1,5 +1,6 @@
 import os
 import json
+import random
 import argparse
 from tqdm import tqdm
 from iris.datasets import load_dataset
@@ -45,6 +46,14 @@ CUDA_VISIBLE_DEVICES=3 python scripts/inference_wildguard.py \
 --dataset_split test \
 --prompt_intention harmful \
 --output_path ./outputs/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-5040/ORBenchDataset/test/harmful_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--dataset_name WildGuardMixDataset \
+--dataset_split train \
+--save_activations \
+--save_logits \
+--output_path ./outputs/wildguard/WildGuardMixDataset/train/dev_prompts.jsonl
 """
 
 if __name__ == "__main__":
@@ -52,6 +61,8 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, default="allenai/wildguard")
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="WildGuardMixDataset")
+    parser.add_argument("--train_eval_split", type=float, default=0.9)
+    parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_samples", type=int, default=None)
     parser.add_argument("--prompt_intention", type=str, default=None)
     parser.add_argument("--attack_engine", type=str, default=None)
@@ -62,6 +73,8 @@ if __name__ == "__main__":
     parser.add_argument("--output_path", type=str, default="./outputs/inference_wildguard.jsonl")
     args = parser.parse_args()
 
+    random.seed(args.seed)
+
     # Initial model
     model = WildGuard(
         model_name_or_path=args.model_name,
@@ -71,6 +84,14 @@ if __name__ == "__main__":
     # Initial dataset
     dataset = load_dataset(args.dataset_name, args.prompt_intention, args.attack_engine)
     samples = dataset.as_samples(split=args.dataset_split)
+    random.shuffle(samples)
+
+    if args.dataset_split == "train" and args.train_eval_split == 1.0:
+        samples = []
+    else:
+        train_size = int(len(samples) * args.train_eval_split)
+        samples = samples[train_size:]
+
     if args.max_samples is not None:
         samples = samples[:args.max_samples]
 
