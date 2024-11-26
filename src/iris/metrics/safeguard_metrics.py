@@ -33,6 +33,7 @@ class SafeGuardMetric:
         self.f1s = 2 * self.precisions * self.recalls / (self.precisions + self.recalls + 1e-7)
 
     def plot(self, dataset_name: str = None):
+        plt.figure(figsize=(13, 5))
         plt.subplot(1, 2, 1)
         plt.plot(self.recalls, self.precisions, color='darkorange', lw=1, label='AUC = %0.2f' % (self.pr_auc * 100))
         plt.xlim([0.0, 1.0])
