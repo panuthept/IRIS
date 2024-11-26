@@ -226,6 +226,7 @@ class IRISL2Trainer(SFTTrainer):
         return intermediate_loss
 
     def compute_loss(self, model, inputs, return_outputs=False):
+        # Compute final-prediction loss
         if return_outputs:
             (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
         else:
