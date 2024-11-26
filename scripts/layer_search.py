@@ -12,32 +12,31 @@ from iris.model_wrappers.guard_models import WildGuard
 """
 CUDA_VISIBLE_DEVICES=0 python scripts/layer_search.py \
 --model_name allenai/wildguard \
---save_logits \
---save_path ./layer_search_outputs/wildguard/logits.jsonl
-
-CUDA_VISIBLE_DEVICES=0 python scripts/layer_search.py \
---model_name allenai/wildguard \
---save_activations \
---save_path ./layer_search_outputs/wildguard/activations.jsonl
-
-CUDA_VISIBLE_DEVICES=0 python scripts/layer_search.py \
---model_name allenai/wildguard \
+--checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-1260 \
 --save_logits \
 --save_activations \
---save_path ./layer_search_outputs/wildguard/activations_and_logits.jsonl
+--save_path ./layer_search_outputs/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-1260/activations_and_logits.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/layer_search.py \
 --model_name allenai/wildguard \
---checkpoint_path ./finetuned_models/iris_wildguard_layer_19/checkpoint-1220 \
---save_logits \
---save_path ./layer_search_outputs/iris_wildguard_layer_19/logits.jsonl
-
-CUDA_VISIBLE_DEVICES=1 python scripts/layer_search.py \
---model_name allenai/wildguard \
---checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_benign_only_v2/checkpoint-1220 \
+--checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-2520 \
 --save_logits \
 --save_activations \
---save_path ./layer_search_outputs/iris_l2_wildguard_layer_19_benign_only_v2/activations_and_logits.jsonl
+--save_path ./layer_search_outputs/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-2520/activations_and_logits.jsonl
+
+CUDA_VISIBLE_DEVICES=2 python scripts/layer_search.py \
+--model_name allenai/wildguard \
+--checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-3780 \
+--save_logits \
+--save_activations \
+--save_path ./layer_search_outputs/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-3780/activations_and_logits.jsonl
+
+CUDA_VISIBLE_DEVICES=3 python scripts/layer_search.py \
+--model_name allenai/wildguard \
+--checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_b05h05_10_epochs_v2/checkpoint-6100 \
+--save_logits \
+--save_activations \
+--save_path ./layer_search_outputs/iris_l2_wildguard_layer_19_b05h05_10_epochs_v2/checkpoint-6100/activations_and_logits.jsonl
 """
 
 
@@ -60,7 +59,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_logits", action="store_true")
     parser.add_argument("--save_activations", action="store_true")
     parser.add_argument("--plot", action="store_true")
-    parser.add_argument("--save_path", type=str, default="./activations.jsonl")
+    parser.add_argument("--save_path", type=str, default="./activations_and_logits.jsonl")
     args = parser.parse_args()
 
     if not os.path.exists(args.save_path):
