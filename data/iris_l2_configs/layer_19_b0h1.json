@@ -1,0 +1,6 @@
+{
+    "alpha": 0.1,
+    "layer_weights": {
+        "model.layers.19": {"1476": 0.0, "5849": 1.0}
+    }
+}
