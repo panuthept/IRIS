@@ -52,6 +52,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, default="allenai/wildguard")
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="WildGuardMixDataset")
+    parser.add_argument("--max_samples", type=int, default=None)
     parser.add_argument("--prompt_intention", type=str, default=None)
     parser.add_argument("--attack_engine", type=str, default=None)
     parser.add_argument("--dataset_split", type=str, default="test")
@@ -70,6 +71,8 @@ if __name__ == "__main__":
     # Initial dataset
     dataset = load_dataset(args.dataset_name, args.prompt_intention, args.attack_engine)
     samples = dataset.as_samples(split=args.dataset_split)
+    if args.max_samples is not None:
+        samples = samples[:args.max_samples]
 
     # Create save directory
     os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
