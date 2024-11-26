@@ -61,7 +61,6 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, default="allenai/wildguard")
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="WildGuardMixDataset")
-    parser.add_argument("--train_eval_split", type=float, default=0.9)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_samples", type=int, default=None)
     parser.add_argument("--prompt_intention", type=str, default=None)
@@ -85,12 +84,6 @@ if __name__ == "__main__":
     dataset = load_dataset(args.dataset_name, args.prompt_intention, args.attack_engine)
     samples = dataset.as_samples(split=args.dataset_split)
     random.shuffle(samples)
-
-    if args.dataset_split == "train" and args.train_eval_split == 1.0:
-        samples = []
-    else:
-        train_size = int(len(samples) * args.train_eval_split)
-        samples = samples[train_size:]
 
     if args.max_samples is not None:
         samples = samples[:args.max_samples]
