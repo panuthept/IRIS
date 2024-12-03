@@ -236,7 +236,7 @@ class IRISL2Trainer(SFTTrainer):
         return (loss, outputs) if return_outputs else loss
 
 
-class IRISDiffTripletTrainer(IRISL2Trainer):
+class IRISDiffTripletTrainer(SFTTrainer):
     def __init__(
         self, 
         logitlens: LogitLens, 
@@ -319,6 +319,20 @@ class IRISDiffTripletTrainer(IRISL2Trainer):
         intermediate_loss = self.loss_fn(flatten_diffs, flatten_pos_labels, flatten_neg_labels, self.margin_coeff)
         intermediate_loss = (intermediate_loss * flatten_weights).mean()
         return intermediate_loss
+    
+    def compute_loss(self, model, inputs, return_outputs=False):
+        # Compute final-prediction loss
+        if return_outputs:
+            (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
+        else:
+            loss = super().compute_loss(model, inputs, return_outputs)
+        # Compute intermediate loss
+        labels = inputs.pop("labels") if "labels" in inputs else None
+        if labels is not None:
+            intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]] = self.logitlens.fetch_intermediate_activations()
+            intermediate_loss = self._compute_intermediate_loss(intermediate_activations, labels[:, -1])
+            loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
+        return (loss, outputs) if return_outputs else loss
     
 
 class IRISCLTrainer(SFTTrainer):
