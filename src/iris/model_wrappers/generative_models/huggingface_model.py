@@ -259,19 +259,11 @@ class IRISDiffTripletTrainer(SFTTrainer):
         pos_targets: shape (batch_size, embedding_dim)
         neg_targets: shape (batch_size, embedding_dim)
         """
-        print(f"inputs: {inputs.size()}")
-        print(f"pos_targets: {pos_targets.size()}")
-        print(f"neg_targets: {neg_targets.size()}")
         pos_distance = (pos_targets - inputs).norm(dim=-1, p=2)         # shape: (batch_size, )
-        print(f"pos_distance: {pos_distance}")
         neg_distance = (neg_targets - inputs).norm(dim=-1, p=2)         # shape: (batch_size, )
-        print(f"neg_distance: {neg_distance}")
         base_distance = (pos_targets - neg_targets).norm(dim=-1, p=2)   # shape: (batch_size, )
-        print(f"base_distance: {base_distance}")
         margins = base_distance * margin_coeff                          # shape: (batch_size, )
-        print(f"margins: {margins}")
         loss = torch.max(pos_distance - neg_distance + margins, torch.tensor(0.0, device=inputs.device))
-        print(f"loss: {loss}")
         return loss
 
     def _compute_intermediate_loss(
@@ -309,7 +301,6 @@ class IRISDiffTripletTrainer(SFTTrainer):
         # Convert to tensors
         flatten_diffs = torch.stack(flatten_diffs, dim=0)
         flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)
-        print(f"flatten_weights: {flatten_weights}")
         flatten_pos_labels = torch.stack(flatten_pos_labels, dim=0) # shape: (layer*batch, embedding_dim)
         flatten_neg_labels = torch.stack(flatten_neg_labels, dim=0) # shape: (layer*batch, embedding_dim)
         # Ensure that the flatten_pos_labels are on the same device and has the same type as flatten_diffs
@@ -331,11 +322,7 @@ class IRISDiffTripletTrainer(SFTTrainer):
         if labels is not None:
             intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]] = self.logitlens.fetch_intermediate_activations()
             intermediate_loss = self._compute_intermediate_loss(intermediate_activations, labels[:, -1])
-            print(f"intermediate_loss: {intermediate_loss}")
-            print(f"loss: {loss}")
             loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
-            print(f"final loss: {loss}")
-            print(f"-" * 100)
         return (loss, outputs) if return_outputs else loss
     
 
