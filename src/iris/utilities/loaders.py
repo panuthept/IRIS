@@ -1,6 +1,6 @@
 import json
 from typing import List
-from iris.data_types import Sample, ModelResponse, IRISConfig, IRISL2Config, IRISCLConfig
+from iris.data_types import Sample, ModelResponse, IRISConfig, IRISL2Config, IRISCLConfig, IRISDiffTripletConfig
 
 
 def save_samples(samples: List[Sample], path: str):
@@ -58,3 +58,11 @@ def load_iris_cl_config(path) -> IRISCLConfig:
         layer_weights = config.pop("layer_weights")
         config["layer_weights"] = {module_name: {int(final_label): layer_weight for final_label, layer_weight in layer_weights[module_name].items()} for module_name in layer_weights}
     return IRISCLConfig(**config)
+
+
+def load_iris_diff_triplet_config(path) -> IRISDiffTripletConfig:
+    config = json.load(open(path, "r"))
+    if "layer_weights" in config:
+        layer_weights = config.pop("layer_weights")
+        config["layer_weights"] = {module_name: {int(final_label): layer_weight for final_label, layer_weight in layer_weights[module_name].items()} for module_name in layer_weights}
+    return IRISDiffTripletConfig(**config)

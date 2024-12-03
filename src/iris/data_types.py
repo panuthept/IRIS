@@ -37,6 +37,11 @@ class IRISL2Config:
 
 
 @dataclass
+class IRISDiffTripletConfig(IRISL2Config):
+    margin_coeff: float = 0.5
+
+
+@dataclass
 class IRISCLConfig(IRISL2Config):
     pass
 

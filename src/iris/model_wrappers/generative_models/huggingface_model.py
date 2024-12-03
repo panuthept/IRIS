@@ -12,10 +12,10 @@ from jaxtyping import Int, Float
 from accelerate import PartialState
 from iris.logitlens import LogitLens
 from typing import List, Callable, Union, Tuple, Optional
-from iris.data_types import IRISConfig, IRISL2Config, IRISCLConfig
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from iris.data_types import IRISConfig, IRISL2Config, IRISDiffTripletConfig, IRISCLConfig
 
 
 class IRISTrainer(SFTTrainer):
@@ -181,10 +181,6 @@ class IRISL2Trainer(SFTTrainer):
         self.intermediate_labels = self.iris_config.layer_labels
         self.intermediate_weights = self.iris_config.layer_weights
 
-        # self.loss_fn = nn.MSELoss(
-        #     reduction="none",
-        # )
-
     @staticmethod
     def loss_fn(inputs, targets):
         return (targets - inputs).norm(dim=-1, p=2)
@@ -238,6 +234,91 @@ class IRISL2Trainer(SFTTrainer):
             intermediate_loss = self._compute_intermediate_loss(intermediate_activations, labels[:, -1])
             loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
         return (loss, outputs) if return_outputs else loss
+
+
+class IRISDiffTripletTrainer(IRISL2Trainer):
+    def __init__(
+        self, 
+        logitlens: LogitLens, 
+        iris_config: IRISDiffTripletConfig,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.logitlens = logitlens
+        self.iris_config = iris_config
+
+        self.alpha = self.iris_config.alpha
+        self.labels = self.iris_config.layer_labels
+        self.weights = self.iris_config.layer_weights
+        self.margin_coeff = self.iris_config.margin_coeff
+
+    @staticmethod
+    def loss_fn(inputs, pos_targets, neg_targets, margin_coeff: float = 0.5):
+        """
+        inputs: shape (batch_size, embedding_dim)
+        pos_targets: shape (batch_size, embedding_dim)
+        neg_targets: shape (batch_size, embedding_dim)
+        """
+        print(f"inputs: {inputs.size()}")
+        print(f"pos_targets: {pos_targets.size()}")
+        print(f"neg_targets: {neg_targets.size()}")
+        pos_distance = (pos_targets - inputs).norm(dim=-1, p=2)         # shape: (batch_size, )
+        print(f"pos_distance: {pos_distance}")
+        neg_distance = (neg_targets - inputs).norm(dim=-1, p=2)         # shape: (batch_size, )
+        print(f"neg_distance: {neg_distance}")
+        base_distance = (pos_targets - neg_targets).norm(dim=-1, p=2)   # shape: (batch_size, )
+        print(f"base_distance: {base_distance}")
+        margins = base_distance * margin_coeff                          # shape: (batch_size, )
+        print(f"margins: {margins}")
+        loss = torch.max(pos_distance - neg_distance + margins, torch.tensor(0.0, device=inputs.device))
+        print(f"loss: {loss}")
+        print("-" * 100)
+        return loss
+
+    def _compute_intermediate_loss(
+        self, 
+        intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]], 
+        final_labels: Int[Tensor, "batch"],
+    ):
+        flatten_weights: Float[Tensor, "layer*batch"] = []
+        flatten_diffs: Float[Tensor, "layer*batch embedding_dim"] = []
+        flatten_pos_labels: Float[Tensor, "layer*batch embedding_dim"] = []
+        flatten_neg_labels: Float[Tensor, "layer*batch embedding_dim"] = []
+        for module_name in self.weights:
+            for batch_idx in range(intermediate_activations[module_name].size(0)):
+                prev_module_name = f"model.layers.{int(module_name.split('.')[-1]) - 1}"
+                # Get final prediction label
+                final_label = final_labels[batch_idx].item()
+                # Get intermediate activation
+                intermediate_activation = intermediate_activations[module_name][batch_idx]
+                prev_intermediate_activation = intermediate_activations[prev_module_name][batch_idx]
+                # Get activation different
+                diff = intermediate_activation - prev_intermediate_activation
+                # Get intermediate prediction label and weight
+                pos_label = self.labels[module_name].get(final_label, None)
+                weight = self.weights[module_name].get(final_label, 0.0)
+                if pos_label is not None:
+                    neg_label = [value for key, value in self.labels[module_name].items() if key != final_label][0]
+                    flatten_pos_labels.append(torch.from_numpy(pos_label).squeeze())
+                    flatten_neg_labels.append(torch.from_numpy(neg_label).squeeze())
+                    flatten_weights.append(weight)
+                    flatten_diffs.append(diff)
+        # Return 0.0 if there are no flatten_diffs
+        if len(flatten_diffs) == 0:
+            print("[Warning] No intermediate activations found.")
+            return torch.tensor(0.0, device=final_labels.device)
+        # Convert to tensors
+        flatten_diffs = torch.stack(flatten_diffs, dim=0)
+        flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)
+        flatten_pos_labels = torch.stack(flatten_pos_labels, dim=0) # shape: (layer*batch, embedding_dim)
+        flatten_neg_labels = torch.stack(flatten_neg_labels, dim=0) # shape: (layer*batch, embedding_dim)
+        # Ensure that the flatten_pos_labels are on the same device and has the same type as flatten_diffs
+        flatten_pos_labels = flatten_pos_labels.to(device=flatten_diffs.device, dtype=flatten_diffs.dtype)
+        flatten_neg_labels = flatten_neg_labels.to(device=flatten_diffs.device, dtype=flatten_diffs.dtype)
+        # Compute intermediate loss
+        intermediate_loss = self.loss_fn(flatten_diffs, flatten_pos_labels, flatten_neg_labels, self.margin_coeff)
+        intermediate_loss = (intermediate_loss * flatten_weights).mean()
+        return intermediate_loss
     
 
 class IRISCLTrainer(SFTTrainer):
@@ -772,6 +853,44 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         else:
             print("Starting PEFT SFT training...")
         trainer = IRISCLTrainer(
+            logitlens=self.logitlens,
+            iris_config=iris_config,
+            model=self.llm,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            args=sft_config,
+            tokenizer=self.tokenizer,
+            formatting_func=formatting_prompts_func,
+            data_collator=collator,
+            peft_config=peft_config,
+        )
+        # Freeze layers
+        if iris_config.freeze_layers is not None:
+            for name, param in self.llm.named_parameters():
+                for module_name in iris_config.freeze_layers:
+                    if module_name in name:
+                        param.requires_grad_(False)
+                        break
+        self.report_trainable_params()
+        trainer.train()
+
+    def train_iris_diff_triplet(
+        self,
+        iris_config: IRISDiffTripletConfig,
+        train_dataset: Dataset,
+        response_template: str,
+        formatting_prompts_func: Callable,
+        sft_config: SFTConfig = None,
+        peft_config: LoraConfig = None,
+        eval_dataset: Dataset = None,
+    ):
+        self.tokenizer.padding_side = "right"
+        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+        if peft_config is None:
+            print("Starting FFT SFT training...")
+        else:
+            print("Starting PEFT SFT training...")
+        trainer = IRISDiffTripletTrainer(
             logitlens=self.logitlens,
             iris_config=iris_config,
             model=self.llm,
