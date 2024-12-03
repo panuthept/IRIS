@@ -1,5 +1,5 @@
 {
-    "alpha": 0.1,
+    "alpha": 0.5,
     "margin_coeff": 0.5,
     "layer_weights": {
         "model.layers.11": {"1476": 0.0625, "5849": 0.0625},
