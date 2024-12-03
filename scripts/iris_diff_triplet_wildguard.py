@@ -13,6 +13,7 @@ from iris.utilities.loaders import load_iris_diff_triplet_config as load_iris_co
 """
 CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_diff_triplet_wildguard.py \
 --iris_config ./data/iris_diff_triplet_configs/layer_1_to_10.json \
+--iris_label_path ./data/saved_directions \
 --model_name allenai/wildguard \
 --train_eval_split 0.9 \
 --max_seq_length 2048 \
@@ -30,7 +31,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_di
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--iris_config", type=str, default="./data/iris_diff_triplet_configs/layer_1_to_10.json")
-    parser.add_argument("--iris_label_path", type=str, default="./outputs/wildguard/WildGuardMixDataset/train/saved_directions")
+    parser.add_argument("--iris_label_path", type=str, default="./data/saved_directions")
     parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
     parser.add_argument("--attack_engine", type=str, default=None)
     parser.add_argument("--cache_dir", type=str, default="./data/datasets/wildguardmix")
