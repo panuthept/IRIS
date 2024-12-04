@@ -255,14 +255,14 @@ class IRISDiffTripletTrainer(SFTTrainer):
     @staticmethod
     def loss_fn(inputs, pos_targets, neg_targets, margin_coeff: float = 0.5):
         """
-        inputs: shape (batch_size, embedding_dim)
-        pos_targets: shape (batch_size, embedding_dim)
-        neg_targets: shape (batch_size, embedding_dim)
+        inputs: shape (layer*batch, embedding_dim)
+        pos_targets: shape (layer*batch, embedding_dim)
+        neg_targets: shape (layer*batch, embedding_dim)
         """
-        pos_distance = (pos_targets - inputs).norm(dim=-1, p=2)         # shape: (batch_size, )
-        neg_distance = (neg_targets - inputs).norm(dim=-1, p=2)         # shape: (batch_size, )
-        base_distance = (pos_targets - neg_targets).norm(dim=-1, p=2)   # shape: (batch_size, )
-        margins = base_distance * margin_coeff                          # shape: (batch_size, )
+        pos_distance = (pos_targets - inputs).norm(dim=-1, p=2)         # shape: (layer*batch, )
+        neg_distance = (neg_targets - inputs).norm(dim=-1, p=2)         # shape: (layer*batch, )
+        base_distance = (pos_targets - neg_targets).norm(dim=-1, p=2)   # shape: (layer*batch, )
+        margins = base_distance * margin_coeff                          # shape: (layer*batch, )
         loss = torch.max(pos_distance - neg_distance + margins, torch.tensor(0.0, device=inputs.device))
         return loss
 
@@ -271,6 +271,8 @@ class IRISDiffTripletTrainer(SFTTrainer):
         intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]], 
         final_labels: Int[Tensor, "batch"],
     ):
+        batch_size = final_labels.size(0)
+
         flatten_weights: Float[Tensor, "layer*batch"] = []
         flatten_diffs: Float[Tensor, "layer*batch embedding_dim"] = []
         flatten_pos_labels: Float[Tensor, "layer*batch embedding_dim"] = []
@@ -308,7 +310,8 @@ class IRISDiffTripletTrainer(SFTTrainer):
         flatten_neg_labels = flatten_neg_labels.to(device=flatten_diffs.device, dtype=flatten_diffs.dtype)
         # Compute intermediate loss
         intermediate_loss = self.loss_fn(flatten_diffs, flatten_pos_labels, flatten_neg_labels, self.margin_coeff)
-        intermediate_loss = (intermediate_loss * flatten_weights).mean()
+        intermediate_loss = (intermediate_loss * flatten_weights).mean() # shape: (layer*batch, )
+        # intermediate_loss = intermediate_loss.view(batch_size, -1).sum(dim=-1).mean()
         return intermediate_loss
     
     def compute_loss(self, model, inputs, return_outputs=False):
