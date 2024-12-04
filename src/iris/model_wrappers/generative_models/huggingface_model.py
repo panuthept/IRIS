@@ -310,8 +310,7 @@ class IRISDiffTripletTrainer(SFTTrainer):
         flatten_neg_labels = flatten_neg_labels.to(device=flatten_diffs.device, dtype=flatten_diffs.dtype)
         # Compute intermediate loss
         intermediate_loss = self.loss_fn(flatten_diffs, flatten_pos_labels, flatten_neg_labels, self.margin_coeff)
-        intermediate_loss = (intermediate_loss * flatten_weights).mean() # shape: (layer*batch, )
-        # intermediate_loss = intermediate_loss.view(batch_size, -1).sum(dim=-1).mean()
+        intermediate_loss = (intermediate_loss * flatten_weights).view(batch_size, -1).sum(dim=-1).mean()
         return intermediate_loss
     
     def compute_loss(self, model, inputs, return_outputs=False):
