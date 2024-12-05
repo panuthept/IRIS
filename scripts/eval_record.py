@@ -8,9 +8,13 @@ from iris.metrics.safeguard_metrics import SafeGuardMetric
 python scripts/eval_record.py \
 --load_path_a1 ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts.jsonl \
 --load_path_a2 ./outputs/wildguard/ORBenchDataset/test/harmful_prompts.jsonl \
---load_path_b1 ./outputs/iris_l2_wildguard_layer_19_b05h05_10_epochs_v2/checkpoint-6100/ORBenchDataset/test/hard_benign_prompts.jsonl \
---load_path_b2 ./outputs/iris_l2_wildguard_layer_19_b05h05_10_epochs_v2/checkpoint-6100/ORBenchDataset/test/harmful_prompts.jsonl \
+--load_path_b1 ./outputs/iris_diff_triplet_wildguard_layer_1_to_10_epoch10/ORBenchDataset/test/hard_benign_prompts.jsonl \
+--load_path_b2 ./outputs/iris_diff_triplet_wildguard_layer_1_to_10_epoch10/ORBenchDataset/test/harmful_prompts.jsonl \
 --dataset_name ORBench
+
+python scripts/eval_record.py \
+--load_path_a1 ./outputs/wildguard/WildGuardMixDataset/train/4000_prompts.jsonl \
+--dataset_name WildGuardMix
 """
 
 
@@ -50,6 +54,8 @@ if __name__ == "__main__":
 
     metrics_a = SafeGuardMetric()
     metrics_a.update(all_gold_labels, all_pred_scores)
+    print((metrics_a.precision, metrics_a.recall, metrics_a.f1))
+    # metrics_a.plot(args.dataset_name)
 
     all_gold_labels, all_pred_scores = load_examples(args.load_path_b1)
     if args.load_path_b2:
@@ -63,5 +69,6 @@ if __name__ == "__main__":
 
     metrics_b = SafeGuardMetric()
     metrics_b.update(all_gold_labels, all_pred_scores)
+    print((metrics_b.precision, metrics_b.recall, metrics_b.f1))
 
     metrics_b.plot_comparison(metrics_a, "WildGuard", args.dataset_name)

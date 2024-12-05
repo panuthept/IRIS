@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, precision_recall_curve, auc
+from sklearn.metrics import precision_recall_fscore_support, roc_curve, precision_recall_curve, auc
 
 
 class SafeGuardMetric:
@@ -14,6 +14,9 @@ class SafeGuardMetric:
         self.pr_thresholds = []
         self.pr_auc = None
         self.f1s = []
+        self.recall = None
+        self.precision = None
+        self.f1 = None
 
     def update(self, gold_labels, pred_scores):
         """
@@ -23,6 +26,8 @@ class SafeGuardMetric:
         # Convert to NumpyArray
         gold_labels = np.array(gold_labels)
         pred_scores = np.array(pred_scores)
+        # Compute Recall, Precision, F1
+        self.precision, self.recall, self.f1, _ = precision_recall_fscore_support(gold_labels, pred_scores > 0.5, average='binary')
         # Compute ROC curve and ROC area
         self.fprs, self.tprs, self.roc_thresholds = roc_curve(gold_labels, pred_scores)
         self.precisions, self.recalls, self.pr_thresholds = precision_recall_curve(gold_labels, pred_scores)
