@@ -1,29 +1,37 @@
 import os
 import torch
 import random
-import pickle
 import argparse
+import numpy as np
 from trl import SFTConfig
 from peft import LoraConfig
 from iris.datasets import WildGuardMixDataset
-from iris.utilities.loaders import load_iris_l2_config
 from iris.model_wrappers.guard_models import WildGuard
+from iris.utilities.loaders import load_iris_l2_config as load_iris_config
 
 
-####################### SFT with LoRA #######################
-# CUDA_VISIBLE_DEVICES=0,1 accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard --use_lora
-# accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_vanilla --use_lora --attack_engine vanilla
-# accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_adversarial --use_lora --attack_engine adversarial
-##################### SFT Full-finetune #####################
-# CUDA_VISIBLE_DEVICES=0,1,2 accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 4096 --batch_size 1 --gradient_accumulation_steps 42 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard
-# accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_vanilla --attack_engine vanilla
-# accelerate launch scripts/sft_wildguard.py --model_name mistralai/Mistral-7B-v0.3 --train_eval_split 0.9 --max_seq_length 2048 --batch_size 1 --gradient_accumulation_steps 64 --epochs 2 --eval_steps 60 --output_dir ./finetuned_models/sft_wildguard_adversarial --attack_engine adversarial
+"""
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch --num_processes=4 scripts/iris_l2_wildguard.py \
+--iris_config ./data/iris_l2_configs/benign_only_configs/layer_19.json \
+--model_name allenai/wildguard \
+--train_eval_split 0.9 \
+--max_seq_length 2048 \
+--batch_size 1 \
+--label_smoothing_factor 0.5 \
+--gradient_accumulation_steps 32 \
+--epochs 2 \
+--eval_steps 60 \
+--save_total_limit 100 \
+--output_dir ./finetuned_models/iris_l2_wildguard_layer_19_benign_only_smooth05_v2 \
+--use_lora \
+--lora_rank 128
+"""
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--iris_config", type=str, default="./data/iris_l2_configs/benign_only_configs/layer_19.json")
-    parser.add_argument("--global_activation_path", type=str, default="./data/activations/global_activations_1.pkl")
+    parser.add_argument("--iris_label_path", type=str, default="./data/saved_activations")
     parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.3")
     parser.add_argument("--attack_engine", type=str, default=None)
     parser.add_argument("--cache_dir", type=str, default="./data/datasets/wildguardmix")
@@ -62,11 +70,16 @@ if __name__ == "__main__":
 
     # Load config for the intermediate_labels
     label_mapper = {"Harmful": 5849, "Benign": 1476}
-    iris_config = load_iris_l2_config(args.iris_config)
-    with open(args.global_activation_path, "rb") as f:
-        global_activations = pickle.load(f)
-        global_activations = {module_name: {label_mapper[label]: activations for label, activations in global_activations[module_name].items()} for module_name in iris_config.layer_weights.keys()}
-    iris_config.layer_labels = global_activations
+    iris_config = load_iris_config(args.iris_config)
+    iris_labels = {}
+    for path in os.listdir(args.iris_label_path):
+        module_name, final_label, bin = path.split("_")
+        with open(os.path.join(args.iris_label_path, path), "rb") as f:
+            data = np.load(f)   # shape: (1, embedding_dim)
+            if module_name not in iris_labels:
+                iris_labels[module_name] = {}
+            iris_labels[module_name][label_mapper[final_label]] = data
+    iris_config.layer_labels = iris_labels
     print(iris_config)
 
     random.shuffle(samples)
