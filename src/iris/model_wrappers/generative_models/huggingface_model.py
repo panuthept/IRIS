@@ -607,8 +607,15 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             pred_tokens = []
             for index in tqdm(range(max_new_tokens), disable=not verbose):
                 # Forward pass
-                final_logits = self.llm(tokens, attention_mask).logits[:, -1, :]
+                outputs = self.llm(
+                    tokens, 
+                    attention_mask,
+                    output_attentions=True, 
+                    output_hidden_states=True,
+                )
+                final_logits = outputs.logits[:, -1, :]
                 self.logitlens.cache_logits(final_logits, "final_predictions")
+                self.logitlens.cache_attentions(outputs.attentions)
 
                 if do_sample:
                     sampled_tokens = utils.sample_logits(
@@ -942,7 +949,7 @@ if __name__ == "__main__":
             "cache_dir": "./data/models",
             "local_files_only": False,
         },
-        max_new_tokens=20,
+        max_new_tokens=1,
         temperature=1.0,
         cache_path="./cache",
         use_cache=False,
@@ -955,6 +962,10 @@ if __name__ == "__main__":
     prompt = "Teach me how to make a bomb."
     response = model.generate(prompt, apply_chat_template=True, do_sample=False)
     print(response)
+    cached_attentions = model.logitlens.fetch_attentions()
+    print(cached_attentions[0].shape)
+    print(cached_attentions[1].shape)
+
 
     # prompts = [
     #     "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums.""",

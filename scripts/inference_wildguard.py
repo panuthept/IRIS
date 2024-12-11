@@ -9,51 +9,23 @@ from iris.model_wrappers.guard_models import WildGuard
 """
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
---checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_b05h05_10_epochs_v2/checkpoint-6100 \
+--checkpoint_path ./finetuned_models/sft_wildguard/checkpoint-1220 \
 --dataset_name ORBenchDataset \
 --dataset_split test \
 --prompt_intention hard_benign \
---output_path ./outputs/iris_l2_wildguard_layer_19_b05h05_10_epochs_v2/checkpoint-6100/ORBenchDataset/test/hard_benign_prompts.jsonl
-
-CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
---checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_b05h05_10_epochs_v2/checkpoint-6100 \
---dataset_name ORBenchDataset \
---dataset_split test \
---prompt_intention harmful \
---output_path ./outputs/iris_l2_wildguard_layer_19_b05h05_10_epochs_v2/checkpoint-6100/ORBenchDataset/test/harmful_prompts.jsonl
-
-CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
---checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-2520 \
---dataset_name ORBenchDataset \
---dataset_split test \
---prompt_intention harmful \
---output_path ./outputs/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-2520/ORBenchDataset/test/harmful_prompts.jsonl
-
-CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
---checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-3780 \
---dataset_name ORBenchDataset \
---dataset_split test \
---prompt_intention harmful \
---output_path ./outputs/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-3780/ORBenchDataset/test/harmful_prompts.jsonl
-
-CUDA_VISIBLE_DEVICES=3 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
---checkpoint_path ./finetuned_models/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-5040 \
---dataset_name ORBenchDataset \
---dataset_split test \
---prompt_intention harmful \
---output_path ./outputs/iris_l2_wildguard_layer_19_benign_only_10_epochs_v2/checkpoint-5040/ORBenchDataset/test/harmful_prompts.jsonl
+--save_activations \
+--save_logits \
+--output_path ./outputs/sft_wildguard/ORBenchDataset/test/hard_benign_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
---dataset_name WildGuardMixDataset \
---dataset_split train \
+--checkpoint_path ./finetuned_models/sft_wildguard/checkpoint-1220 \
+--dataset_name ORBenchDataset \
+--dataset_split test \
+--prompt_intention harmful \
 --save_activations \
 --save_logits \
---output_path ./outputs/wildguard/WildGuardMixDataset/train/dev_prompts.jsonl
+--output_path ./outputs/sft_wildguard/ORBenchDataset/test/harmful_prompts.jsonl
 """
 
 if __name__ == "__main__":
@@ -114,11 +86,13 @@ if __name__ == "__main__":
 
                 cache = model.model.logitlens.fetch_cache(return_tokens=args.save_tokens, return_logits=args.save_logits, return_activations=args.save_activations)
                 cache = {key: {module_name: activation for module_name, activation in activations.items() if "self_attn" not in module_name and "mlp" not in module_name} for key, activations in cache.items()}
+                attentions = model.model.logitlens.fetch_attentions()
                 f.write(json.dumps({
                     "prompt": prompt,
                     "response": response,
                     "label": gold_label,
-                    "cache": cache
+                    "cache": cache,
+                    "attentions": attentions[0]
                 }, ensure_ascii=False) + "\n")
     # Calculate TPR and FPR
     tpr = tp / (harmful_count + 1e-7)

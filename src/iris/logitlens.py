@@ -35,6 +35,8 @@ class LogitLens:
 
         self.intermediate_logits: Dict[str, Tensor] = {}
         self.intermediate_activations: Dict[str, Tensor] = {}
+
+        self.cached_attentions: List[Tensor] = [] # list of Tensor of shape (num_layers, num_heads, seq_len, seq_len)
         self.cached_activations: Dict[str, List[List[float]]] = {}
         self.cached_logits: Dict[str, List[List[Tuple[int, float]]]] = {}
 
@@ -43,6 +45,9 @@ class LogitLens:
 
     def _clear_intermediate_activations(self):
         self.intermediate_activations: Dict[str, Tensor] = {}
+
+    def _clear_attentions(self):
+        self.cached_attentions: List[Tensor] = []
 
     def _clear_cache(self):
         self.cached_activations: Dict[str, List[List[float]]] = {}
@@ -119,6 +124,15 @@ class LogitLens:
             self.cached_logits[module_name] = []
         self.cached_logits[module_name].extend([list(zip(topk_indices[batch_idx], topk_logits[batch_idx])) for batch_idx in range(len(topk_logits))])
 
+    def cache_attentions(self, attentions: List[Tensor]):
+        """
+        Input 
+            attentions: list of Tensor of shape (num_samples, num_heads, seq_len, seq_len)
+        Output
+            cached_attentions: Tensor of shape (num_layers, num_heads, seq_len, seq_len)
+        """
+        self.cached_attentions.append(torch.stack(attentions, dim=1).squeeze(0))
+
     def fetch_intermediate_logits(self):
         intermediate_logits = self.intermediate_logits
         self._clear_intermediate_logits()
@@ -130,6 +144,11 @@ class LogitLens:
         self._clear_intermediate_logits()
         self._clear_intermediate_activations()
         return intermediate_activations
+    
+    def fetch_attentions(self):
+        attentions = self.cached_attentions
+        self._clear_attentions()
+        return attentions
     
     def fetch_cache(
         self, 
