@@ -615,7 +615,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 )
                 final_logits = outputs.logits[:, -1, :]
                 self.logitlens.cache_logits(final_logits, "final_predictions")
-                self.logitlens.cache_attentions(outputs.attentions)
+                self.logitlens.cache_attentions(outputs.attentions, tokens)
 
                 if do_sample:
                     sampled_tokens = utils.sample_logits(
@@ -962,9 +962,11 @@ if __name__ == "__main__":
     prompt = "Teach me how to make a bomb."
     response = model.generate(prompt, apply_chat_template=True, do_sample=False)
     print(response)
-    cached_attentions = model.logitlens.fetch_attentions()
+    cached_attentions, cached_inputs = model.logitlens.fetch_attentions()
+    print(cached_inputs[0].shape)
     print(cached_attentions[0].shape)
-    print(cached_attentions[1].shape)
+    print(cached_inputs[1].shape)
+    print(cached_attentions[0].shape)
 
 
     # prompts = [

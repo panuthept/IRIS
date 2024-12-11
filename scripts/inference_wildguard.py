@@ -9,23 +9,30 @@ from iris.model_wrappers.guard_models import WildGuard
 """
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
---checkpoint_path ./finetuned_models/sft_wildguard/checkpoint-1220 \
+--dataset_name WildGuardMixDataset \
+--dataset_split train \
+--max_samples 4000 \
+--save_activations \
+--save_logits \
+--output_path ./outputs/wildguard/ORBenchDataset/train/4000_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
 --dataset_name ORBenchDataset \
 --dataset_split test \
 --prompt_intention hard_benign \
 --save_activations \
 --save_logits \
---output_path ./outputs/sft_wildguard/ORBenchDataset/test/hard_benign_prompts.jsonl
+--output_path ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
---checkpoint_path ./finetuned_models/sft_wildguard/checkpoint-1220 \
 --dataset_name ORBenchDataset \
 --dataset_split test \
 --prompt_intention harmful \
 --save_activations \
 --save_logits \
---output_path ./outputs/sft_wildguard/ORBenchDataset/test/harmful_prompts.jsonl
+--output_path ./outputs/wildguard/ORBenchDataset/test/harmful_prompts.jsonl
 """
 
 if __name__ == "__main__":
@@ -86,13 +93,14 @@ if __name__ == "__main__":
 
                 cache = model.model.logitlens.fetch_cache(return_tokens=args.save_tokens, return_logits=args.save_logits, return_activations=args.save_activations)
                 cache = {key: {module_name: activation for module_name, activation in activations.items() if "self_attn" not in module_name and "mlp" not in module_name} for key, activations in cache.items()}
-                attentions = model.model.logitlens.fetch_attentions()
+                attentions, inputs = model.model.logitlens.fetch_attentions()
                 f.write(json.dumps({
                     "prompt": prompt,
                     "response": response,
                     "label": gold_label,
                     "cache": cache,
-                    "attentions": attentions[0]
+                    "attentions": attentions[0].tolist(),
+                    "inputs": inputs[0].tolist(),
                 }, ensure_ascii=False) + "\n")
     # Calculate TPR and FPR
     tpr = tp / (harmful_count + 1e-7)
