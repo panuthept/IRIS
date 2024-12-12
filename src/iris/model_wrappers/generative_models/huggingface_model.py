@@ -695,6 +695,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 texts,
                 # max_length=self.max_tokens,
                 # truncation=True,
+                add_special_tokens=False,
                 padding=True,
                 return_tensors="pt",
             )
