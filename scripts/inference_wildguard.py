@@ -77,6 +77,7 @@ if __name__ == "__main__":
 
     tp = 0
     fp = 0
+    unknown_count = 0
     harmful_count = 0
     benign_count = 0
     with open(args.output_path, "w") as f:
@@ -92,7 +93,8 @@ if __name__ == "__main__":
                     mask_last_n_tokens=args.mask_last_n_tokens,
                 )
 
-                classified_label = sorted(response, key=lambda x: x[1], reverse=True)[0][0]
+                classified_label = response[0][0]
+                predicted_token = response[0][2]
                 if gold_label == "Harmful":
                     harmful_count += 1
                     if classified_label == "Harmful":
@@ -101,6 +103,8 @@ if __name__ == "__main__":
                     benign_count += 1
                     if classified_label == "Harmful":
                         fp += 1
+                if predicted_token not in [" yes", " no"]:
+                    unknown_count += 1
 
                 cache = model.model.logitlens.fetch_cache(return_tokens=args.save_tokens, return_logits=args.save_logits, return_activations=args.save_activations)
                 cache = {key: {module_name: activation for module_name, activation in activations.items() if "self_attn" not in module_name and "mlp" not in module_name} for key, activations in cache.items()}
@@ -119,3 +123,4 @@ if __name__ == "__main__":
     fpr = fp / (benign_count + 1e-7)
     print(f"TPR: {round(tpr, 2)}")
     print(f"FPR: {round(fpr, 2)}")
+    print(f"Unknown count: {unknown_count}")
