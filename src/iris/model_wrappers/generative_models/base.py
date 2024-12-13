@@ -25,6 +25,7 @@ class GenerativeLLM(LLM):
         suffix_prompt: Optional[str] = None,  # suffix prompt for GuardLLM
         apply_chat_template: bool = True,
         add_special_tokens: bool = False,
+        mask_start_token: bool = False,
         max_trials: int = 1,
         failure_sleep_time: int = 1,
         return_logprobs: bool = False,
@@ -51,6 +52,7 @@ class GenerativeLLM(LLM):
                 suffix_prompt=suffix_prompt,
                 apply_chat_template=apply_chat_template, 
                 add_special_tokens=add_special_tokens,
+                mask_start_token=mask_start_token,
                 **kwargs
             )
         if self.use_cache:

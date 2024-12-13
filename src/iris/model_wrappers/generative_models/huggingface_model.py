@@ -715,6 +715,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         suffix_prompt: Optional[str] = None, 
         apply_chat_template: bool = True, 
         add_special_tokens: bool = False,
+        mask_start_token: bool = False,
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Tokenize the prompt
@@ -725,10 +726,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             apply_chat_template=apply_chat_template, 
             add_special_tokens=add_special_tokens
         )
-        print(encoded_texts["input_ids"])
-        print(encoded_texts["attention_mask"])
-        encoded_texts["attention_mask"][:, 0] = 0
-        print(encoded_texts["attention_mask"])
+        if mask_start_token:
+            encoded_texts["attention_mask"][:, 0] = 0
         # Generate the response
         self.llm.eval()
         completed_ids, logprobs = self._generate(
