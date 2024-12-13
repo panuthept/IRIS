@@ -666,6 +666,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         texts: List[str],
         suffix_prompt: Optional[str] = None,
         apply_chat_template: bool = True,
+        add_special_tokens: bool = False,
     ) -> Int[Tensor, "batch pos"]:
         if apply_chat_template:
             if suffix_prompt:
@@ -695,7 +696,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 texts,
                 # max_length=self.max_tokens,
                 # truncation=True,
-                add_special_tokens=False,
+                add_special_tokens=add_special_tokens,
                 padding=True,
                 return_tensors="pt",
             )
@@ -713,11 +714,21 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         ref_prompt: Optional[str] = None, 
         suffix_prompt: Optional[str] = None, 
         apply_chat_template: bool = True, 
+        add_special_tokens: bool = False,
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Tokenize the prompt
         self.tokenizer.padding_side = "left"
-        encoded_texts = self.tokenize([prompt], suffix_prompt=suffix_prompt, apply_chat_template=apply_chat_template)
+        encoded_texts = self.tokenize(
+            [prompt], 
+            suffix_prompt=suffix_prompt, 
+            apply_chat_template=apply_chat_template, 
+            add_special_tokens=add_special_tokens
+        )
+        print(encoded_texts["input_ids"])
+        print(encoded_texts["attention_mask"])
+        encoded_texts["attention_mask"][:, 0] = 0
+        print(encoded_texts["attention_mask"])
         # Generate the response
         self.llm.eval()
         completed_ids, logprobs = self._generate(
