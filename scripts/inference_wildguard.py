@@ -14,6 +14,7 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --max_samples 4000 \
 --save_activations \
 --save_logits \
+--mask_first_n_tokens 89 \
 --output_path ./outputs/wildguard/WildGuardMixDataset/train/4000_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
@@ -23,6 +24,7 @@ CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
 --prompt_intention hard_benign \
 --save_activations \
 --save_logits \
+--mask_first_n_tokens 89 \
 --output_path ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
@@ -32,6 +34,7 @@ CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
 --prompt_intention harmful \
 --save_activations \
 --save_logits \
+--mask_first_n_tokens 89 \
 --output_path ./outputs/wildguard/ORBenchDataset/test/harmful_prompts.jsonl
 """
 
@@ -48,7 +51,8 @@ if __name__ == "__main__":
     parser.add_argument("--save_tokens", action="store_true")
     parser.add_argument("--save_logits", action="store_true")
     parser.add_argument("--save_activations", action="store_true")
-    parser.add_argument("--mask_start_token", action="store_true")
+    parser.add_argument("--mask_first_n_tokens", type=int, default=None)
+    parser.add_argument("--mask_last_n_tokens", type=int, default=None)
     parser.add_argument("--output_path", type=str, default="./outputs/inference_wildguard.jsonl")
     args = parser.parse_args()
 
@@ -80,7 +84,12 @@ if __name__ == "__main__":
             prompts = sample.get_prompts()
             gold_labels = sample.instructions_true_label
             for prompt, gold_label in zip(prompts, gold_labels):
-                response = model.generate(prompt, return_probs=True, mask_start_token=args.mask_start_token)
+                response = model.generate(
+                    prompt, 
+                    return_probs=True, 
+                    mask_first_n_tokens=args.mask_first_n_tokens,
+                    mask_last_n_tokens=args.mask_last_n_tokens,
+                )
 
                 classified_label = sorted(response, key=lambda x: x[1], reverse=True)[0][0]
                 if gold_label == "Harmful":
