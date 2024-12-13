@@ -15,7 +15,7 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --save_activations \
 --save_logits \
 --mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/WildGuardMixDataset/train/4000_prompts.jsonl
+--output_path ./outputs/wildguard/WildGuardMixDataset/train/4000_prompts_mask_prefix.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
@@ -25,7 +25,7 @@ CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
 --save_activations \
 --save_logits \
 --mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts.jsonl
+--output_path ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts_mask_prefix.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
@@ -35,7 +35,7 @@ CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
 --save_activations \
 --save_logits \
 --mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/ORBenchDataset/test/harmful_prompts.jsonl
+--output_path ./outputs/wildguard/ORBenchDataset/test/harmful_prompts_mask_prefix.jsonl
 """
 
 if __name__ == "__main__":
@@ -87,6 +87,7 @@ if __name__ == "__main__":
                 response = model.generate(
                     prompt, 
                     return_probs=True, 
+                    return_ori_tokens=True,
                     mask_first_n_tokens=args.mask_first_n_tokens,
                     mask_last_n_tokens=args.mask_last_n_tokens,
                 )
