@@ -82,7 +82,13 @@ class WildGuard(GuardLLM):
     def get_model_name(self) -> str:
         return self.model_name
 
-    def _prompt_classify(self, prompt: str, return_probs: bool = False, **kwargs) -> Union[str, List[Tuple[str, float]]]:
+    def _prompt_classify(
+            self, 
+            prompt: str, 
+            return_probs: bool = False, 
+            return_ori_tokens: bool = False,
+            **kwargs
+    ) -> Union[str, List[Tuple[str, float]]]:
         prompt = self.prompt_clf_template.format(instruction=prompt, response="")
         response, logprobs = self.model.complete(prompt, apply_chat_template=False, return_logprobs=True, **kwargs)
 
@@ -90,12 +96,18 @@ class WildGuard(GuardLLM):
             logprobs = [[(token, 0) for token in [" yes", " no"]]]
 
         logprobs = [(token, logprob) for token, logprob in logprobs[0] if token in [" yes", " no"]] # NOTE: logprobs[0] is the first predicted token
+        tokens = [token for token, _ in logprobs]
         labels = ["Harmful" if token.strip() == "yes" else "Benign" for token, _ in logprobs]
         scores = [logprob for _, logprob in logprobs]
         scores = np.exp(scores) / np.sum(np.exp(scores))
 
         if return_probs:
-            return list(zip(labels, scores))
+            if return_ori_tokens:
+                return list(zip(labels, scores, tokens))  # NOTE: we put the tokens at the end so that the order is consistent with the previous implementation
+            else:
+                return list(zip(labels, scores))
+        elif return_ori_tokens:
+            return tokens[np.argmax(scores)]
         return labels[np.argmax(scores)]
 
     def _response_classify(self, prompt: str, response: str, **kwargs) -> str:
