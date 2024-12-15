@@ -8,8 +8,13 @@ from iris.metrics.safeguard_metrics import SafeGuardMetric
 python scripts/eval_record.py \
 --load_path_a1 ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts.jsonl \
 --load_path_a2 ./outputs/wildguard/ORBenchDataset/test/harmful_prompts.jsonl \
---load_path_b1 ./outputs/iris_diff_triplet_wildguard_layer_1_to_10_epoch10/ORBenchDataset/test/hard_benign_prompts.jsonl \
---load_path_b2 ./outputs/iris_diff_triplet_wildguard_layer_1_to_10_epoch10/ORBenchDataset/test/harmful_prompts.jsonl \
+--dataset_name ORBench
+
+python scripts/eval_record.py \
+--load_path_a1 ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts.jsonl \
+--load_path_a2 ./outputs/wildguard/ORBenchDataset/test/harmful_prompts.jsonl \
+--load_path_b1 ./outputs/wildguard/ORBenchDataset/test/mask_prefix/hard_benign_prompts.jsonl \
+--load_path_b2 ./outputs/wildguard/ORBenchDataset/test/mask_prefix/harmful_prompts.jsonl \
 --dataset_name ORBench
 
 python scripts/eval_record.py \
@@ -25,7 +30,10 @@ def load_examples(load_path: str):
         for line in tqdm(f):
             example = json.loads(line)
             gold_label = int(example["label"] == "Harmful")
-            pred_score = [score for label, score in example["response"] if label == "Harmful"][0]
+            if len(example["response"][0]) == 2:
+                pred_score = [score for label, score in example["response"] if label == "Harmful"][0]
+            else:
+                pred_score = [score for label, score, _ in example["response"] if label == "Harmful"][0]
             gold_labels.append(gold_label)
             pred_scores.append(pred_score)
     return gold_labels, pred_scores
