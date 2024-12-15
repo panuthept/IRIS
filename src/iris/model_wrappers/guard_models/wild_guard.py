@@ -85,7 +85,6 @@ class WildGuard(GuardLLM):
     def _prompt_classify(
             self, 
             prompt: str, 
-            return_probs: bool = False, 
             return_ori_tokens: bool = False,
             **kwargs
     ) -> Union[str, List[Tuple[str, float]]]:
@@ -95,20 +94,18 @@ class WildGuard(GuardLLM):
         if logprobs is None:
             logprobs = [[(token, 0) for token in [" yes", " no"]]]
 
-        logprobs = [(token, logprob) for token, logprob in logprobs[0] if token in [" yes", " no"]] # NOTE: logprobs[0] is the first predicted token
-        tokens = [token for token, _ in logprobs]
-        labels = ["Harmful" if token.strip() == "yes" else "Benign" for token, _ in logprobs]
-        scores = [logprob for _, logprob in logprobs]
-        scores = np.exp(scores) / np.sum(np.exp(scores))
+        tokens = [token for token, _ in logprobs[0]]
+        tokens_scores = [logprob for _, logprob in logprobs[0]]
+        tokens_scores = np.exp(tokens_scores) / np.sum(np.exp(tokens_scores))   # Convert logprobs to probabilities
 
-        if return_probs:
-            if return_ori_tokens:
-                return list(zip(labels, scores, tokens))  # NOTE: we put the tokens at the end so that the order is consistent with the previous implementation
-            else:
-                return list(zip(labels, scores))
-        elif return_ori_tokens:
-            return tokens[np.argmax(scores)]
-        return labels[np.argmax(scores)]
+        labels = ["Harmful" if token == " yes" else "Benign" for token, _ in logprobs[0] if token in [" yes", " no"]]
+        labels_scores = [logprob for token, logprob in logprobs[0] if token in [" yes", " no"]]
+        labels_scores = np.exp(labels_scores) / np.sum(np.exp(labels_scores))   # Convert logprobs to probabilities
+
+        outputs =(list(zip(labels, labels_scores)),)        
+        if return_ori_tokens:
+            outputs += (list(zip(tokens, tokens_scores)),)
+        return outputs
 
     def _response_classify(self, prompt: str, response: str, **kwargs) -> str:
         raise NotImplementedError

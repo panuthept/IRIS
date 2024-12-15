@@ -17,7 +17,7 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --mask_first_n_tokens 89 \
 --output_path ./outputs/wildguard/WildGuardMixDataset/train/4000_prompts_mask_prefix.jsonl
 
-CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
 --dataset_name ORBenchDataset \
 --dataset_split test \
@@ -25,9 +25,10 @@ CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
 --save_activations \
 --save_logits \
 --mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts_mask_prefix.jsonl
+--mask_last_n_tokens 30 \
+--output_path ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts_mask_prefix_postfix.jsonl
 
-CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
+CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
 --dataset_name ORBenchDataset \
 --dataset_split test \
@@ -35,7 +36,28 @@ CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
 --save_activations \
 --save_logits \
 --mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/ORBenchDataset/test/harmful_prompts_mask_prefix.jsonl
+--mask_last_n_tokens 30 \
+--output_path ./outputs/wildguard/ORBenchDataset/test/harmful_prompts_mask_prefix_postfix.jsonl
+
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--dataset_name ORBenchDataset \
+--dataset_split test \
+--prompt_intention hard_benign \
+--save_activations \
+--save_logits \
+--mask_last_n_tokens 30 \
+--output_path ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts_mask_postfix.jsonl
+
+CUDA_VISIBLE_DEVICES=3 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--dataset_name ORBenchDataset \
+--dataset_split test \
+--prompt_intention harmful \
+--save_activations \
+--save_logits \
+--mask_last_n_tokens 30 \
+--output_path ./outputs/wildguard/ORBenchDataset/test/harmful_prompts_mask_postfix.jsonl
 """
 
 if __name__ == "__main__":
@@ -85,16 +107,15 @@ if __name__ == "__main__":
             prompts = sample.get_prompts()
             gold_labels = sample.instructions_true_label
             for prompt, gold_label in zip(prompts, gold_labels):
-                response = model.generate(
+                pred_labels, pred_tokens = model.generate(
                     prompt, 
-                    return_probs=True, 
                     return_ori_tokens=True,
                     mask_first_n_tokens=args.mask_first_n_tokens,
                     mask_last_n_tokens=args.mask_last_n_tokens,
                 )
 
-                classified_label = response[0][0]
-                predicted_token = response[0][2]
+                classified_label = pred_labels[0][0]
+                predicted_token = pred_tokens[0][0]
                 if gold_label == "Harmful":
                     harmful_count += 1
                     if classified_label == "Harmful":
@@ -112,8 +133,9 @@ if __name__ == "__main__":
                 attentions, inputs = model.model.logitlens.fetch_attentions()
                 f.write(json.dumps({
                     "prompt": prompt,
-                    "response": response,
+                    "response": pred_labels,
                     "label": gold_label,
+                    "raw_response": pred_tokens,
                     "cache": cache,
                     "attentions": attentions[0][:, -1].tolist(),    # Only save attention of the last token
                     "inputs": inputs[0].tolist(),
