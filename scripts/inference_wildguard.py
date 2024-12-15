@@ -19,7 +19,7 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --invert_mask \
 --output_path ./outputs/wildguard/WildGuardMixDataset/train/4000_prompts_mask_prompt.jsonl
 
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
+CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
 --dataset_name ORBenchDataset \
 --dataset_split test \
@@ -31,7 +31,7 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --invert_mask \
 --output_path ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts_mask_prompt.jsonl
 
-CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
 --dataset_name ORBenchDataset \
 --dataset_split test \
@@ -56,6 +56,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset_split", type=str, default="test")
     parser.add_argument("--save_tokens", action="store_true")
     parser.add_argument("--save_logits", action="store_true")
+    parser.add_argument("--save_activations", action="store_true")
     parser.add_argument("--mask_first_n_tokens", type=int, default=None)
     parser.add_argument("--mask_last_n_tokens", type=int, default=None)
     parser.add_argument("--invert_mask", action="store_true")
