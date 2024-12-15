@@ -99,6 +99,7 @@ if __name__ == "__main__":
 
     tp = 0
     fp = 0
+    fn = 0
     unknown_count = 0
     harmful_count = 0
     benign_count = 0
@@ -114,17 +115,21 @@ if __name__ == "__main__":
                     mask_last_n_tokens=args.mask_last_n_tokens,
                 )
 
-                classified_label = pred_labels[0][0]
-                predicted_token = pred_tokens[0][0]
                 if gold_label == "Harmful":
                     harmful_count += 1
-                    if classified_label == "Harmful":
-                        tp += 1
+                    if len(pred_labels) > 0:
+                        if pred_labels[0][0] == "Harmful":
+                            tp += 1
+                        else:
+                            fn += 1
+                    else:
+                        fn += 1
                 else:
                     benign_count += 1
-                    if classified_label == "Harmful":
-                        fp += 1
-                if predicted_token not in [" yes", " no"]:
+                    if len(pred_labels) > 0:
+                        if pred_labels[0][0] == "Harmful":
+                            fp += 1
+                if pred_tokens[0][0] not in [" yes", " no"]:
                     unknown_count += 1
 
                 cache = model.model.logitlens.fetch_cache(return_tokens=args.save_tokens, return_logits=args.save_logits, return_activations=args.save_activations)
@@ -143,6 +148,8 @@ if __name__ == "__main__":
     # Calculate TPR and FPR
     tpr = tp / (harmful_count + 1e-7)
     fpr = fp / (benign_count + 1e-7)
+    fnr = fn / (harmful_count + 1e-7)
     print(f"TPR: {round(tpr, 2)}")
     print(f"FPR: {round(fpr, 2)}")
+    print(f"FNR: {round(fnr, 2)}")
     print(f"Unknown count: {unknown_count}")
