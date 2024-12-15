@@ -717,6 +717,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         add_special_tokens: bool = False,
         mask_first_n_tokens: Optional[int] = None,
         mask_last_n_tokens: Optional[int] = None,
+        invert_mask: bool = False,
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Tokenize the prompt
@@ -731,6 +732,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             encoded_texts["attention_mask"][:, :mask_first_n_tokens] = 0
         if mask_last_n_tokens:
             encoded_texts["attention_mask"][:, -mask_last_n_tokens:] = 0
+        if invert_mask:
+            encoded_texts["attention_mask"] = 1 - encoded_texts["attention_mask"]
         # Ensure that the last token is not masked
         encoded_texts["attention_mask"][:, -1] = 1
         # Generate the response

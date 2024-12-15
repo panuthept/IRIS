@@ -27,6 +27,7 @@ class GenerativeLLM(LLM):
         add_special_tokens: bool = False,
         mask_first_n_tokens: Optional[int] = None,
         mask_last_n_tokens: Optional[int] = None,
+        invert_mask: bool = False,
         max_trials: int = 1,
         failure_sleep_time: int = 1,
         return_logprobs: bool = False,
@@ -55,6 +56,7 @@ class GenerativeLLM(LLM):
                 add_special_tokens=add_special_tokens,
                 mask_first_n_tokens=mask_first_n_tokens,
                 mask_last_n_tokens=mask_last_n_tokens,
+                invert_mask=invert_mask,
                 **kwargs
             )
         if self.use_cache:

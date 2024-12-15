@@ -15,7 +15,9 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --save_activations \
 --save_logits \
 --mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/WildGuardMixDataset/train/4000_prompts_mask_prefix.jsonl
+--mask_last_n_tokens 30 \
+--invert_mask \
+--output_path ./outputs/wildguard/WildGuardMixDataset/train/4000_prompts_mask_prompt.jsonl
 
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
@@ -26,7 +28,8 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --save_logits \
 --mask_first_n_tokens 89 \
 --mask_last_n_tokens 30 \
---output_path ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts_mask_prefix_postfix.jsonl
+--invert_mask \
+--output_path ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts_mask_prompt.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
@@ -37,27 +40,8 @@ CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
 --save_logits \
 --mask_first_n_tokens 89 \
 --mask_last_n_tokens 30 \
---output_path ./outputs/wildguard/ORBenchDataset/test/harmful_prompts_mask_prefix_postfix.jsonl
-
-CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
---dataset_name ORBenchDataset \
---dataset_split test \
---prompt_intention hard_benign \
---save_activations \
---save_logits \
---mask_last_n_tokens 30 \
---output_path ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts_mask_postfix.jsonl
-
-CUDA_VISIBLE_DEVICES=3 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
---dataset_name ORBenchDataset \
---dataset_split test \
---prompt_intention harmful \
---save_activations \
---save_logits \
---mask_last_n_tokens 30 \
---output_path ./outputs/wildguard/ORBenchDataset/test/harmful_prompts_mask_postfix.jsonl
+--invert_mask \
+--output_path ./outputs/wildguard/ORBenchDataset/test/harmful_prompts_mask_prompt.jsonl
 """
 
 if __name__ == "__main__":
@@ -72,9 +56,9 @@ if __name__ == "__main__":
     parser.add_argument("--dataset_split", type=str, default="test")
     parser.add_argument("--save_tokens", action="store_true")
     parser.add_argument("--save_logits", action="store_true")
-    parser.add_argument("--save_activations", action="store_true")
     parser.add_argument("--mask_first_n_tokens", type=int, default=None)
     parser.add_argument("--mask_last_n_tokens", type=int, default=None)
+    parser.add_argument("--invert_mask", action="store_true")
     parser.add_argument("--output_path", type=str, default="./outputs/inference_wildguard.jsonl")
     args = parser.parse_args()
 
@@ -113,6 +97,7 @@ if __name__ == "__main__":
                     return_ori_tokens=True,
                     mask_first_n_tokens=args.mask_first_n_tokens,
                     mask_last_n_tokens=args.mask_last_n_tokens,
+                    invert_mask=args.invert_mask,
                 )
 
                 if gold_label == "Harmful":
