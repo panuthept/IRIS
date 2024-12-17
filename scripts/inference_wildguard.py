@@ -133,8 +133,8 @@ if __name__ == "__main__":
     # Calculate metrics
     metrics = SafeGuardMetric()
     metrics.update(gold_labels, pred_scores)
-    print(f"Recall: {metrics.recall}")
-    print(f"Precision: {metrics.precision}")
-    print(f"F1: {metrics.f1}")
-    print(f"AUPRC: {metrics.pr_auc}")
+    print(f"Recall: {round(metrics.recall * 100, 2)}")
+    print(f"Precision: {round(metrics.precision * 100, 2)}")
+    print(f"F1: {round(metrics.f1 * 100, 2)}")
+    print(f"AUPRC: {round(metrics.pr_auc * 100, 2)}")
     print(f"Unknown count: {unknown_count}")
