@@ -26,6 +26,10 @@ class APIGenerativeLLM(GenerativeLLM):
         ref_prompt: Optional[str] = None, 
         suffix_prompt: Optional[str] = None, 
         apply_chat_template: bool = True, 
+        add_special_tokens: bool = False,
+        mask_first_n_tokens: Optional[int] = None,
+        mask_last_n_tokens: Optional[int] = None,
+        invert_mask: bool = False,
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         if ref_prompt:
