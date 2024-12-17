@@ -13,8 +13,8 @@ python scripts/eval_record.py \
 python scripts/eval_record.py \
 --load_path_a1 ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts.jsonl \
 --load_path_a2 ./outputs/wildguard/ORBenchDataset/test/harmful_prompts.jsonl \
---load_path_b1 ./outputs/wildguard/ORBenchDataset/test/mask_prefix/hard_benign_prompts.jsonl \
---load_path_b2 ./outputs/wildguard/ORBenchDataset/test/mask_prefix/harmful_prompts.jsonl \
+--load_path_b1 ./outputs/wildguard/ORBenchDataset/test/mask_prompt/hard_benign_prompts.jsonl \
+--load_path_b2 ./outputs/wildguard/ORBenchDataset/test/mask_prompt/harmful_prompts.jsonl \
 --dataset_name ORBench
 
 python scripts/eval_record.py \
@@ -30,10 +30,19 @@ def load_examples(load_path: str):
         for line in tqdm(f):
             example = json.loads(line)
             gold_label = int(example["label"] == "Harmful")
-            if len(example["response"][0]) == 2:
-                pred_score = [score for label, score in example["response"] if label == "Harmful"][0]
-            else:
-                pred_score = [score for label, score, _ in example["response"] if label == "Harmful"][0]
+
+            # NOTE: This implementation handles the case when the model predicts invalid token
+            pred_score = 0.0
+            if len(example["response"]) > 0:
+                if len(example["response"][0]) == 2:
+                    _pred_scores = [score for label, score in example["response"] if label == "Harmful"]
+                    if len(_pred_scores) > 0:
+                        pred_score = _pred_scores[0]
+                else:
+                    _pred_scores = [score for label, score, _ in example["response"] if label == "Harmful"]
+                    if len(_pred_scores) > 0:
+                        pred_score = _pred_scores[0]
+            
             gold_labels.append(gold_label)
             pred_scores.append(pred_score)
     return gold_labels, pred_scores
@@ -48,6 +57,7 @@ if __name__ == "__main__":
     parser.add_argument("--load_path_b2", type=str, default=None)
     parser.add_argument("--load_path_b3", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, required=True)
+    parser.add_argument("--plot", action="store_true")
     args = parser.parse_args()
 
     all_gold_labels, all_pred_scores = load_examples(args.load_path_a1)
@@ -79,4 +89,5 @@ if __name__ == "__main__":
     metrics_b.update(all_gold_labels, all_pred_scores)
     print((metrics_b.precision, metrics_b.recall, metrics_b.f1))
 
-    metrics_b.plot_comparison(metrics_a, "WildGuard", args.dataset_name)
+    if args.plot:
+        metrics_b.plot_comparison(metrics_a, "WildGuard", args.dataset_name)
