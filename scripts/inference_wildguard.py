@@ -11,38 +11,44 @@ from iris.metrics.safeguard_metrics import SafeGuardMetric
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
 --dataset_name WildGuardMixDataset \
---dataset_split train \
---max_samples 4000 \
---save_activations \
---save_logits \
---mask_first_n_tokens 89 \
---mask_last_n_tokens 30 \
---invert_mask \
---output_path ./outputs/wildguard/WildGuardMixDataset/train/4000_prompts_mask_prompt.jsonl
+--dataset_split test \
+--output_path ./outputs/wildguard/WildGuardMixDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
 --dataset_name ORBenchDataset \
 --dataset_split test \
---prompt_intention hard_benign \
---save_activations \
---save_logits \
---mask_first_n_tokens 89 \
---mask_last_n_tokens 30 \
---invert_mask \
---output_path ./outputs/wildguard/ORBenchDataset/test/hard_benign_prompts_mask_prompt.jsonl
+--output_path ./outputs/wildguard/ORBenchDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
 --model_name allenai/wildguard \
---dataset_name ORBenchDataset \
+--dataset_name OpenAIModerationDataset \
 --dataset_split test \
---prompt_intention harmful \
---save_activations \
---save_logits \
---mask_first_n_tokens 89 \
---mask_last_n_tokens 30 \
---invert_mask \
---output_path ./outputs/wildguard/ORBenchDataset/test/harmful_prompts_mask_prompt.jsonl
+--output_path ./outputs/wildguard/OpenAIModerationDataset/test/all_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=3 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--dataset_name WildChatDataset \
+--dataset_split test \
+--output_path ./outputs/wildguard/WildChatDataset/test/all_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--dataset_name ToxicChatDataset \
+--dataset_split test \
+--output_path ./outputs/wildguard/ToxicChatDataset/test/all_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--dataset_name XSTestDataset \
+--dataset_split test \
+--output_path ./outputs/wildguard/XSTestDataset/test/all_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
+--model_name allenai/wildguard \
+--dataset_name JailbreakBenchDataset \
+--dataset_split test \
+--output_path ./outputs/wildguard/JailbreakBenchDataset/test/all_prompts.jsonl
 """
 
 if __name__ == "__main__":
