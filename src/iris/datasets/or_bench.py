@@ -39,13 +39,13 @@ class ORBenchDataset(JailbreakDataset):
                     "instructions": [sample["prompt"]],
                     "instructions_true_label": ["Harmful"],
                 })
-        if self.intention is None or self.intention == "benign":
-            dataset = load_dataset("bench-llm/or-bench", "or-bench-80k", cache_dir=self.cache_dir)
-            for sample in dataset["train"]:
-                data["test"].append({
-                    "instructions": [sample["prompt"]],
-                    "instructions_true_label": ["Benign"],
-                })
+        # if self.intention is None or self.intention == "benign":
+        #     dataset = load_dataset("bench-llm/or-bench", "or-bench-80k", cache_dir=self.cache_dir)
+        #     for sample in dataset["train"]:
+        #         data["test"].append({
+        #             "instructions": [sample["prompt"]],
+        #             "instructions_true_label": ["Benign"],
+        #         })
         if self.intention is None or self.intention == "hard_benign":
             dataset = load_dataset("bench-llm/or-bench", "or-bench-hard-1k", cache_dir=self.cache_dir)
             for sample in dataset["train"]:
@@ -65,12 +65,12 @@ if __name__ == "__main__":
     print(samples[0].instructions_true_label[0])
     print("-" * 100)
 
-    dataset = ORBenchDataset(intention="benign")
-    samples = dataset.as_samples(split="test")
-    print(len(samples))
-    print(samples[0].get_prompts()[0])
-    print(samples[0].instructions_true_label[0])
-    print("-" * 100)
+    # dataset = ORBenchDataset(intention="benign")
+    # samples = dataset.as_samples(split="test")
+    # print(len(samples))
+    # print(samples[0].get_prompts()[0])
+    # print(samples[0].instructions_true_label[0])
+    # print("-" * 100)
 
     dataset = ORBenchDataset(intention="hard_benign")
     samples = dataset.as_samples(split="test")
