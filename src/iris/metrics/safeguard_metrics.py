@@ -1,6 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import precision_recall_fscore_support, roc_curve, precision_recall_curve, auc
+from sklearn.metrics import (
+    precision_recall_fscore_support, 
+    precision_recall_curve, 
+    roc_curve, 
+    auc
+)
 
 
 class SafeGuardMetric:
