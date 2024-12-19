@@ -685,7 +685,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 messages,
                 # max_length=self.max_tokens,
                 # truncation=True,
-                add_generation_prompt=False,
+                add_generation_prompt=True,
                 return_dict=True,
                 padding=True,
                 return_tensors="pt",
