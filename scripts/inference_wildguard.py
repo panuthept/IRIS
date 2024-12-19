@@ -102,6 +102,7 @@ if __name__ == "__main__":
                     return_ori_tokens=True,
                     mask_first_n_tokens=args.mask_first_n_tokens,
                     mask_last_n_tokens=args.mask_last_n_tokens,
+                    mask_tokens=[1, 781, 29515, 2318],
                     invert_mask=args.invert_mask,
                 )
                 if pred_tokens[0][0] not in [" yes", " no"]:

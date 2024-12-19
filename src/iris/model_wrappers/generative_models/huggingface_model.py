@@ -717,6 +717,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         add_special_tokens: bool = False,
         mask_first_n_tokens: Optional[int] = None,
         mask_last_n_tokens: Optional[int] = None,
+        mask_tokens: Optional[List[int]] = None,
         invert_mask: bool = False,
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
@@ -732,10 +733,13 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             encoded_texts["attention_mask"][:, :mask_first_n_tokens] = 0
         if mask_last_n_tokens:
             encoded_texts["attention_mask"][:, -mask_last_n_tokens:] = 0
+        if mask_tokens:
+            encoded_texts["attention_mask"] = [[input_id in mask_tokens for input_id, attention_mask in zip(input_ids, attention_masks)] for input_ids, attention_masks in zip(encoded_texts["input_ids"], encoded_texts["attention_mask"])]
         if invert_mask:
             encoded_texts["attention_mask"] = 1 - encoded_texts["attention_mask"]
         # Ensure that the last token is not masked
         encoded_texts["attention_mask"][:, -1] = 1
+        print(encoded_texts["attention_mask"])
         # Generate the response
         self.llm.eval()
         completed_ids, logprobs = self._generate(
