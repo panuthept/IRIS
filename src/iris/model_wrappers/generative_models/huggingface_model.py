@@ -734,7 +734,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         if mask_last_n_tokens:
             encoded_texts["attention_mask"][:, -mask_last_n_tokens:] = 0
         if mask_tokens:
-            encoded_texts["attention_mask"] = torch.tensor([[float(input_id in mask_tokens) for input_id, attention_mask in zip(input_ids, attention_masks)] for input_ids, attention_masks in zip(encoded_texts["input_ids"], encoded_texts["attention_mask"])], dtype=torch.float32, device=encoded_texts["input_ids"].device)
+            encoded_texts["attention_mask"] = torch.tensor([[float(input_id not in mask_tokens) for input_id, attention_mask in zip(input_ids, attention_masks)] for input_ids, attention_masks in zip(encoded_texts["input_ids"], encoded_texts["attention_mask"])], dtype=torch.float32, device=encoded_texts["input_ids"].device)
         if invert_mask:
             encoded_texts["attention_mask"] = 1 - encoded_texts["attention_mask"]
         # Ensure that the last token is not masked
