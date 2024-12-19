@@ -8,54 +8,47 @@ from iris.metrics.safeguard_metrics import SafeGuardMetric
 from iris.model_wrappers.guard_models import load_safeguard, AVAILABLE_GUARDS
 
 """
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name WildGuardMixDataset \
 --dataset_split test \
---mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/WildGuardMixDataset/test/all_prompts_mask_prefix.jsonl
+--output_path ./outputs/LlamaGuard/WildGuardMixDataset/test/all_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
+CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name ORBenchDataset \
 --dataset_split test \
---mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/ORBenchDataset/test/all_prompts_mask_prefix.jsonl
+--output_path ./outputs/LlamaGuard/ORBenchDataset/test/all_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name OpenAIModerationDataset \
 --dataset_split test \
---mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/OpenAIModerationDataset/test/all_prompts_mask_prefix.jsonl
+--output_path ./outputs/LlamaGuard/OpenAIModerationDataset/test/all_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=3 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
---dataset_name WildChatDataset \
---dataset_split test \
---mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/WildChatDataset/test/all_prompts_mask_prefix.jsonl
-
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
+CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name ToxicChatDataset \
 --dataset_split test \
---mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/ToxicChatDataset/test/all_prompts_mask_prefix.jsonl
+--output_path ./outputs/LlamaGuard/ToxicChatDataset/test/all_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=1 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name XSTestDataset \
 --dataset_split test \
---mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/XSTestDataset/test/all_prompts_mask_prefix.jsonl
+--output_path ./outputs/LlamaGuard/XSTestDataset/test/all_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=2 python scripts/inference_wildguard.py \
---model_name allenai/wildguard \
+CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name JailbreakBenchDataset \
 --dataset_split test \
---mask_first_n_tokens 89 \
---output_path ./outputs/wildguard/JailbreakBenchDataset/test/all_prompts_mask_prefix.jsonl
+--output_path ./outputs/LlamaGuard/JailbreakBenchDataset/test/all_prompts.jsonl
 """
 
 if __name__ == "__main__":
@@ -113,7 +106,7 @@ if __name__ == "__main__":
                     mask_last_n_tokens=args.mask_last_n_tokens,
                     invert_mask=args.invert_mask,
                 )
-                if pred_tokens[0][0] not in [" yes", " no"]:
+                if pred_tokens[0][0] not in safeguard.valid_outputs:
                     unknown_count += 1
 
                 gold_label = int(gold_label == "Harmful")

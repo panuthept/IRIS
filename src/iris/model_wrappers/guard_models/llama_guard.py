@@ -150,6 +150,10 @@ class LlamaGuard(GuardLLM):
             "- If unsafe, a second line must include a comma-separated list of violated categories. [/INST]"
         )
 
+    @property
+    def valid_outputs(self):
+        return ["safe", "unsafe"]
+
     def get_model_name(self) -> str:
         return self.model_name
 
@@ -169,14 +173,14 @@ class LlamaGuard(GuardLLM):
         )
 
         if logprobs is None:
-            logprobs = [[(token, 0) for token in ["safe", "unsafe"]]]
+            logprobs = [[(token, 0) for token in self.valid_outputs]]
 
         tokens = [token for token, _ in logprobs[0]]
         tokens_scores = [logprob for _, logprob in logprobs[0]]
         tokens_scores = np.exp(tokens_scores) / np.sum(np.exp(tokens_scores))   # Convert logprobs to probabilities
 
-        labels = ["Harmful" if token == "unsafe" else "Benign" for token, _ in logprobs[0] if token in ["safe", "unsafe"]]
-        labels_scores = [logprob for token, logprob in logprobs[0] if token in ["safe", "unsafe"]]
+        labels = ["Harmful" if token == "unsafe" else "Benign" for token, _ in logprobs[0] if token in self.valid_outputs]
+        labels_scores = [logprob for token, logprob in logprobs[0] if token in self.valid_outputs]
         labels_scores = np.exp(labels_scores) / np.sum(np.exp(labels_scores))   # Convert logprobs to probabilities
 
         outputs =(list(zip(labels, labels_scores)),)        
