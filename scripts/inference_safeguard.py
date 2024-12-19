@@ -127,18 +127,19 @@ if __name__ == "__main__":
                 gold_labels.append(gold_label)
                 pred_scores.append(pred_score)
 
-                cache = safeguard.model.logitlens.fetch_cache(return_tokens=args.save_tokens, return_logits=args.save_logits, return_activations=args.save_activations)
-                cache = {key: {module_name: activation for module_name, activation in activations.items() if "self_attn" not in module_name and "mlp" not in module_name} for key, activations in cache.items()}
-                # Get attention and inputs
-                attentions, inputs = safeguard.model.logitlens.fetch_attentions()
+                if not args.disable_logitlens:
+                    cache = safeguard.model.logitlens.fetch_cache(return_tokens=args.save_tokens, return_logits=args.save_logits, return_activations=args.save_activations)
+                    cache = {key: {module_name: activation for module_name, activation in activations.items() if "self_attn" not in module_name and "mlp" not in module_name} for key, activations in cache.items()}
+                    # Get attention and inputs
+                    attentions, inputs = safeguard.model.logitlens.fetch_attentions()
                 f.write(json.dumps({
                     "prompt": prompt,
                     "response": pred_labels,
                     "label": gold_label,
                     "raw_response": pred_tokens,
-                    "cache": cache,
-                    "attentions": attentions[0][:, -1].tolist(),    # Only save attention of the last token
-                    "inputs": inputs[0].tolist(),
+                    "cache": cache if not args.disable_logitlens else None,
+                    "attentions": attentions[0][:, -1].tolist() if not args.disable_logitlens else None,    # Only save attention of the last token
+                    "inputs": inputs[0].tolist() if not args.disable_logitlens else None,
                 }, ensure_ascii=False) + "\n")
     # Calculate metrics
     metrics = SafeGuardMetric()
