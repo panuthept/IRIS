@@ -741,6 +741,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             encoded_texts["attention_mask"] = 1 - encoded_texts["attention_mask"]
         # Ensure that the last token is not masked
         encoded_texts["attention_mask"][:, -1] = 1
+        print(encoded_texts["input_ids"])
         print([(input_id, self.tokenizer._convert_id_to_token(input_id)) for input_id in encoded_texts["input_ids"][0]])
         print("-" * 100)
         # Generate the response
