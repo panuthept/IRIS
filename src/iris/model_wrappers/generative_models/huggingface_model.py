@@ -507,7 +507,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             enable_cache=enable_logitlens_cache,
             max_cache_size=max_logitlens_cache_size,
         )
-        if not disable_logitlens:
+        self.disable_logitlens = disable_logitlens
+        if not self.disable_logitlens:
             self.logitlens.register_hooks(self.llm)
         self.model_name = model_name_or_path
         super().__init__(**kwargs)
@@ -614,8 +615,9 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                     output_hidden_states=True,
                 )
                 final_logits = outputs.logits[:, -1, :]
-                self.logitlens.cache_logits(final_logits, "final_predictions")
-                self.logitlens.cache_attentions(outputs.attentions, tokens)
+                if not self.disable_logitlens:
+                    self.logitlens.cache_logits(final_logits, "final_predictions")
+                    self.logitlens.cache_attentions(outputs.attentions, tokens)
 
                 if do_sample:
                     sampled_tokens = utils.sample_logits(

@@ -65,6 +65,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_tokens", action="store_true")
     parser.add_argument("--save_logits", action="store_true")
     parser.add_argument("--save_activations", action="store_true")
+    parser.add_argument("--disable_logitlens", action="store_true")
     parser.add_argument("--mask_first_n_tokens", type=int, default=None)
     parser.add_argument("--mask_last_n_tokens", type=int, default=None)
     parser.add_argument("--invert_mask", action="store_true")
@@ -78,6 +79,7 @@ if __name__ == "__main__":
         safeguard_name=args.safeguard_name,
         model_name=args.model_name,
         checkpoint_path=args.checkpoint_path,
+        disable_logitlens=args.disable_logitlens,
     )
 
     # Initial dataset

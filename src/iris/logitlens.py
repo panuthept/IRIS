@@ -134,7 +134,6 @@ class LogitLens:
         Output
             cached_attentions: Tensor of shape (num_layers, seq_len, seq_len)
         """
-        attentions = [attention.detach().cpu().clone() for attention in attentions]
         attentions = torch.stack(attentions, dim=1) # shape (num_samples, num_layers, num_heads, seq_len, seq_len)
         attentions = attentions.mean(dim=2) # shape (num_samples, num_layers, seq_len, seq_len)
         attentions = attentions.squeeze(0) # shape (num_layers, seq_len, seq_len)
