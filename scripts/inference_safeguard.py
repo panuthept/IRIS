@@ -13,51 +13,58 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name WildGuardMixDataset \
 --dataset_split test \
---output_path ./outputs/LlamaGuard8B/WildGuardMixDataset/test/all_prompts.jsonl
+--mask_last_n_tokens 52 \
+--output_path ./outputs/LlamaGuard8B/WildGuardMixDataset/test/all_prompts_mask_suffix.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name ShieldGemma \
---model_name google/shieldgemma-2b \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name ORBenchDataset \
 --dataset_split test \
---output_path ./outputs/ShieldGemma2B/ORBenchDataset/test/all_prompts.jsonl
+--mask_last_n_tokens 52 \
+--output_path ./outputs/LlamaGuard8B/ORBenchDataset/test/all_prompts_mask_suffix.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
---safeguard_name ShieldGemma \
---model_name google/shieldgemma-2b \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name OpenAIModerationDataset \
 --dataset_split test \
---output_path ./outputs/ShieldGemma2B/OpenAIModerationDataset/test/all_prompts.jsonl
+--mask_last_n_tokens 52 \
+--output_path ./outputs/LlamaGuard8B/OpenAIModerationDataset/test/all_prompts_mask_suffix.jsonl
 
 CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
---safeguard_name ShieldGemma \
---model_name google/shieldgemma-2b \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name ToxicChatDataset \
 --dataset_split test \
---output_path ./outputs/ShieldGemma2B/ToxicChatDataset/test/all_prompts.jsonl
+--mask_last_n_tokens 52 \
+--output_path ./outputs/LlamaGuard8B/ToxicChatDataset/test/all_prompts_mask_suffix.jsonl
 
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
---safeguard_name ShieldGemma \
---model_name google/shieldgemma-2b \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name XSTestDataset \
 --dataset_split test \
---output_path ./outputs/ShieldGemma2B/XSTestDataset/test/all_prompts.jsonl
+--mask_last_n_tokens 52 \
+--output_path ./outputs/LlamaGuard8B/XSTestDataset/test/all_prompts_mask_suffix.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name ShieldGemma \
---model_name google/shieldgemma-2b \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name JailbreakBenchDataset \
 --dataset_split test \
---output_path ./outputs/ShieldGemma2B/JailbreakBenchDataset/test/all_prompts.jsonl
+--mask_last_n_tokens 52 \
+--output_path ./outputs/LlamaGuard8B/JailbreakBenchDataset/test/all_prompts_mask_suffix.jsonl
 """
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--safeguard_name", type=str, default="WildGuard", choices=list(AVAILABLE_GUARDS.keys()))
-    parser.add_argument("--model_name", type=str, default="allenai/wildguard")
+    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-Guard-3-8B")
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="WildGuardMixDataset", choices=list(AVAILABLE_DATASETS.keys()))
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--top_logprobs", type=int, default=10)
     parser.add_argument("--max_samples", type=int, default=None)
     parser.add_argument("--prompt_intention", type=str, default=None)
     parser.add_argument("--attack_engine", type=str, default=None)
@@ -80,6 +87,7 @@ if __name__ == "__main__":
         model_name=args.model_name,
         checkpoint_path=args.checkpoint_path,
         disable_logitlens=args.disable_logitlens,
+        top_logprobs=args.top_logprobs,
     )
     print(len(safeguard.prefix_token_ids))
     print(len(safeguard.suffix_token_ids))

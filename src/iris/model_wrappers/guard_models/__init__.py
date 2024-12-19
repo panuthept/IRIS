@@ -20,6 +20,7 @@ def load_safeguard(
     api_key: Optional[str] = None, 
     api_base: Optional[str] = None,
     disable_logitlens: bool = False,
+    top_logprobs: int = 10,
 ) -> GuardLLM:
     assert safeguard_name in AVAILABLE_GUARDS, f"Invalid guard model: {safeguard_name}"
     return AVAILABLE_GUARDS[safeguard_name](
@@ -28,4 +29,5 @@ def load_safeguard(
         api_key=api_key,
         api_base=api_base,
         disable_logitlens=disable_logitlens,
+        top_logprobs=top_logprobs,
     )
