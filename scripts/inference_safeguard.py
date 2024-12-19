@@ -81,6 +81,8 @@ if __name__ == "__main__":
         checkpoint_path=args.checkpoint_path,
         disable_logitlens=args.disable_logitlens,
     )
+    print(len(safeguard.prefix_token_ids))
+    print(len(safeguard.suffix_token_ids))
 
     # Initial dataset
     dataset = load_dataset(args.dataset_name, args.prompt_intention, args.attack_engine)
