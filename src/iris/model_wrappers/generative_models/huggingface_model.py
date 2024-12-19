@@ -739,7 +739,6 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             encoded_texts["attention_mask"] = 1 - encoded_texts["attention_mask"]
         # Ensure that the last token is not masked
         encoded_texts["attention_mask"][:, -1] = 1
-        print(encoded_texts["attention_mask"])
         # Generate the response
         self.llm.eval()
         completed_ids, logprobs = self._generate(
