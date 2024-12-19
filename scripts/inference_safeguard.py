@@ -118,13 +118,13 @@ if __name__ == "__main__":
                     mask_last_n_tokens=args.mask_last_n_tokens,
                     invert_mask=args.invert_mask,
                 )
-                if pred_tokens[0][0] not in safeguard.valid_outputs:
-                    unknown_count += 1
+                # if pred_tokens[0][0] not in safeguard.valid_outputs:
+                #     unknown_count += 1
 
                 gold_label = int(gold_label == "Harmful")
                 # NOTE: This implementation handles the case when the safeguard predicts invalid token
                 pred_score = 0.0
-                if len(pred_labels) > 0:
+                if len(pred_labels) == 2:
                     if len(pred_labels[0]) == 2:
                         _pred_scores = [score for label, score in pred_labels if label == "Harmful"]
                         if len(_pred_scores) > 0:
@@ -133,6 +133,8 @@ if __name__ == "__main__":
                         _pred_scores = [score for label, score, _ in pred_labels if label == "Harmful"]
                         if len(_pred_scores) > 0:
                             pred_score = _pred_scores[0]
+                else:
+                    unknown_count += 1
 
                 gold_labels.append(gold_label)
                 pred_scores.append(pred_score)
