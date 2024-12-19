@@ -13,42 +13,42 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name WildGuardMixDataset \
 --dataset_split test \
---output_path ./outputs/LlamaGuard/WildGuardMixDataset/test/all_prompts.jsonl
+--output_path ./outputs/LlamaGuard8B/WildGuardMixDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-2b \
 --dataset_name ORBenchDataset \
 --dataset_split test \
---output_path ./outputs/LlamaGuard/ORBenchDataset/test/all_prompts.jsonl
+--output_path ./outputs/ShieldGemma2B/ORBenchDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-2b \
 --dataset_name OpenAIModerationDataset \
 --dataset_split test \
---output_path ./outputs/LlamaGuard/OpenAIModerationDataset/test/all_prompts.jsonl
+--output_path ./outputs/ShieldGemma2B/OpenAIModerationDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-2b \
 --dataset_name ToxicChatDataset \
 --dataset_split test \
---output_path ./outputs/LlamaGuard/ToxicChatDataset/test/all_prompts.jsonl
+--output_path ./outputs/ShieldGemma2B/ToxicChatDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-2b \
 --dataset_name XSTestDataset \
 --dataset_split test \
---output_path ./outputs/LlamaGuard/XSTestDataset/test/all_prompts.jsonl
+--output_path ./outputs/ShieldGemma2B/XSTestDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-2b \
 --dataset_name JailbreakBenchDataset \
 --dataset_split test \
---output_path ./outputs/LlamaGuard/JailbreakBenchDataset/test/all_prompts.jsonl
+--output_path ./outputs/ShieldGemma2B/JailbreakBenchDataset/test/all_prompts.jsonl
 """
 
 if __name__ == "__main__":
