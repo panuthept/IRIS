@@ -114,7 +114,7 @@ class LlamaGuard(GuardLLM):
                 max_new_tokens=1,
                 temperature=temperature,
                 logprobs=True,
-                top_logprobs=10,
+                top_logprobs=None,
                 use_cache=use_cache,
                 cache_path=cache_path,
                 cache_mode=cache_mode,
