@@ -1,3 +1,4 @@
+import numpy as np
 from iris.cache import CacheMode
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
@@ -80,11 +81,13 @@ class LlamaGuard(GuardLLM):
             api_key: str = None,
             api_base: str = None,
             max_tokens: int = 4000,
-            temperature: float = 1,
-            pipeline_kwargs: dict = None,
+            temperature: float = 0,
             use_cache: bool = False,
             cache_path: str = "./cache",
             cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
+            disable_logitlens: bool = False,
+            enable_logitlens_cache: bool = True,
+            max_logitlens_cache_size: int = 10,
     ):
         self.model_name = model_name_or_path
         self.device = None
@@ -108,10 +111,16 @@ class LlamaGuard(GuardLLM):
                 model_name_or_path,
                 checkpoint_path=checkpoint_path,
                 max_tokens=max_tokens,
-                pipeline_kwargs=pipeline_kwargs,
+                max_new_tokens=1,
+                temperature=temperature,
+                logprobs=True,
+                top_logprobs=10,
                 use_cache=use_cache,
                 cache_path=cache_path,
                 cache_mode=cache_mode,
+                disable_logitlens=disable_logitlens,
+                enable_logitlens_cache=enable_logitlens_cache,
+                max_logitlens_cache_size=max_logitlens_cache_size,
             )
             self.device = self.model.llm.device
 
@@ -144,9 +153,41 @@ class LlamaGuard(GuardLLM):
     def get_model_name(self) -> str:
         return self.model_name
 
-    def _prompt_classify(self, prompt: str, **kwargs) -> str:
+    def _prompt_classify(
+            self, 
+            prompt: str, 
+            return_ori_tokens: bool = False, 
+            **kwargs
+    ) -> str:
         prompt = self.sample_clf_prompt_template.format(instruction=prompt)
-        response = self.model.complete(prompt, apply_chat_template=False, **kwargs)
+        response, logprobs = self.model.complete(
+            prompt, 
+            apply_chat_template=False, 
+            add_special_tokens=True,
+            return_logprobs=True, 
+            **kwargs
+        )
+        print(logprobs)
+        print(response)
+
+        if logprobs is None:
+            logprobs = [[(token, 0) for token in [" yes", " no"]]]
+
+        tokens = [token for token, _ in logprobs[0]]
+        tokens_scores = [logprob for _, logprob in logprobs[0]]
+        tokens_scores = np.exp(tokens_scores) / np.sum(np.exp(tokens_scores))   # Convert logprobs to probabilities
+
+        labels = ["Harmful" if token == " yes" else "Benign" for token, _ in logprobs[0] if token in [" yes", " no"]]
+        labels_scores = [logprob for token, logprob in logprobs[0] if token in [" yes", " no"]]
+        labels_scores = np.exp(labels_scores) / np.sum(np.exp(labels_scores))   # Convert logprobs to probabilities
+
+        outputs =(list(zip(labels, labels_scores)),)        
+        if return_ori_tokens:
+            outputs += (list(zip(tokens, tokens_scores)),)
+        return outputs
+
+
+
         response = "Benign" if response.strip().capitalize() == "Safe" else "Harmful"
         return response
 
