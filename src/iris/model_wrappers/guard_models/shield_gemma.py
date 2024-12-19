@@ -21,11 +21,13 @@ class ShieldGemma(GuardLLM):
             api_key: str = None,
             api_base: str = None,
             max_tokens: int = 4000,
-            temperature: float = 1,
-            pipeline_kwargs: dict = None,
+            temperature: float = 0,
             use_cache: bool = False,
             cache_path: str = "./cache",
             cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
+            disable_logitlens: bool = False,
+            enable_logitlens_cache: bool = True,
+            max_logitlens_cache_size: int = 10,
     ):
         self.model_name = model_name_or_path
         self.device = None
@@ -49,10 +51,16 @@ class ShieldGemma(GuardLLM):
                 model_name_or_path,
                 checkpoint_path=checkpoint_path,
                 max_tokens=max_tokens,
-                pipeline_kwargs=pipeline_kwargs,
+                max_new_tokens=1,
+                temperature=temperature,
+                logprobs=True,
+                top_logprobs=10,
                 use_cache=use_cache,
                 cache_path=cache_path,
                 cache_mode=cache_mode,
+                disable_logitlens=disable_logitlens,
+                enable_logitlens_cache=enable_logitlens_cache,
+                max_logitlens_cache_size=max_logitlens_cache_size,
             )
             self.device = self.model.llm.device
 
@@ -66,21 +74,43 @@ class ShieldGemma(GuardLLM):
             "Does the human question violate the above principle? Your answer must start with ’Yes’ or ’No’. And then walk through step by step to be sure we answer correctly.\n"
         )
 
+    @property
+    def valid_outputs(self):
+        return ["Yes", "No"]
+
     def get_model_name(self) -> str:
         return self.model_name
 
-    def _prompt_classify(self, prompt: str, return_probs: bool = False, **kwargs) -> Union[str, List[Tuple[str, float]]]:
+    def _prompt_classify(
+            self, 
+            prompt: str, 
+            return_ori_tokens: bool = False,
+            **kwargs
+    ) -> Union[str, List[Tuple[str, float]]]:
         prompt = self.prompt_template.format(instruction=prompt, response="")
-        _, logprobs = self.model.complete(prompt, apply_chat_template=False, return_logprobs=True, **kwargs)
+        response, logprobs = self.model.complete(
+            prompt, 
+            apply_chat_template=False, 
+            add_special_tokens=True,
+            return_logprobs=True, 
+            **kwargs
+        )
 
-        logprobs = [(token, logprob) for token, logprob in logprobs[0] if token in ["Yes", "No"]]
-        labels = ["Harmful" if token.strip() == "Yes" else "Benign" for token, _ in logprobs]
-        scores = [logprob for _, logprob in logprobs]
-        scores = np.exp(scores) / np.sum(np.exp(scores))
+        if logprobs is None:
+            logprobs = [[(token, 0) for token in self.valid_outputs]]
 
-        if return_probs:
-            return list(zip(labels, scores))
-        return labels[np.argmax(scores)]
+        tokens = [token for token, _ in logprobs[0]]
+        tokens_scores = [logprob for _, logprob in logprobs[0]]
+        tokens_scores = np.exp(tokens_scores) / np.sum(np.exp(tokens_scores))   # Convert logprobs to probabilities
+
+        labels = ["Harmful" if token == "Yes" else "Benign" for token, _ in logprobs[0] if token in self.valid_outputs]
+        labels_scores = [logprob for token, logprob in logprobs[0] if token in self.valid_outputs]
+        labels_scores = np.exp(labels_scores) / np.sum(np.exp(labels_scores))   # Convert logprobs to probabilities
+
+        outputs =(list(zip(labels, labels_scores)),)        
+        if return_ori_tokens:
+            outputs += (list(zip(tokens, tokens_scores)),)
+        return outputs
 
     def _response_classify(self, prompt: str, response: str, **kwargs) -> str:
         raise NotImplementedError
