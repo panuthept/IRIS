@@ -167,7 +167,7 @@ class LlamaGuard(GuardLLM):
         response, logprobs = self.model.complete(
             prompt, 
             apply_chat_template=False, 
-            add_special_tokens=True,
+            add_special_tokens=False,
             return_logprobs=True, 
             **kwargs
         )
