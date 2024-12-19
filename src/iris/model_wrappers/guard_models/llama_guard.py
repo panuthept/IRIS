@@ -167,29 +167,22 @@ class LlamaGuard(GuardLLM):
             return_logprobs=True, 
             **kwargs
         )
-        print(logprobs)
-        print(response)
 
         if logprobs is None:
-            logprobs = [[(token, 0) for token in [" yes", " no"]]]
+            logprobs = [[(token, 0) for token in ["safe", "unsafe"]]]
 
         tokens = [token for token, _ in logprobs[0]]
         tokens_scores = [logprob for _, logprob in logprobs[0]]
         tokens_scores = np.exp(tokens_scores) / np.sum(np.exp(tokens_scores))   # Convert logprobs to probabilities
 
-        labels = ["Harmful" if token == " yes" else "Benign" for token, _ in logprobs[0] if token in [" yes", " no"]]
-        labels_scores = [logprob for token, logprob in logprobs[0] if token in [" yes", " no"]]
+        labels = ["Harmful" if token == "unsafe" else "Benign" for token, _ in logprobs[0] if token in ["safe", "unsafe"]]
+        labels_scores = [logprob for token, logprob in logprobs[0] if token in ["safe", "unsafe"]]
         labels_scores = np.exp(labels_scores) / np.sum(np.exp(labels_scores))   # Convert logprobs to probabilities
 
         outputs =(list(zip(labels, labels_scores)),)        
         if return_ori_tokens:
             outputs += (list(zip(tokens, tokens_scores)),)
         return outputs
-
-
-
-        response = "Benign" if response.strip().capitalize() == "Safe" else "Harmful"
-        return response
 
     def _response_classify(self, prompt: str, response: str, **kwargs) -> str:
         prompt = self.response_clf_prompt_template.format(instruction=prompt, response=response)
