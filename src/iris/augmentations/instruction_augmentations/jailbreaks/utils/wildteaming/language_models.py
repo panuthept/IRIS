@@ -1,7 +1,7 @@
 import time
 from typing import List
 import os
-import ray
+# import ray
 from tqdm import tqdm
 from vllm import LLM, SamplingParams
 import openai

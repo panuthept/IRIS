@@ -1,6 +1,6 @@
 import os
 import sys
-import ray
+# import ray
 from transformers import AutoTokenizer
 
 sys.path.append(os.getcwd())

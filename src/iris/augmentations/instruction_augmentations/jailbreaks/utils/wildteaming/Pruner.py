@@ -1,6 +1,6 @@
 import os
 import sys
-import ray
+# import ray
 import torch
 from transformers import (PreTrainedTokenizer,
                           PreTrainedTokenizerFast,

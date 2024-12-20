@@ -11,7 +11,7 @@ import json
 import yaml
 import pandas as pd
 import os
-import ray
+# import ray
 import random
 from transformers.dynamic_module_utils import init_hf_modules
 
