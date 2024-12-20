@@ -20,7 +20,6 @@ AVAILABLE_ATTACKERS = {
 }
 
 
-
 def load_attacker(
     attacker_name: str, 
     target_model: GuardLLM,

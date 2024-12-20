@@ -70,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="WildGuardMixDataset", choices=list(AVAILABLE_DATASETS.keys()))
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--top_logprobs", type=int, default=10)
+    parser.add_argument("--top_logprobs", type=int, default=128)
     parser.add_argument("--max_samples", type=int, default=None)
     parser.add_argument("--prompt_intention", type=str, default=None)
     parser.add_argument("--attack_engine", type=str, default=None)
