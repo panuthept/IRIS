@@ -30,11 +30,11 @@ class WildTeamingJailbreaking(Jailbreaking):
         if attack_model is None:
             attack_model = APIGenerativeLLM(
                 llm=TogetherLLM(
-                    # model="mistralai/Mixtral-8x7B-Instruct-v0.1",
-                    # api_key=os.environ.get("TOGETHERAI_API_KEY"),
-                    model="TheBloke/Mixtral-8x7B-Instruct-v0.1-GPTQ",
-                    api_key="EMPTY",
-                    api_base="http://10.204.100.79:11700/v1",
+                    model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+                    api_key=os.environ.get("TOGETHERAI_API_KEY"),
+                    # model="TheBloke/Mixtral-8x7B-Instruct-v0.1-GPTQ",
+                    # api_key="EMPTY",
+                    # api_base="http://10.204.100.79:11700/v1",
                 ),
                 cache_path="./cache",
                 use_cache=True,
@@ -101,7 +101,7 @@ class WildTeamingJailbreaking(Jailbreaking):
         for _ in range(self.max_iteration):
             num_attacks = max(self.max_jailbreak - len(jailbreak_prompts), 0)
             attack_prompts: List[str] = self._attack(instruction, num_attacks, reference_answers)
-            responses = [self.target_model.generate(attack_prompt) for attack_prompt in attack_prompts]
+            responses = [self.target_model.generate(attack_prompt)[0][0] for attack_prompt in attack_prompts]
             results = [self._evaluate(instruction, response, reference_answers) for response in responses]
             jailbreak_prompts.extend([attack_prompt for attack_prompt, result in zip(attack_prompts, results) if result])
             attack_prompts.extend(attack_prompts)
