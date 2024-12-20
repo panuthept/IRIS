@@ -3,7 +3,7 @@ from typing import List
 import os
 # import ray
 from tqdm import tqdm
-from vllm import LLM, SamplingParams
+# from vllm import LLM, SamplingParams
 import openai
 from transformers import PreTrainedTokenizer, PreTrainedTokenizerFast
 
