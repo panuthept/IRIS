@@ -9,58 +9,64 @@ from iris.model_wrappers.guard_models import load_safeguard, AVAILABLE_GUARDS
 
 """
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-9b \
 --dataset_name WildGuardMixDataset \
 --dataset_split test \
---mask_last_n_tokens 52 \
---output_path ./outputs/LlamaGuard8B/WildGuardMixDataset/test/all_prompts_mask_suffix.jsonl
+--mask_last_n_tokens 311 \
+--top_logprobs 128 \
+--output_path ./outputs/ShieldGemma9B/WildGuardMixDataset/test/all_prompts_mask_suffix.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-9b \
 --dataset_name ORBenchDataset \
 --dataset_split test \
---mask_last_n_tokens 52 \
---output_path ./outputs/LlamaGuard8B/ORBenchDataset/test/all_prompts_mask_suffix.jsonl
+--mask_last_n_tokens 311 \
+--top_logprobs 128 \
+--output_path ./outputs/ShieldGemma9B/ORBenchDataset/test/all_prompts_mask_suffix.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-9b \
 --dataset_name OpenAIModerationDataset \
 --dataset_split test \
---mask_last_n_tokens 52 \
---output_path ./outputs/LlamaGuard8B/OpenAIModerationDataset/test/all_prompts_mask_suffix.jsonl
+--mask_last_n_tokens 311 \
+--top_logprobs 128 \
+--output_path ./outputs/ShieldGemma9B/OpenAIModerationDataset/test/all_prompts_mask_suffix.jsonl
 
 CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-9b \
 --dataset_name ToxicChatDataset \
 --dataset_split test \
---mask_last_n_tokens 52 \
---output_path ./outputs/LlamaGuard8B/ToxicChatDataset/test/all_prompts_mask_suffix.jsonl
+--mask_last_n_tokens 311 \
+--top_logprobs 128 \
+--output_path ./outputs/ShieldGemma9B/ToxicChatDataset/test/all_prompts_mask_suffix.jsonl
 
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-9b \
 --dataset_name XSTestDataset \
 --dataset_split test \
---mask_last_n_tokens 52 \
---output_path ./outputs/LlamaGuard8B/XSTestDataset/test/all_prompts_mask_suffix.jsonl
+--mask_last_n_tokens 311 \
+--top_logprobs 1024 \
+--output_path ./outputs/ShieldGemma9B/XSTestDataset/test/all_prompts_mask_suffix.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-9b \
 --dataset_name JailbreakBenchDataset \
 --dataset_split test \
---mask_last_n_tokens 52 \
---output_path ./outputs/LlamaGuard8B/JailbreakBenchDataset/test/all_prompts_mask_suffix.jsonl
+--mask_last_n_tokens 311 \
+--top_logprobs 1024 \
+--output_path ./outputs/ShieldGemma9B/JailbreakBenchDataset/test/all_prompts_mask_suffix.jsonl
 """
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--safeguard_name", type=str, default="WildGuard", choices=list(AVAILABLE_GUARDS.keys()))
-    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-Guard-3-8B")
+    parser.add_argument("--safeguard_name", type=str, default="ShieldGemma", choices=list(AVAILABLE_GUARDS.keys()))
+    parser.add_argument("--model_name", type=str, default="google/shieldgemma-9b")
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="WildGuardMixDataset", choices=list(AVAILABLE_DATASETS.keys()))
     parser.add_argument("--seed", type=int, default=42)
