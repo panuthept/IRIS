@@ -59,13 +59,13 @@ def is_skip(args, sample, jailbreak_artifacts):
 
 
 """
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+CUDA_VISIBLE_DEVICES=0 python scripts/generate_jailbreak_artifacts.py \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
 --dataset_name JailbreakBenchDataset \
 --prompt_intention harmful \
 --dataset_split test \
---attacker_name MultiLingualJailbreaking \
+--attacker_name MultiLingualJailbreaking
 """
 
 
