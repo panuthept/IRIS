@@ -61,8 +61,49 @@ def is_skip(args, sample, jailbreak_artifacts):
 """
 CUDA_VISIBLE_DEVICES=0 python scripts/generate_jailbreak_artifacts.py \
 --ignore_existing \
+--disable_logitlens \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
+--dataset_name JailbreakBenchDataset \
+--prompt_intention harmful \
+--dataset_split test \
+--attacker_name MultiLingualJailbreaking
+
+CUDA_VISIBLE_DEVICES=1 python scripts/generate_jailbreak_artifacts.py \
+--ignore_existing \
+--disable_logitlens \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-9b \
+--dataset_name JailbreakBenchDataset \
+--prompt_intention harmful \
+--dataset_split test \
+--attacker_name MultiLingualJailbreaking
+
+CUDA_VISIBLE_DEVICES=2 python scripts/generate_jailbreak_artifacts.py \
+--ignore_existing \
+--disable_logitlens \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-2b \
+--dataset_name JailbreakBenchDataset \
+--prompt_intention harmful \
+--dataset_split test \
+--attacker_name MultiLingualJailbreaking
+
+CUDA_VISIBLE_DEVICES=3 python scripts/generate_jailbreak_artifacts.py \
+--ignore_existing \
+--disable_logitlens \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
+--dataset_name JailbreakBenchDataset \
+--prompt_intention harmful \
+--dataset_split test \
+--attacker_name MultiLingualJailbreaking
+
+CUDA_VISIBLE_DEVICES=3 python scripts/generate_jailbreak_artifacts.py \
+--ignore_existing \
+--disable_logitlens \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-1B \
 --dataset_name JailbreakBenchDataset \
 --prompt_intention harmful \
 --dataset_split test \
@@ -143,4 +184,4 @@ if __name__ == "__main__":
             attacked_samples = attacker.augment_batch(batch, verbose=True)
             # Save jailbreak artifacts
             save(args, attacked_samples)
-    print(f"ASR: {attacker.attack_success_rate}")
+    print(f"ASR: {round(attacker.attack_success_rate * 100, 1)}")
