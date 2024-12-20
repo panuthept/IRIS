@@ -78,7 +78,7 @@ TOGETHERAI_API_KEY=efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa
 --dataset_name JailbreakBenchDataset \
 --prompt_intention harmful \
 --dataset_split test \
---attacker_name WildTeamingJailbreaking \
+--attacker_name WildTeamingJailbreaking
 
 TOGETHERAI_API_KEY=efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f CUDA_VISIBLE_DEVICES=3 python scripts/generate_jailbreak_artifacts.py \
 --ignore_existing \

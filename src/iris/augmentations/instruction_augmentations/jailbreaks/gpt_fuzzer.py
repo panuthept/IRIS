@@ -124,7 +124,7 @@ class GPTFuzzerJailbreaking(Jailbreaking):
                     prompt_node.responses = []
                     prompt_node.results = []
                     break
-                response = self.target_model.generate(message)
+                response = self.target_model.generate(message)[0][0]
                 result = self.evaluator(response)
                 prompt_node.responses.append(response)
                 prompt_node.results.append(result)
