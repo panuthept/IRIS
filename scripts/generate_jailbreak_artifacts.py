@@ -78,7 +78,7 @@ TOGETHERAI_API_KEY=efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa
 --dataset_name JailbreakBenchDataset \
 --prompt_intention harmful \
 --dataset_split test \
---attacker_name WildTeamingJailbreaking
+--attacker_name WildTeamingJailbreaking \
 
 TOGETHERAI_API_KEY=efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f CUDA_VISIBLE_DEVICES=3 python scripts/generate_jailbreak_artifacts.py \
 --ignore_existing \
@@ -108,7 +108,8 @@ TOGETHERAI_API_KEY=efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa
 --dataset_name JailbreakBenchDataset \
 --prompt_intention harmful \
 --dataset_split test \
---attacker_name WildTeamingJailbreaking
+--attacker_name WildTeamingJailbreaking \
+--eval_only
 
 
 CUDA_VISIBLE_DEVICES=0 python scripts/generate_jailbreak_artifacts.py \
@@ -208,8 +209,6 @@ if __name__ == "__main__":
         jailbreak_artifacts = jailbreak_artifacts["jailbreak_artifacts"]
         for ori_prompt in jailbreak_artifacts:
             if len(jailbreak_artifacts[ori_prompt][args.target_model][args.attack_model]) > 0:
-                success_count += 1
-            else:
                 for adversarial_prompt in jailbreak_artifacts[ori_prompt][args.target_model]:
                     if adversarial_prompt != "":
                         success_count += 1
