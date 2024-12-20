@@ -59,6 +59,57 @@ def is_skip(args, sample, jailbreak_artifacts):
 
 
 """
+TOGETHERAI_API_KEY=efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f CUDA_VISIBLE_DEVICES=2 python scripts/generate_jailbreak_artifacts.py \
+--ignore_existing \
+--disable_logitlens \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-2b \
+--dataset_name JailbreakBenchDataset \
+--prompt_intention harmful \
+--dataset_split test \
+--attacker_name WildTeamingJailbreaking
+
+TOGETHERAI_API_KEY=efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f CUDA_VISIBLE_DEVICES=1 python scripts/generate_jailbreak_artifacts.py \
+--ignore_existing \
+--disable_logitlens \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-9b \
+--dataset_name JailbreakBenchDataset \
+--prompt_intention harmful \
+--dataset_split test \
+--attacker_name WildTeamingJailbreaking
+
+TOGETHERAI_API_KEY=efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f CUDA_VISIBLE_DEVICES=3 python scripts/generate_jailbreak_artifacts.py \
+--ignore_existing \
+--disable_logitlens \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-1B \
+--dataset_name JailbreakBenchDataset \
+--prompt_intention harmful \
+--dataset_split test \
+--attacker_name WildTeamingJailbreaking
+
+TOGETHERAI_API_KEY=efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f CUDA_VISIBLE_DEVICES=3 python scripts/generate_jailbreak_artifacts.py \
+--ignore_existing \
+--disable_logitlens \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
+--dataset_name JailbreakBenchDataset \
+--prompt_intention harmful \
+--dataset_split test \
+--attacker_name WildTeamingJailbreaking
+
+TOGETHERAI_API_KEY=efaa563e1bb5b11eebdf39b8327337113b0e8b087c6df22e2ce0b2130e4aa13f CUDA_VISIBLE_DEVICES=0 python scripts/generate_jailbreak_artifacts.py \
+--ignore_existing \
+--disable_logitlens \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
+--dataset_name JailbreakBenchDataset \
+--prompt_intention harmful \
+--dataset_split test \
+--attacker_name WildTeamingJailbreaking
+
+
 CUDA_VISIBLE_DEVICES=0 python scripts/generate_jailbreak_artifacts.py \
 --ignore_existing \
 --disable_logitlens \
@@ -67,47 +118,8 @@ CUDA_VISIBLE_DEVICES=0 python scripts/generate_jailbreak_artifacts.py \
 --dataset_name JailbreakBenchDataset \
 --prompt_intention harmful \
 --dataset_split test \
---attacker_name MultiLingualJailbreaking
-
-CUDA_VISIBLE_DEVICES=1 python scripts/generate_jailbreak_artifacts.py \
---ignore_existing \
---disable_logitlens \
---safeguard_name ShieldGemma \
---model_name google/shieldgemma-9b \
---dataset_name JailbreakBenchDataset \
---prompt_intention harmful \
---dataset_split test \
---attacker_name MultiLingualJailbreaking
-
-CUDA_VISIBLE_DEVICES=2 python scripts/generate_jailbreak_artifacts.py \
---ignore_existing \
---disable_logitlens \
---safeguard_name ShieldGemma \
---model_name google/shieldgemma-2b \
---dataset_name JailbreakBenchDataset \
---prompt_intention harmful \
---dataset_split test \
---attacker_name MultiLingualJailbreaking
-
-CUDA_VISIBLE_DEVICES=3 python scripts/generate_jailbreak_artifacts.py \
---ignore_existing \
---disable_logitlens \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---dataset_name JailbreakBenchDataset \
---prompt_intention harmful \
---dataset_split test \
---attacker_name MultiLingualJailbreaking
-
-CUDA_VISIBLE_DEVICES=3 python scripts/generate_jailbreak_artifacts.py \
---ignore_existing \
---disable_logitlens \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-1B \
---dataset_name JailbreakBenchDataset \
---prompt_intention harmful \
---dataset_split test \
---attacker_name MultiLingualJailbreaking
+--attacker_name MultiLingualJailbreaking \
+--eval_only
 """
 
 
@@ -130,6 +142,8 @@ if __name__ == "__main__":
     
     parser.add_argument("--attacker_name", type=str, default="WildTeamingJailbreaking", choices=list(AVAILABLE_ATTACKERS.keys()))
     parser.add_argument("--max_iteration", type=int, default=10)
+
+    parser.add_argument("--eval_only", action="store_true")
     
     args = parser.parse_args()
 
@@ -158,30 +172,40 @@ if __name__ == "__main__":
     args.target_model = target_model.get_model_name()
     print(args.target_model)
 
-    # Load jailbreak artifacts, if exists
+    if not args.eval_only:
+        # Load jailbreak artifacts, if exists
+        jailbreak_artifacts = load(args)
+        if jailbreak_artifacts is not None:
+            jailbreak_artifacts = jailbreak_artifacts["jailbreak_artifacts"]
+
+        if args.attacker_name == "GPTFuzzerJailbreaking":
+            if any([is_skip(args, sample, jailbreak_artifacts) for sample in samples]):
+                print("All samples are already processed. Skipping...")
+            else:
+                # GPTFUZZER is designed to process samples all at once
+                attacked_samples = attacker.augment_batch(samples, verbose=True)
+                # Save jailbreak artifacts
+                save(args, attacked_samples)
+        else:
+            # Process samples in batch
+            for i in range(0, len(samples), args.save_batch):
+                print(f"Processing batch {i} - {i+args.save_batch}")
+                batch = [sample for sample in samples[i:i+args.save_batch] if not is_skip(args, sample, jailbreak_artifacts)]
+                if len(batch) == 0:
+                    # Skip if all samples are already processed
+                    print("All samples are already processed. Skipping...")
+                    continue
+                # Generate jailbreak artifacts
+                attacked_samples = attacker.augment_batch(batch, verbose=True)
+                # Save jailbreak artifacts
+                save(args, attacked_samples)
+
+    # Get attack success rate (ASR) from saved jailbreak artifacts
     jailbreak_artifacts = load(args)
     if jailbreak_artifacts is not None:
+        success_count = 0
         jailbreak_artifacts = jailbreak_artifacts["jailbreak_artifacts"]
-
-    if args.attacker_name == "GPTFuzzerJailbreaking":
-        if any([is_skip(args, sample, jailbreak_artifacts) for sample in samples]):
-            print("All samples are already processed. Skipping...")
-        else:
-            # GPTFUZZER is designed to process samples all at once
-            attacked_samples = attacker.augment_batch(samples, verbose=True)
-            # Save jailbreak artifacts
-            save(args, attacked_samples)
-    else:
-        # Process samples in batch
-        for i in range(0, len(samples), args.save_batch):
-            print(f"Processing batch {i} - {i+args.save_batch}")
-            batch = [sample for sample in samples[i:i+args.save_batch] if not is_skip(args, sample, jailbreak_artifacts)]
-            if len(batch) == 0:
-                # Skip if all samples are already processed
-                print("All samples are already processed. Skipping...")
-                continue
-            # Generate jailbreak artifacts
-            attacked_samples = attacker.augment_batch(batch, verbose=True)
-            # Save jailbreak artifacts
-            save(args, attacked_samples)
-    print(f"ASR: {round(attacker.attack_success_rate * 100, 1)}")
+        for ori_prompt in jailbreak_artifacts:
+            success_count += len(jailbreak_artifacts[ori_prompt][args.target_model][args.attack_model])
+        asr = success_count / len(jailbreak_artifacts)
+        print(f"ASR: {round(jailbreak_artifacts * 100, 1)}")
