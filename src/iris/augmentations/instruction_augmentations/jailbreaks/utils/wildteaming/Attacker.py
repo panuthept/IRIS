@@ -4,7 +4,7 @@ The Attacker class is used to generate attacks for a given behavior.
 """
 import os
 import sys
-import ray
+# import ray
 import json
 import random
 from transformers import AutoTokenizer
