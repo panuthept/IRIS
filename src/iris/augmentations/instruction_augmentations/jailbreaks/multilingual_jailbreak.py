@@ -25,7 +25,7 @@ class CacheableTranslate(Translate):
             translation, _ = self.cache_storage.retrieve(text)
         if translation is None:
             translation = super().translate(text, src_lang)
-            self.cache_storage.cache(translation, text)
+            self.cache_storage.cache(translation, text, temperature=0.0)
         return translation
 
 
