@@ -103,7 +103,7 @@ class MultiLingualJailbreaking(Jailbreaking):
                 jailbreak_prompt = instance.jailbreak_prompt.format(translated_query=instance.translated_query)
             else:
                 jailbreak_prompt = instance.query
-            target_response = self.target_model.generate(jailbreak_prompt)[0][0]
+            target_response = self.target_model.generate(jailbreak_prompt)[0][0][0]
             print(target_response)
             target_response = self._translate_to_en(target_response) if self.translate_answer_to_en else target_response
             attack_results.append((jailbreak_prompt, target_response))
