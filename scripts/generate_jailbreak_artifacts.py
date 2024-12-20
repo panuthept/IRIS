@@ -208,4 +208,4 @@ if __name__ == "__main__":
         for ori_prompt in jailbreak_artifacts:
             success_count += len(jailbreak_artifacts[ori_prompt][args.target_model][args.attack_model])
         asr = success_count / len(jailbreak_artifacts)
-        print(f"ASR: {round(jailbreak_artifacts * 100, 1)}")
+        print(f"ASR: {round(asr * 100, 1)}")
