@@ -158,9 +158,9 @@ class ShieldGemma(GuardLLM):
         labels_scores = [logprob for token, logprob in logprobs[0] if token in self.valid_outputs]
         labels_scores = np.exp(labels_scores) / np.sum(np.exp(labels_scores))   # Convert logprobs to probabilities
 
-        outputs = (list(zip(labels, labels_scores)),)        
+        outputs = list(zip(labels, labels_scores))
         if return_ori_tokens:
-            outputs += (list(zip(tokens, tokens_scores)),)
+            outputs = (outputs, list(zip(tokens, tokens_scores)))
         return outputs
 
     def _response_classify(self, prompt: str, response: str, **kwargs) -> str:
