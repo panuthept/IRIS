@@ -9,7 +9,7 @@ from transformers import (PreTrainedTokenizer,
                           RobertaTokenizer)
 
 sys.path.append(os.getcwd())
-from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.language_models import GPT, VLLM
+from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.language_models import GPT#, VLLM
 from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.evaluator_prompts import evaluator_prompts
 
 

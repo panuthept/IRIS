@@ -12,7 +12,7 @@ from transformers import AutoTokenizer
 sys.path.append(os.getcwd())
 
 from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.my_utils import read_json
-from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.language_models import GPT, VLLM
+from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.language_models import GPT#, VLLM
 from iris.augmentations.instruction_augmentations.jailbreaks.utils.wildteaming.system_prompts import system_prompts
 
 

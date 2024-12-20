@@ -92,96 +92,96 @@ class GPT():
         return [self._generate(prompt, max_new_tokens, temperature, top_p, **kwargs) for prompt in prompts]
 
 
-@ray.remote
-class VLLM:
-    def __init__(self, model_name_or_path, n_devices=1, **model_kwargs):
-        self.model_name = model_name_or_path
+# @ray.remote
+# class VLLM:
+#     def __init__(self, model_name_or_path, n_devices=1, **model_kwargs):
+#         self.model_name = model_name_or_path
 
-        # In https://github.com/vllm-project/vllm/blob/main/vllm/engine/ray_utils.py
-        # VLLM will manually allocate gpu placement_groups for ray actors if using tensor_parallel (num_gpus) > 1
-        # So we will set CUDA_VISIBLE_DEVICES to all and let vllm.engine.ray_utils handle this
-        # if n_devices > 1:
-        resources = ray.cluster_resources()
-        available_devices = ",".join([str(i) for i in range(int(resources.get("GPU", 0)))])  # "2,3,4,5"
-        os.environ['CUDA_VISIBLE_DEVICES'] = available_devices
+#         # In https://github.com/vllm-project/vllm/blob/main/vllm/engine/ray_utils.py
+#         # VLLM will manually allocate gpu placement_groups for ray actors if using tensor_parallel (num_gpus) > 1
+#         # So we will set CUDA_VISIBLE_DEVICES to all and let vllm.engine.ray_utils handle this
+#         # if n_devices > 1:
+#         resources = ray.cluster_resources()
+#         available_devices = ",".join([str(i) for i in range(int(resources.get("GPU", 0)))])  # "2,3,4,5"
+#         os.environ['CUDA_VISIBLE_DEVICES'] = available_devices
 
-        self.model = self.load_vllm_model(model_name_or_path, num_gpus=n_devices, **model_kwargs)
+#         self.model = self.load_vllm_model(model_name_or_path, num_gpus=n_devices, **model_kwargs)
 
-    def batched_generate(self,
-                         prompts: list[str],
-                         do_chat_formatting: bool = False,
-                         system_message: str = None,
-                         tokenizer: PreTrainedTokenizer | PreTrainedTokenizerFast | None = None,
-                         use_tqdm: bool = False,
-                         return_full_outputs: bool = False,  # Whether to return the direct vllm output objects
-                         temperature: float = 1.0,
-                         top_p: float = 1.0,
-                         max_tokens: int = 2048,
-                         is_print_example: bool = False,
-                         **sampling_args
-                         ):
-        if do_chat_formatting:
-            assert tokenizer is not None, "Chat formatting requires tokenizer"
-            if system_message is not None:
-                conversation_prompts = [[{'role': 'system', 'content': system_message}, {'role': 'user', 'content': p}]
-                                        for p in prompts]
-            else:
-                conversation_prompts = [[{'role': 'user', 'content': p}] for p in prompts]
-            formatted_prompts = [tokenizer.apply_chat_template(p, tokenize=False) for p in conversation_prompts]
-        else:
-            formatted_prompts = prompts
+#     def batched_generate(self,
+#                          prompts: list[str],
+#                          do_chat_formatting: bool = False,
+#                          system_message: str = None,
+#                          tokenizer: PreTrainedTokenizer | PreTrainedTokenizerFast | None = None,
+#                          use_tqdm: bool = False,
+#                          return_full_outputs: bool = False,  # Whether to return the direct vllm output objects
+#                          temperature: float = 1.0,
+#                          top_p: float = 1.0,
+#                          max_tokens: int = 2048,
+#                          is_print_example: bool = False,
+#                          **sampling_args
+#                          ):
+#         if do_chat_formatting:
+#             assert tokenizer is not None, "Chat formatting requires tokenizer"
+#             if system_message is not None:
+#                 conversation_prompts = [[{'role': 'system', 'content': system_message}, {'role': 'user', 'content': p}]
+#                                         for p in prompts]
+#             else:
+#                 conversation_prompts = [[{'role': 'user', 'content': p}] for p in prompts]
+#             formatted_prompts = [tokenizer.apply_chat_template(p, tokenize=False) for p in conversation_prompts]
+#         else:
+#             formatted_prompts = prompts
 
-        if is_print_example:
-            print("=" * 30, "An Example of formatted prompt", "=" * 30)
-            print(formatted_prompts[0])
-            print("=" * 92)
+#         if is_print_example:
+#             print("=" * 30, "An Example of formatted prompt", "=" * 30)
+#             print(formatted_prompts[0])
+#             print("=" * 92)
 
-        sampling_params = SamplingParams(
-            max_tokens=max_tokens,
-            temperature=temperature,
-            top_p=top_p,
-            **sampling_args
-        )
-        outputs = self.model.generate(prompts=formatted_prompts, sampling_params=sampling_params, use_tqdm=use_tqdm)
-        if return_full_outputs:
-            return outputs
+#         sampling_params = SamplingParams(
+#             max_tokens=max_tokens,
+#             temperature=temperature,
+#             top_p=top_p,
+#             **sampling_args
+#         )
+#         outputs = self.model.generate(prompts=formatted_prompts, sampling_params=sampling_params, use_tqdm=use_tqdm)
+#         if return_full_outputs:
+#             return outputs
 
-        results = [it.outputs[0].text for it in outputs]
-        return results
+#         results = [it.outputs[0].text for it in outputs]
+#         return results
 
-    def load_vllm_model(self,
-                        model_name_or_path,
-                        dtype='auto',
-                        trust_remote_code=True,  # False
-                        download_dir=None,
-                        revision=None,
-                        quantization=None,
-                        num_gpus=1,
-                        ## tokenizer_args
-                        use_fast_tokenizer=True,
-                        pad_token=None,
-                        eos_token=None,
-                        **kwargs
-                        ):
+#     def load_vllm_model(self,
+#                         model_name_or_path,
+#                         dtype='auto',
+#                         trust_remote_code=True,  # False
+#                         download_dir=None,
+#                         revision=None,
+#                         quantization=None,
+#                         num_gpus=1,
+#                         ## tokenizer_args
+#                         use_fast_tokenizer=True,
+#                         pad_token=None,
+#                         eos_token=None,
+#                         **kwargs
+#                         ):
 
-        model = LLM(model=model_name_or_path,
-                    dtype=dtype,
-                    trust_remote_code=trust_remote_code,
-                    download_dir=download_dir,
-                    revision=revision,
-                    quantization=quantization,
-                    tokenizer_mode="auto" if use_fast_tokenizer else "slow",
-                    tensor_parallel_size=num_gpus)
+#         model = LLM(model=model_name_or_path,
+#                     dtype=dtype,
+#                     trust_remote_code=trust_remote_code,
+#                     download_dir=download_dir,
+#                     revision=revision,
+#                     quantization=quantization,
+#                     tokenizer_mode="auto" if use_fast_tokenizer else "slow",
+#                     tensor_parallel_size=num_gpus)
 
-        if pad_token:
-            model.llm_engine.tokenizer.tokenizer.pad_token = pad_token
-        if eos_token:
-            model.llm_engine.tokenizer.tokenizer.eos_token = eos_token
+#         if pad_token:
+#             model.llm_engine.tokenizer.tokenizer.pad_token = pad_token
+#         if eos_token:
+#             model.llm_engine.tokenizer.tokenizer.eos_token = eos_token
 
-        return model
+#         return model
 
-    def set_tokenizer_truncation_side(self, side):
-        self.model.llm_engine.tokenizer.tokenizer.truncation_side = side
+#     def set_tokenizer_truncation_side(self, side):
+#         self.model.llm_engine.tokenizer.tokenizer.truncation_side = side
 
-    def is_initialized(self):
-        print(f"==> Initialized {self.model_name}")
+#     def is_initialized(self):
+#         print(f"==> Initialized {self.model_name}")
