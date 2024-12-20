@@ -58,6 +58,17 @@ def is_skip(args, sample, jailbreak_artifacts):
     return False
 
 
+"""
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
+--dataset_name JailbreakBenchDataset \
+--prompt_intention harmful \
+--dataset_split test \
+--attacker_name MultiLingualJailbreaking \
+"""
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--save_dir", type=str, default="./jailbreak_artifacts")
@@ -70,7 +81,7 @@ if __name__ == "__main__":
     parser.add_argument("--disable_logitlens", action="store_true")
     parser.add_argument("--top_logprobs", type=int, default=128)
 
-    parser.add_argument("--dataset_name", type=str, default="WildGuardMixDataset", choices=list(AVAILABLE_DATASETS.keys()))
+    parser.add_argument("--dataset_name", type=str, default="JailbreakBenchDataset", choices=list(AVAILABLE_DATASETS.keys()))
     parser.add_argument("--prompt_intention", type=str, default="harmful")
     parser.add_argument("--dataset_split", type=str, default="test")
     parser.add_argument("--seed", type=int, default=42)
