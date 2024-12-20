@@ -60,6 +60,7 @@ def is_skip(args, sample, jailbreak_artifacts):
 
 """
 CUDA_VISIBLE_DEVICES=0 python scripts/generate_jailbreak_artifacts.py \
+--ignore_existing \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
 --dataset_name JailbreakBenchDataset \
@@ -142,3 +143,4 @@ if __name__ == "__main__":
             attacked_samples = attacker.augment_batch(batch, verbose=True)
             # Save jailbreak artifacts
             save(args, attacked_samples)
+    print(f"ASR: {attacker.attack_success_rate}")
