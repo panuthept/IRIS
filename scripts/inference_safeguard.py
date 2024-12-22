@@ -17,14 +17,13 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --top_logprobs 128 \
 --output_path ./outputs/ShieldGemma9B/WildGuardMixDataset/test/all_prompts_mask_suffix.jsonl
 
-CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name ShieldGemma \
---model_name google/shieldgemma-9b \
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name ORBenchDataset \
 --dataset_split test \
---mask_last_n_tokens 311 \
---top_logprobs 128 \
---output_path ./outputs/ShieldGemma9B/ORBenchDataset/test/all_prompts_mask_suffix.jsonl
+--top_logprobs 2 \
+--output_path ./outputs/LlamaGuard8B/ORBenchDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --safeguard_name ShieldGemma \
@@ -153,7 +152,7 @@ if __name__ == "__main__":
                 f.write(json.dumps({
                     "prompt": prompt,
                     "response": pred_labels,
-                    "label": gold_label,
+                    "label": "Harmful" if gold_label == 1 else "Benign",
                     "raw_response": pred_tokens,
                     "cache": cache if not args.disable_logitlens else None,
                     "attentions": attentions[0][:, -1].tolist() if not args.disable_logitlens else None,    # Only save attention of the last token
