@@ -9,105 +9,58 @@ from iris.model_wrappers.guard_models import load_safeguard, AVAILABLE_GUARDS
 
 """
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
---safeguard_name ShieldGemma \
---model_name google/shieldgemma-2b \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
 --dataset_name WildGuardMixDataset \
---dataset_split train \
---max_samples 4000 \
+--dataset_split test \
 --top_logprobs 128 \
---save_activations \
---output_path ./outputs/ShieldGemma2B/WildGuardMixDataset/train/4000_prompts.jsonl
+--mask_topk_tokens 10 \
+--output_path ./outputs/WildGuard/WildGuardMixDataset/test/all_prompts_mask_top10.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name ShieldGemma \
---model_name google/shieldgemma-9b \
---dataset_name WildGuardMixDataset \
---dataset_split train \
---max_samples 4000 \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
+--dataset_name ORBenchDataset \
+--dataset_split test \
 --top_logprobs 128 \
---save_activations \
---output_path ./outputs/ShieldGemma9B/WildGuardMixDataset/train/4000_prompts.jsonl
+--mask_topk_tokens 10 \
+--output_path ./outputs/WildGuard/ORBenchDataset/test/all_prompts_mask_top10.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-1B \
---dataset_name WildGuardMixDataset \
---dataset_split train \
---max_samples 4000 \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
+--dataset_name OpenAIModerationDataset \
+--dataset_split test \
 --top_logprobs 128 \
---save_activations \
---output_path ./outputs/LlamaGuard1B/WildGuardMixDataset/train/4000_prompts.jsonl
-
-CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---dataset_name WildGuardMixDataset \
---dataset_split train \
---max_samples 4000 \
---top_logprobs 128 \
---save_activations \
---output_path ./outputs/LlamaGuard8B/WildGuardMixDataset/train/4000_prompts.jsonl
+--mask_topk_tokens 10 \
+--output_path ./outputs/WildGuard/OpenAIModerationDataset/test/all_prompts_mask_top10.jsonl
 
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
---dataset_name WildGuardMixDataset \
---dataset_split train \
---max_samples 4000 \
---top_logprobs 128 \
---save_activations \
---output_path ./outputs/WildGuard/WildGuardMixDataset/train/4000_prompts.jsonl
-
-
-
-
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---dataset_name WildGuardMixDataset \
---dataset_split test \
---top_logprobs 128 \
---output_path ./outputs/LlamaGuard8B/WildGuardMixDataset/test/all_prompts.jsonl
-
-CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---dataset_name ORBenchDataset \
---dataset_split test \
---top_logprobs 128 \
---output_path ./outputs/LlamaGuard8B/ORBenchDataset/test/all_prompts.jsonl
-
-CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---dataset_name OpenAIModerationDataset \
---dataset_split test \
---top_logprobs 128 \
---output_path ./outputs/LlamaGuard8B/OpenAIModerationDataset/test/all_prompts.jsonl
-
-CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name ToxicChatDataset \
 --dataset_split test \
 --top_logprobs 128 \
---output_path ./outputs/LlamaGuard8B/ToxicChatDataset/test/all_prompts.jsonl
+--mask_topk_tokens 10 \
+--output_path ./outputs/WildGuard/ToxicChatDataset/test/all_prompts_mask_top10.jsonl
 
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
 --dataset_name XSTestDataset \
 --dataset_split test \
 --top_logprobs 1024 \
---output_path ./outputs/LlamaGuard8B/XSTestDataset/test/all_prompts.jsonl
+--mask_topk_tokens 10 \
+--output_path ./outputs/WildGuard/XSTestDataset/test/all_prompts_mask_top10.jsonl
 
-CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
 --dataset_name JailbreakBenchDataset \
 --dataset_split test \
 --top_logprobs 1024 \
---output_path ./outputs/LlamaGuard8B/JailbreakBenchDataset/test/all_prompts.jsonl
+--mask_topk_tokens 10 \
+--output_path ./outputs/WildGuard/JailbreakBenchDataset/test/all_prompts_mask_top10.jsonl
 """
 
 if __name__ == "__main__":
@@ -137,10 +90,10 @@ if __name__ == "__main__":
 
     # Get mask_tokens
     mask_tokens = None
-    if args.mask_first_n_tokens is not None:
+    if args.mask_topk_tokens is not None:
         with open("./data/LMI_scores.jsonl", "r") as f:
             data = json.load(f)
-            train_harmful_LMIs = list(data["LMI"]["harmful"])[:args.mask_first_n_tokens]
+            train_harmful_LMIs = list(data["LMI"]["harmful"])[:args.mask_topk_tokens]
             mask_tokens = [int(k) for k in train_harmful_LMIs]
         print(f"Mask tokens: {mask_tokens}")
 
