@@ -144,6 +144,7 @@ if __name__ == "__main__":
             prompts = sample.get_prompts()
             _gold_labels = sample.instructions_true_label
             for prompt, gold_label in zip(prompts, _gold_labels):
+                prompt = prompt_intervention(prompt, train_harmful_LMIs, tokenizer)
                 pred_labels, pred_tokens = safeguard.generate(
                     prompt, 
                     return_ori_tokens=True,
