@@ -107,6 +107,7 @@ class GraniteGuardian(GuardLLM):
     
 
 if __name__ == "__main__":
+    # CUDA_VISIBLE_DEVICES=0 python src/iris/model_wrappers/guard_models/granite_guardian.py
     model = GraniteGuardian(
         model_name_or_path="ibm-granite/granite-guardian-3.1-8b",
     )
