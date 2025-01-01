@@ -81,7 +81,7 @@ class GraniteGuardian(GuardLLM):
             apply_chat_template=True, 
             add_special_tokens=False,
             return_logprobs=True, 
-            special_tokenizer_kwargs={"risk_name": "harm"}
+            special_tokenizer_kwargs={"risk_name": "harm"},
             **kwargs
         )
 
