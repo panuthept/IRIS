@@ -80,8 +80,8 @@ class GraniteGuardian(GuardLLM):
             message=[{"role": "user", "content": prompt}, {"role": "assistant", "content": ""}],
             apply_chat_template=True, 
             add_special_tokens=False,
-            return_logprobs=True, 
             special_tokenizer_kwargs={"risk_name": "harm"},
+            return_logprobs=True, 
             **kwargs
         )
 
