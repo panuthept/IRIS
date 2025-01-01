@@ -681,7 +681,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                     {"role": "user", "content": text}
                 ] if self.system_prompt else [{"role": "user", "content": text}] 
                 for text in texts
-            ] if messages is not None else messages
+            ] if messages is None else messages
             # Tokenize the messages
             encoded_texts = self.tokenizer.apply_chat_template(
                 messages,
