@@ -665,10 +665,12 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
 
     def tokenize(
         self, 
-        texts: List[str],
+        texts: List[str] = None,
+        messages: List[List[Dict[str, str]]] = None,
         suffix_prompt: Optional[str] = None,
         apply_chat_template: bool = True,
         add_special_tokens: bool = False,
+        special_tokenizer_kwargs: dict = {},
     ) -> Int[Tensor, "batch pos"]:
         if apply_chat_template:
             if suffix_prompt:
@@ -679,7 +681,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                     {"role": "user", "content": text}
                 ] if self.system_prompt else [{"role": "user", "content": text}] 
                 for text in texts
-            ]
+            ] if messages is not None else messages
             # Tokenize the messages
             encoded_texts = self.tokenizer.apply_chat_template(
                 messages,
@@ -689,6 +691,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 return_dict=True,
                 padding=True,
                 return_tensors="pt",
+                **special_tokenizer_kwargs,
             )
         else:
             texts = [f"{self.system_prompt}\n\n{text}" if self.system_prompt else text for text in texts]
@@ -712,7 +715,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
 
     def _complete(
         self, 
-        prompt: str, 
+        prompt: str = None, 
+        message: List[Dict[str, str]] = None,
         ref_prompt: Optional[str] = None, 
         suffix_prompt: Optional[str] = None, 
         apply_chat_template: bool = True, 
@@ -721,15 +725,18 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         mask_last_n_tokens: Optional[int] = None,
         mask_tokens: Optional[List[int]] = None,
         invert_mask: bool = False,
+        special_tokenizer_kwargs: dict = {},
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Tokenize the prompt
         self.tokenizer.padding_side = "left"
         encoded_texts = self.tokenize(
-            [prompt], 
+            texts=[prompt] if prompt else None, 
+            messages=[message] if message else None,
             suffix_prompt=suffix_prompt, 
             apply_chat_template=apply_chat_template, 
-            add_special_tokens=add_special_tokens
+            add_special_tokens=add_special_tokens,
+            special_tokenizer_kwargs=special_tokenizer_kwargs,
         )
         if mask_first_n_tokens:
             encoded_texts["attention_mask"][:, :mask_first_n_tokens] = 0
