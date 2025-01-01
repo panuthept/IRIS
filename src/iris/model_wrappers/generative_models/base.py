@@ -2,7 +2,7 @@ import time
 from tqdm import tqdm
 from abc import abstractmethod
 from iris.model_wrappers import LLM
-from typing import List, Tuple, Optional
+from typing import List, Dict, Tuple, Optional
 from iris.data_types import Sample, ModelResponse
 
 
@@ -20,7 +20,8 @@ class GenerativeLLM(LLM):
     
     def complete(
         self, 
-        prompt: str, 
+        prompt: str = None, 
+        message: List[Dict[str, str]] = None,
         ref_prompt: Optional[str] = None,   # reference prompt for TransformerLens
         suffix_prompt: Optional[str] = None,  # suffix prompt for GuardLLM
         apply_chat_template: bool = True,
@@ -31,6 +32,7 @@ class GenerativeLLM(LLM):
         max_trials: int = 1,
         failure_sleep_time: int = 1,
         return_logprobs: bool = False,
+        special_tokenizer_kwargs: dict = {},
         **kwargs
     ) -> str:
         # Get the answer from cache if available
@@ -38,7 +40,7 @@ class GenerativeLLM(LLM):
         logprobs = None
         if self.use_cache:
             answer, logprobs = self.cache_storage.retrieve(
-                prompt, 
+                prompt if prompt is not None else str(message), 
                 temperature=self.temperature,
                 system_prompt=self.system_prompt,
                 apply_chat_template=apply_chat_template,
@@ -49,7 +51,8 @@ class GenerativeLLM(LLM):
             )
         if answer is None or (self.logprobs and logprobs is None):             
             answer, logprobs = self._complete(
-                prompt, 
+                prompt=prompt, 
+                message=message,
                 ref_prompt=ref_prompt, 
                 suffix_prompt=suffix_prompt,
                 apply_chat_template=apply_chat_template, 
@@ -57,13 +60,14 @@ class GenerativeLLM(LLM):
                 mask_first_n_tokens=mask_first_n_tokens,
                 mask_last_n_tokens=mask_last_n_tokens,
                 invert_mask=invert_mask,
+                special_tokenizer_kwargs=special_tokenizer_kwargs,
                 **kwargs
             )
         if self.use_cache:
             # Cache the answer
             self.cache_storage.cache(
                 answer, 
-                prompt, 
+                prompt if prompt is not None else str(message), 
                 temperature=self.temperature,
                 system_prompt=self.system_prompt,
                 apply_chat_template=apply_chat_template,
