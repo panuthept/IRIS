@@ -61,7 +61,6 @@ class GraniteGuardian(GuardLLM):
                 max_logitlens_cache_size=max_logitlens_cache_size,
             )
             self.device = self.model.llm.device
-            self.response_template_ids = self._get_response_template_ids()
 
     @property
     def valid_outputs(self):
