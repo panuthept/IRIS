@@ -14,8 +14,9 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --dataset_name WildGuardMixDataset \
 --dataset_split test \
 --top_logprobs 128 \
---mask_topk_tokens 10 \
---output_path ./outputs/WildGuard/WildGuardMixDataset/test/all_prompts_mask_top10.jsonl
+--save_logits \
+--save_activations \
+--output_path ./outputs/WildGuard/WildGuardMixDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
@@ -23,8 +24,9 @@ CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
 --dataset_name ORBenchDataset \
 --dataset_split test \
 --top_logprobs 128 \
---mask_topk_tokens 10 \
---output_path ./outputs/WildGuard/ORBenchDataset/test/all_prompts_mask_top10.jsonl
+--save_logits \
+--save_activations \
+--output_path ./outputs/WildGuard/ORBenchDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
@@ -32,8 +34,9 @@ CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --dataset_name OpenAIModerationDataset \
 --dataset_split test \
 --top_logprobs 128 \
---mask_topk_tokens 10 \
---output_path ./outputs/WildGuard/OpenAIModerationDataset/test/all_prompts_mask_top10.jsonl
+--save_logits \
+--save_activations \
+--output_path ./outputs/WildGuard/OpenAIModerationDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
@@ -41,26 +44,29 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --dataset_name ToxicChatDataset \
 --dataset_split test \
 --top_logprobs 128 \
---mask_topk_tokens 10 \
---output_path ./outputs/WildGuard/ToxicChatDataset/test/all_prompts_mask_top10.jsonl
+--save_logits \
+--save_activations \
+--output_path ./outputs/WildGuard/ToxicChatDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
 --dataset_name XSTestDataset \
 --dataset_split test \
---top_logprobs 1024 \
---mask_topk_tokens 10 \
---output_path ./outputs/WildGuard/XSTestDataset/test/all_prompts_mask_top10.jsonl
+--top_logprobs 128 \
+--save_logits \
+--save_activations \
+--output_path ./outputs/WildGuard/XSTestDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
 --dataset_name JailbreakBenchDataset \
 --dataset_split test \
---top_logprobs 1024 \
---mask_topk_tokens 10 \
---output_path ./outputs/WildGuard/JailbreakBenchDataset/test/all_prompts_mask_top10.jsonl
+--top_logprobs 128 \
+--save_logits \
+--save_activations \
+--output_path ./outputs/WildGuard/JailbreakBenchDataset/test/all_prompts.jsonl
 """
 
 if __name__ == "__main__":
@@ -78,6 +84,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_tokens", action="store_true")
     parser.add_argument("--save_logits", action="store_true")
     parser.add_argument("--save_activations", action="store_true")
+    parser.add_argument("--save_attentions", action="store_true")
     parser.add_argument("--disable_logitlens", action="store_true")
     parser.add_argument("--mask_first_n_tokens", type=int, default=None)
     parser.add_argument("--mask_last_n_tokens", type=int, default=None)
@@ -167,7 +174,7 @@ if __name__ == "__main__":
                     "label": "Harmful" if gold_label == 1 else "Benign",
                     "raw_response": pred_tokens,
                     "cache": cache if not args.disable_logitlens else None,
-                    "attentions": attentions[0][:, -1].tolist() if not args.disable_logitlens else None,    # Only save attention of the last token
+                    "attentions": attentions[0][:, -1].tolist() if not args.disable_logitlens and args.save_attentions else None, # Only save the last token attentions
                     "inputs": inputs[0].tolist() if not args.disable_logitlens else None,
                 }, ensure_ascii=False) + "\n")
     # Calculate metrics
