@@ -9,64 +9,75 @@ from iris.model_wrappers.guard_models import load_safeguard, AVAILABLE_GUARDS
 
 """
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
+--dataset_name WildGuardMixDataset \
+--dataset_split train \
+--top_logprobs 128 \
+--save_logits \
+--save_activations \
+--max_samples 4000 \
+--output_path ./outputs/LlamaGuard8B/WildGuardMixDataset/train/4000_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name WildGuardMixDataset \
 --dataset_split test \
 --top_logprobs 128 \
 --save_logits \
 --save_activations \
---output_path ./outputs/WildGuard/WildGuardMixDataset/test/all_prompts.jsonl
+--output_path ./outputs/LlamaGuard8B/WildGuardMixDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name ORBenchDataset \
 --dataset_split test \
 --top_logprobs 128 \
 --save_logits \
 --save_activations \
---output_path ./outputs/WildGuard/ORBenchDataset/test/all_prompts.jsonl
+--output_path ./outputs/LlamaGuard8B/ORBenchDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name OpenAIModerationDataset \
 --dataset_split test \
 --top_logprobs 128 \
 --save_logits \
 --save_activations \
---output_path ./outputs/WildGuard/OpenAIModerationDataset/test/all_prompts.jsonl
+--output_path ./outputs/LlamaGuard8B/OpenAIModerationDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name ToxicChatDataset \
 --dataset_split test \
 --top_logprobs 128 \
 --save_logits \
 --save_activations \
---output_path ./outputs/WildGuard/ToxicChatDataset/test/all_prompts.jsonl
+--output_path ./outputs/LlamaGuard8B/ToxicChatDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name XSTestDataset \
 --dataset_split test \
 --top_logprobs 128 \
 --save_logits \
 --save_activations \
---output_path ./outputs/WildGuard/XSTestDataset/test/all_prompts.jsonl
+--output_path ./outputs/LlamaGuard8B/XSTestDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name JailbreakBenchDataset \
 --dataset_split test \
 --top_logprobs 128 \
 --save_logits \
 --save_activations \
---output_path ./outputs/WildGuard/JailbreakBenchDataset/test/all_prompts.jsonl
+--output_path ./outputs/LlamaGuard8B/JailbreakBenchDataset/test/all_prompts.jsonl
 """
 
 if __name__ == "__main__":
@@ -174,7 +185,7 @@ if __name__ == "__main__":
                     "label": "Harmful" if gold_label == 1 else "Benign",
                     "raw_response": pred_tokens,
                     "cache": cache if not args.disable_logitlens else None,
-                    "attentions": attentions[0][:, -1].tolist() if not args.disable_logitlens and args.save_attentions else None, # Only save the last token attentions
+                    "attentions": attentions[0].tolist() if not args.disable_logitlens and args.save_attentions else None, # Only save the last token attentions
                     "inputs": inputs[0].tolist() if not args.disable_logitlens else None,
                 }, ensure_ascii=False) + "\n")
     # Calculate metrics
