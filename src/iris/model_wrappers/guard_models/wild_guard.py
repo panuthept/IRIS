@@ -129,7 +129,7 @@ class WildGuard(GuardLLM):
         tokens_logits = [logit for _, _, logit in logprobs[0]]
         tokens_probs = np.exp(tokens_logprobs) / np.sum(np.exp(tokens_logprobs))   # Convert logprobs to probabilities
 
-        labels = ["Harmful" if token == " yes" else "Benign" for token, _ in logprobs[0] if token in self.valid_outputs]
+        labels = ["Harmful" if token == " yes" else "Benign" for token, _, _ in logprobs[0] if token in self.valid_outputs]
         labels_logprobs = [logprob for token, logprob, _ in logprobs[0] if token in self.valid_outputs]
         labels_logits = [logit for token, _, logit in logprobs[0] if token in self.valid_outputs]
         labels_probs = np.exp(labels_logprobs) / np.sum(np.exp(labels_logprobs))   # Convert logprobs to probabilities
