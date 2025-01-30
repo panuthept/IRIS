@@ -659,9 +659,9 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             pred_logprobs = torch.log_softmax(pred_logits, dim=-1)
 
             if return_logprobs:
-                return pred_tokens, pred_logprobs
+                return pred_tokens, pred_logprobs, pred_logits
             else:
-                return pred_tokens, None
+                return pred_tokens, None, None
 
     def tokenize(
         self, 
@@ -750,7 +750,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         encoded_texts["attention_mask"][:, -1] = 1
         # Generate the response
         self.llm.eval()
-        completed_ids, logprobs = self._generate(
+        completed_ids, logprobs, logits = self._generate(
             input_ids=encoded_texts["input_ids"],
             attention_mask=encoded_texts["attention_mask"],
             max_new_tokens=self.max_new_tokens,
@@ -761,12 +761,15 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         )
         pred_ids = completed_ids[0]
         logprobs = logprobs[0]
+        logits = logits[0]
         sorted_logprobs, sorted_indices = torch.sort(logprobs, descending=True)
+        sorted_logits = logits[torch.arange(logits.size(0)).unsqueeze(1), sorted_indices]
         sorted_logprobs = sorted_logprobs[:, :self.top_logprobs]
+        sorted_logits = sorted_logits[:, :self.top_logprobs]
         sorted_indices = sorted_indices[:, :self.top_logprobs]
         # Decode the response
         answer = self.tokenizer.decode(pred_ids, skip_special_tokens=True)
-        logprobs = [[(self.id_to_token(token_id), logprob.item()) for token_id, logprob in zip(top_indices, top_logprobs)] for top_indices, top_logprobs in zip(sorted_indices, sorted_logprobs)]
+        logprobs = [[(self.id_to_token(token_id), logprob.item(), logit.item()) for token_id, logprob, logit in zip(top_indices, top_logprobs, top_logits)] for top_indices, top_logprobs, top_logits in zip(sorted_indices, sorted_logprobs, sorted_logits)]
         return answer, logprobs
     
     def train_sft(

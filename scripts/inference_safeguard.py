@@ -165,7 +165,7 @@ if __name__ == "__main__":
                         if len(_pred_scores) > 0:
                             pred_score = _pred_scores[0]
                     else:
-                        _pred_scores = [score for label, score, _ in pred_labels if label == "Harmful"]
+                        _pred_scores = [score for label, score, logit in pred_labels if label == "Harmful"]
                         if len(_pred_scores) > 0:
                             pred_score = _pred_scores[0]
                 else:
