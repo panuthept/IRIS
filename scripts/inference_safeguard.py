@@ -3,25 +3,25 @@ import json
 import random
 import argparse
 from tqdm import tqdm
+from transformers import AutoTokenizer
 from iris.datasets import load_dataset, AVAILABLE_DATASETS
 from iris.metrics.safeguard_metrics import SafeGuardMetric
 from iris.model_wrappers.guard_models import load_safeguard, AVAILABLE_GUARDS
 
 """
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
 --dataset_name WildGuardMixDataset \
 --dataset_split train \
 --top_logprobs 128 \
 --save_logits \
---save_activations \
 --max_samples 4000 \
 --output_path ./outputs/LlamaGuard8B/WildGuardMixDataset/train/4000_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
 --dataset_name WildGuardMixDataset \
 --dataset_split test \
 --top_logprobs 128 \
@@ -30,8 +30,8 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --output_path ./outputs/LlamaGuard8B/WildGuardMixDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
 --dataset_name ORBenchDataset \
 --dataset_split test \
 --top_logprobs 128 \
@@ -40,8 +40,8 @@ CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
 --output_path ./outputs/LlamaGuard8B/ORBenchDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
 --dataset_name OpenAIModerationDataset \
 --dataset_split test \
 --top_logprobs 128 \
@@ -50,8 +50,8 @@ CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --output_path ./outputs/LlamaGuard8B/OpenAIModerationDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
 --dataset_name ToxicChatDataset \
 --dataset_split test \
 --top_logprobs 128 \
@@ -60,8 +60,8 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --output_path ./outputs/LlamaGuard8B/ToxicChatDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
 --dataset_name XSTestDataset \
 --dataset_split test \
 --top_logprobs 128 \
@@ -70,8 +70,8 @@ CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
 --output_path ./outputs/LlamaGuard8B/XSTestDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
 --dataset_name JailbreakBenchDataset \
 --dataset_split test \
 --top_logprobs 128 \
@@ -79,6 +79,15 @@ CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --save_activations \
 --output_path ./outputs/LlamaGuard8B/JailbreakBenchDataset/test/all_prompts.jsonl
 """
+
+def prompt_intervention(prompt, preserve_tokens, tokenizer):
+    intervented_prompt_tokens = []
+    prompt_tokens = tokenizer(prompt, add_special_tokens=False)["input_ids"]
+    for token_id in prompt_tokens:
+        if token_id not in preserve_tokens:
+            continue
+        intervented_prompt_tokens.append(token_id)
+    return tokenizer.decode(intervented_prompt_tokens)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -101,10 +110,22 @@ if __name__ == "__main__":
     parser.add_argument("--mask_last_n_tokens", type=int, default=None)
     parser.add_argument("--mask_topk_tokens", type=int, default=None)
     parser.add_argument("--invert_mask", action="store_true")
+    parser.add_argument("--prompt_intervention", action="store_true")
+    parser.add_argument("--lmi_label", type=str, default="Harmful", choices=["Harmful", "Safe"])
+    parser.add_argument("--lmi_threshold", type=float, default=0.0)
+    parser.add_argument("--lmi_k", type=int, default=1000)
     parser.add_argument("--output_path", type=str, default="./outputs/inference_safeguard.jsonl")
     args = parser.parse_args()
 
     random.seed(args.seed)
+
+    with open("./data/LMI_scores.jsonl", "r") as f:
+        data = json.load(f)
+        tokenizer = AutoTokenizer.from_pretrained(data["tokenizer"])
+        train_harmful_LMIs = [(k, v) for k, v in data["LMI"]["harmful"].items() if v > args.lmi_threshold][:args.lmi_k]
+        train_harmful_LMIs = {int(k): v for k, v in train_harmful_LMIs}
+        train_safe_LMIs = [(k, v) for k, v in data["LMI"]["benign"].items() if v > args.lmi_threshold][:args.lmi_k]
+        train_safe_LMIs = {int(k): v for k, v in train_safe_LMIs}
 
     # Get mask_tokens
     mask_tokens = None
@@ -145,6 +166,12 @@ if __name__ == "__main__":
             prompts = sample.get_prompts()
             _gold_labels = sample.instructions_true_label
             for prompt, gold_label in zip(prompts, _gold_labels):
+                # Intervene prompt (Optional)
+                if args.prompt_intervention:
+                    if args.lmi_label == "Harmful":
+                        prompt = prompt_intervention(prompt, train_harmful_LMIs, tokenizer)
+                    else:
+                        prompt = prompt_intervention(prompt, train_safe_LMIs, tokenizer)
                 pred_labels, pred_tokens = safeguard.generate(
                     prompt, 
                     return_ori_tokens=True,
