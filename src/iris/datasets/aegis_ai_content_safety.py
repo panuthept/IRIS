@@ -36,10 +36,16 @@ class AegisAIContentSafetyDataset(JailbreakDataset):
         dataset = load_dataset("nvidia/Aegis-AI-Content-Safety-Dataset-1.0", cache_dir=self.cache_dir)
         # Read train dataset
         for sample in dataset["train"]:
-            if sample["labels_0"] is None or sample["labels_1"] is None or sample["labels_2"] is None:
-                continue
-        
-            intention = "benign" if sample["labels_0"] == "Safe" else "harmful"
+            voted = 0
+            for i in range(0, 5):
+                if sample[f"labels_{i}"] is None:
+                    continue
+
+                if "Safe" in sample[f"labels_{i}"]:
+                    voted += 1
+            
+            groundtruth = round(sample["num_annotations"]/2)
+            intention = "benign" if voted >= groundtruth else "harmful"
             if self.intention is not None and intention != self.intention:
                 continue
             data["train"].append({
