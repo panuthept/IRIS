@@ -9,7 +9,7 @@ from iris.metrics.safeguard_metrics import SafeGuardMetric
 from iris.model_wrappers.guard_models import load_safeguard, AVAILABLE_GUARDS
 
 """
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
 --dataset_name WildGuardMixDataset \
@@ -17,9 +17,13 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --top_logprobs 128 \
 --save_logits \
 --max_samples 4000 \
---output_path ./outputs/LlamaGuard8B/WildGuardMixDataset/train/4000_prompts.jsonl
+--disable_logitlens \
+--prompt_intervention \
+--lmi_label Safe \
+--lmi_k 100 \
+--output_path ./outputs/WildGuard_CFA_Safe/WildGuardMixDataset/train/4000_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
 --dataset_name WildGuardMixDataset \
@@ -27,9 +31,13 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --top_logprobs 128 \
 --save_logits \
 --save_activations \
---output_path ./outputs/LlamaGuard8B/WildGuardMixDataset/test/all_prompts.jsonl
+--disable_logitlens \
+--prompt_intervention \
+--lmi_label Safe \
+--lmi_k 100 \
+--output_path ./outputs/WildGuard_CFA_Safe/WildGuardMixDataset/test/all_prompts_k100.jsonl
 
-CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
+CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
 --dataset_name ORBenchDataset \
@@ -37,7 +45,11 @@ CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
 --top_logprobs 128 \
 --save_logits \
 --save_activations \
---output_path ./outputs/LlamaGuard8B/ORBenchDataset/test/all_prompts.jsonl
+--disable_logitlens \
+--prompt_intervention \
+--lmi_label Safe \
+--lmi_k 100 \
+--output_path ./outputs/WildGuard_CFA_Safe/ORBenchDataset/test/all_prompts_k100.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
@@ -47,9 +59,13 @@ CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --top_logprobs 128 \
 --save_logits \
 --save_activations \
---output_path ./outputs/LlamaGuard8B/OpenAIModerationDataset/test/all_prompts.jsonl
+--disable_logitlens \
+--prompt_intervention \
+--lmi_label Safe \
+--lmi_k 100 \
+--output_path ./outputs/WildGuard_CFA_Safe/OpenAIModerationDataset/test/all_prompts_k100.jsonl
 
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
 --dataset_name ToxicChatDataset \
@@ -57,9 +73,13 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --top_logprobs 128 \
 --save_logits \
 --save_activations \
---output_path ./outputs/LlamaGuard8B/ToxicChatDataset/test/all_prompts.jsonl
+--disable_logitlens \
+--prompt_intervention \
+--lmi_label Safe \
+--lmi_k 100 \
+--output_path ./outputs/WildGuard_CFA_Safe/ToxicChatDataset/test/all_prompts_k100.jsonl
 
-CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
 --dataset_name XSTestDataset \
@@ -67,9 +87,13 @@ CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
 --top_logprobs 128 \
 --save_logits \
 --save_activations \
---output_path ./outputs/LlamaGuard8B/XSTestDataset/test/all_prompts.jsonl
+--disable_logitlens \
+--prompt_intervention \
+--lmi_label Safe \
+--lmi_k 100 \
+--output_path ./outputs/WildGuard_CFA_Safe/XSTestDataset/test/all_prompts_k100.jsonl
 
-CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
+CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
 --dataset_name JailbreakBenchDataset \
@@ -77,7 +101,11 @@ CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --top_logprobs 128 \
 --save_logits \
 --save_activations \
---output_path ./outputs/LlamaGuard8B/JailbreakBenchDataset/test/all_prompts.jsonl
+--disable_logitlens \
+--prompt_intervention \
+--lmi_label Safe \
+--lmi_k 100 \
+--output_path ./outputs/WildGuard_CFA_Safe/JailbreakBenchDataset/test/all_prompts_k100.jsonl
 """
 
 def prompt_intervention(prompt, preserve_tokens, tokenizer):
