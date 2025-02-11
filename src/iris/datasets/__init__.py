@@ -15,7 +15,7 @@ from iris.datasets.overshadowprompt import OvershadowPromptDataset
 from iris.datasets.openai_moderation import OpenAIModerationDataset
 from iris.datasets.instruction_induction import InstructionIndutionDataset
 from iris.datasets.beavertails import BeaverTails330kDataset, BeaverTails30kDataset
-from iris.datasets.aegis_ai_content_safety import AegisAIContentSafetyDataset
+from iris.datasets.aegis_ai_content_safety import AegisAIContentSafetyDataset, AegisAIContentSafety2Dataset
 
 
 AVAILABLE_DATASETS = {
@@ -34,6 +34,7 @@ AVAILABLE_DATASETS = {
     "OpenAIModerationDataset": OpenAIModerationDataset,
     "OvershadowPromptDataset": OvershadowPromptDataset,
     "AegisAIContentSafetyDataset": AegisAIContentSafetyDataset,
+    "AegisAIContentSafety2Dataset": AegisAIContentSafety2Dataset,
 }
 
 

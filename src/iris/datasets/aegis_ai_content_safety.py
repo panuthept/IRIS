@@ -65,14 +65,76 @@ class AegisAIContentSafetyDataset(JailbreakDataset):
                 "instructions_true_label": [intention.capitalize()],
             })
         return data
+    
+class AegisAIContentSafety2Dataset(JailbreakDataset):
+    def __init__(
+            self, 
+            category: str = None,
+            intention: str = None,
+            attack_engine: str = None,
+            path: str = "./data/datasets/aegis_ai_content_safety_2",
+            cache_dir: str = "./data/datasets/aegis_ai_content_safety_2",
+    ):
+        self.cache_dir = cache_dir
+        super().__init__(
+            path=path,
+            category=category,
+            intention=intention,
+            attack_engine=attack_engine
+        )
+
+    @classmethod
+    def split_available(cls) -> List[str]:
+        return ["train", "dev", "test"]
+
+    @classmethod
+    def intentions_available(cls) -> List[str]:
+        return ["harmful", "benign"]
+
+    def _load_dataset(self, path: str) -> Dict[str, List]:
+        data: Dict[str, List] = defaultdict(list)
+        # Load train dataset
+        dataset = load_dataset("nvidia/Aegis-AI-Content-Safety-Dataset-2.0", cache_dir=self.cache_dir)
+        # Read train subset
+        for sample in dataset["train"]:
+            prompt = sample["prompt"]
+            intention = "Benign" if sample["prompt_label"] == "safe" else "Harmful"
+            data["train"].append({
+                "instructions": [prompt],
+                "instructions_true_label": [intention.capitalize()],
+            })
+        # Read dev subset
+        for sample in dataset["validation"]:
+            prompt = sample["prompt"]
+            intention = "Benign" if sample["prompt_label"] == "safe" else "Harmful"
+            data["dev"].append({
+                "instructions": [prompt],
+                "instructions_true_label": [intention.capitalize()],
+            })
+        # Read test subset
+        for sample in dataset["test"]:
+            prompt = sample["prompt"]
+            intention = "Benign" if sample["prompt_label"] == "safe" else "Harmful"
+            data["test"].append({
+                "instructions": [prompt],
+                "instructions_true_label": [intention.capitalize()],
+            })
+        return data
+
 
 if __name__ == "__main__":
-    dataset = AegisAIContentSafetyDataset(
+    dataset = AegisAIContentSafety2Dataset(
         intention="harmful",
-        cache_dir="./data/datasets/aegis_ai_content_safety",
+        cache_dir="./data/datasets/aegis_ai_content_safety_2",
     )
     
     samples = dataset.as_samples(split="test")
+    print(len(samples))
+    print(samples[0].get_prompts()[0])
+    print(samples[0].instructions_true_label[0])
+    print("-" * 100)
+
+    samples = dataset.as_samples(split="dev")
     print(len(samples))
     print(samples[0].get_prompts()[0])
     print(samples[0].instructions_true_label[0])
