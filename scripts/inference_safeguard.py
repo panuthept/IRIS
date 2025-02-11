@@ -18,10 +18,8 @@ CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
 --save_logits \
 --max_samples 4000 \
 --disable_logitlens \
---prompt_intervention \
---lmi_label Safe \
---lmi_k 100 \
---output_path ./outputs/WildGuard_CFA_Safe/WildGuardMixDataset/train/4000_prompts.jsonl
+--prompt_intervention_2 \
+--output_path ./outputs/WildGuard_CFI2/WildGuardMixDataset/train/4000_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
@@ -32,10 +30,8 @@ CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --save_logits \
 --save_activations \
 --disable_logitlens \
---prompt_intervention \
---lmi_label Safe \
---lmi_k 100 \
---output_path ./outputs/WildGuard_CFA_Safe/WildGuardMixDataset/test/all_prompts_k100.jsonl
+--prompt_intervention_2 \
+--output_path ./outputs/WildGuard_CFI2/WildGuardMixDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
@@ -46,10 +42,8 @@ CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
 --save_logits \
 --save_activations \
 --disable_logitlens \
---prompt_intervention \
---lmi_label Safe \
---lmi_k 100 \
---output_path ./outputs/WildGuard_CFA_Safe/ORBenchDataset/test/all_prompts_k100.jsonl
+--prompt_intervention_2 \
+--output_path ./outputs/WildGuard_CFI2/ORBenchDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
@@ -60,10 +54,8 @@ CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --save_logits \
 --save_activations \
 --disable_logitlens \
---prompt_intervention \
---lmi_label Safe \
---lmi_k 100 \
---output_path ./outputs/WildGuard_CFA_Safe/OpenAIModerationDataset/test/all_prompts_k100.jsonl
+--prompt_intervention_2 \
+--output_path ./outputs/WildGuard_CFI2/OpenAIModerationDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
@@ -74,10 +66,8 @@ CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
 --save_logits \
 --save_activations \
 --disable_logitlens \
---prompt_intervention \
---lmi_label Safe \
---lmi_k 100 \
---output_path ./outputs/WildGuard_CFA_Safe/ToxicChatDataset/test/all_prompts_k100.jsonl
+--prompt_intervention_2 \
+--output_path ./outputs/WildGuard_CFI2/ToxicChatDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
@@ -88,10 +78,8 @@ CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --save_logits \
 --save_activations \
 --disable_logitlens \
---prompt_intervention \
---lmi_label Safe \
---lmi_k 100 \
---output_path ./outputs/WildGuard_CFA_Safe/XSTestDataset/test/all_prompts_k100.jsonl
+--prompt_intervention_2 \
+--output_path ./outputs/WildGuard_CFI2/XSTestDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
@@ -102,10 +90,8 @@ CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
 --save_logits \
 --save_activations \
 --disable_logitlens \
---prompt_intervention \
---lmi_label Safe \
---lmi_k 100 \
---output_path ./outputs/WildGuard_CFA_Safe/JailbreakBenchDataset/test/all_prompts_k100.jsonl
+--prompt_intervention_2 \
+--output_path ./outputs/WildGuard_CFI2/JailbreakBenchDataset/test/all_prompts.jsonl
 """
 
 def prompt_intervention(prompt, preserve_tokens, tokenizer):
@@ -116,6 +102,11 @@ def prompt_intervention(prompt, preserve_tokens, tokenizer):
             continue
         intervented_prompt_tokens.append(token_id)
     return tokenizer.decode(intervented_prompt_tokens)
+
+def prompt_intervention_2(prompt):
+    suffled_prompt = prompt.split()
+    random.shuffle(suffled_prompt)
+    return " ".join(suffled_prompt)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -139,6 +130,7 @@ if __name__ == "__main__":
     parser.add_argument("--mask_topk_tokens", type=int, default=None)
     parser.add_argument("--invert_mask", action="store_true")
     parser.add_argument("--prompt_intervention", action="store_true")
+    parser.add_argument("--prompt_intervention_2", action="store_true")
     parser.add_argument("--lmi_label", type=str, default="Harmful", choices=["Harmful", "Safe"])
     parser.add_argument("--lmi_threshold", type=float, default=0.0)
     parser.add_argument("--lmi_k", type=int, default=1000)
@@ -200,6 +192,8 @@ if __name__ == "__main__":
                         prompt = prompt_intervention(prompt, train_harmful_LMIs, tokenizer)
                     else:
                         prompt = prompt_intervention(prompt, train_safe_LMIs, tokenizer)
+                elif args.prompt_intervention_2:
+                    prompt = prompt_intervention_2(prompt)
                 pred_labels, pred_tokens = safeguard.generate(
                     prompt, 
                     return_ori_tokens=True,
