@@ -17,7 +17,7 @@ class NemoGuard(GuardLLM):
             checkpoint_path: str = "./data/models/llama-3.1-nemoguard-8b-content-safety-lora-adapter",
             api_key: str = None,
             api_base: str = None,
-            top_logprobs: int = 10,
+            top_logprobs: int = 2,
             max_tokens: int = 4000,
             temperature: float = 0,
             use_cache: bool = False,
