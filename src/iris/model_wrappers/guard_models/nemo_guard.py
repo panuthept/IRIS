@@ -114,8 +114,6 @@ class NemoGuard(GuardLLM):
             return_logprobs=True, 
             **kwargs
         )
-        print(f"Response: {response}\n\n")
-        print(logprobs)
         # print(logprobs)
         if logprobs is None:
             logprobs = [[(token, 0) for token in self.valid_outputs]]
