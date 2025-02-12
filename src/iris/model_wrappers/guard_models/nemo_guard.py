@@ -5,10 +5,10 @@ from iris.model_wrappers.guard_models import GuardLLM
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
 import torch 
 
-class Aegis2(GuardLLM):
+class NemoGuard(GuardLLM):
     def __init__(
             self, 
-            model_name_or_path: str = "meta-llama/LlamaGuard-7b", 
+            model_name_or_path: str = "meta-llama/Llama-3.1-8B-Instruct", 
             checkpoint_path: str = None,
             api_key: str = None,
             api_base: str = None,
@@ -16,7 +16,7 @@ class Aegis2(GuardLLM):
             max_tokens: int = 4000,
             temperature: float = 0,
             use_cache: bool = False,
-            cache_path: str = "/mnt/data/nicky/cache_hug",
+            cache_path: str = "./cache",
             cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
             disable_logitlens: bool = False,
             enable_logitlens_cache: bool = True,
@@ -134,14 +134,14 @@ class Aegis2(GuardLLM):
         return ["unsafe", "safe"]
 
 if __name__ == "__main__":
-    model = Aegis2(
+    model = NemoGuard(
         model_name_or_path="meta-llama/Llama-3.1-8B-Instruct",
-        checkpoint_path = "/mnt/data/nicky/cache_hug/llama-3.1-nemoguard-8b-content-safety-lora-adapter",# local file that lora weight is saved
+        # checkpoint_path = "/mnt/data/nicky/cache_hug/llama-3.1-nemoguard-8b-content-safety-lora-adapter",# local file that lora weight is saved
         # api_key="EMPTY",
         # api_base="http://10.204.100.70:11700/v1",
-        temperature=1,
-        cache_path="/mnt/data/nicky/cache_hug",
-        use_cache=True,
+        # temperature=1,
+        # cache_path="/mnt/data/nicky/cache_hug",
+        # use_cache=True,
     )
     prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
     response = model.generate(prompt)
