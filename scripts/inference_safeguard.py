@@ -10,88 +10,76 @@ from iris.model_wrappers.guard_models import load_safeguard, AVAILABLE_GUARDS
 
 """
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
---dataset_name WildGuardMixDataset \
---dataset_split train \
---top_logprobs 128 \
---save_logits \
---max_samples 4000 \
---disable_logitlens \
---prompt_intervention_2 \
---output_path ./outputs/WildGuard_CFI2/WildGuardMixDataset/train/4000_prompts.jsonl
-
-CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+--safeguard_name NemoGuard \
+--model_name meta-llama/Llama-3.1-8B-Instruct \
+--checkpoint_path ./data/models/llama-3.1-nemoguard-8b-content-safety-lora-adapter \
 --dataset_name WildGuardMixDataset \
 --dataset_split test \
---top_logprobs 128 \
+--top_logprobs 2 \
 --save_logits \
 --save_activations \
 --disable_logitlens \
---prompt_intervention_2 \
---output_path ./outputs/WildGuard_CFI2/WildGuardMixDataset/test/all_prompts.jsonl
+--output_path ./outputs/NemoGuard/WildGuardMixDataset/test/all_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
+--safeguard_name NemoGuard \
+--model_name meta-llama/Llama-3.1-8B-Instruct \
+--checkpoint_path ./data/models/llama-3.1-nemoguard-8b-content-safety-lora-adapter \
 --dataset_name ORBenchDataset \
 --dataset_split test \
---top_logprobs 128 \
+--top_logprobs 2 \
 --save_logits \
 --save_activations \
 --disable_logitlens \
---prompt_intervention_2 \
---output_path ./outputs/WildGuard_CFI2/ORBenchDataset/test/all_prompts.jsonl
+--output_path ./outputs/NemoGuard/ORBenchDataset/test/all_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
+--safeguard_name NemoGuard \
+--model_name meta-llama/Llama-3.1-8B-Instruct \
+--checkpoint_path ./data/models/llama-3.1-nemoguard-8b-content-safety-lora-adapter \
 --dataset_name OpenAIModerationDataset \
 --dataset_split test \
---top_logprobs 128 \
+--top_logprobs 2 \
 --save_logits \
 --save_activations \
 --disable_logitlens \
---prompt_intervention_2 \
---output_path ./outputs/WildGuard_CFI2/OpenAIModerationDataset/test/all_prompts.jsonl
+--output_path ./outputs/NemoGuard/OpenAIModerationDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+--safeguard_name NemoGuard \
+--model_name meta-llama/Llama-3.1-8B-Instruct \
+--checkpoint_path ./data/models/llama-3.1-nemoguard-8b-content-safety-lora-adapter \
 --dataset_name ToxicChatDataset \
 --dataset_split test \
---top_logprobs 128 \
+--top_logprobs 2 \
 --save_logits \
 --save_activations \
 --disable_logitlens \
---prompt_intervention_2 \
---output_path ./outputs/WildGuard_CFI2/ToxicChatDataset/test/all_prompts.jsonl
+--output_path ./outputs/NemoGuard/ToxicChatDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+--safeguard_name NemoGuard \
+--model_name meta-llama/Llama-3.1-8B-Instruct \
+--checkpoint_path ./data/models/llama-3.1-nemoguard-8b-content-safety-lora-adapter \
 --dataset_name XSTestDataset \
 --dataset_split test \
---top_logprobs 128 \
+--top_logprobs 2 \
 --save_logits \
 --save_activations \
 --disable_logitlens \
---prompt_intervention_2 \
---output_path ./outputs/WildGuard_CFI2/XSTestDataset/test/all_prompts.jsonl
+--output_path ./outputs/NemoGuard/XSTestDataset/test/all_prompts.jsonl
 
 CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+--safeguard_name NemoGuard \
+--model_name meta-llama/Llama-3.1-8B-Instruct \
+--checkpoint_path ./data/models/llama-3.1-nemoguard-8b-content-safety-lora-adapter \
 --dataset_name JailbreakBenchDataset \
 --dataset_split test \
---top_logprobs 128 \
+--top_logprobs 2 \
 --save_logits \
 --save_activations \
 --disable_logitlens \
---prompt_intervention_2 \
---output_path ./outputs/WildGuard_CFI2/JailbreakBenchDataset/test/all_prompts.jsonl
+--output_path ./outputs/NemoGuard/JailbreakBenchDataset/test/all_prompts.jsonl
 """
 
 def prompt_intervention(prompt, preserve_tokens, tokenizer):
@@ -164,8 +152,8 @@ if __name__ == "__main__":
         disable_logitlens=args.disable_logitlens,
         top_logprobs=args.top_logprobs,
     )
-    print(len(safeguard.prefix_token_ids))
-    print(len(safeguard.suffix_token_ids))
+    # print(len(safeguard.prefix_token_ids))
+    # print(len(safeguard.suffix_token_ids))
 
     # Initial dataset
     dataset = load_dataset(args.dataset_name, args.prompt_intention, args.attack_engine)
