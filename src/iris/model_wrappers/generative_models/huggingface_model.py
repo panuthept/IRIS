@@ -459,6 +459,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
     def __init__(
         self, 
         model_name_or_path: str,  
+        adapter_name_or_path: str = None,
         checkpoint_path: str = None,
         modules_to_cache: List[str] = None,
         disable_logitlens: bool = False,
@@ -478,7 +479,9 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 The maximum number of activations and logits to cache.
         """
         # Load model
-        if checkpoint_path:
+        if adapter_name_or_path:
+            self.llm = self.load_adapter_model(model_name_or_path, adapter_name_or_path)
+        elif checkpoint_path:
             self.llm = self.load_finetuned_model(model_name_or_path, checkpoint_path)
         else:
             self.llm = self.load_pretrained_model(model_name_or_path)
@@ -528,6 +531,14 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
                 local_files_only=False,
             )
+        return model
+
+    def load_adapter_model(self, model_name: str, adapter_name: str) -> AutoModelForCausalLM:
+        from adapters import AutoAdapterModel # Lazy import
+
+        model = AutoAdapterModel.from_pretrained(model_name)
+        adapter = model.load_adapter(adapter_name)
+        model.adapter = adapter
         return model
 
     def load_finetuned_model(self, model_name, checkpoint_path: str) -> AutoModelForCausalLM:
