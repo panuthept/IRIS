@@ -47,7 +47,6 @@ class NemoGuard(GuardLLM):
         else:
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path,
-                adapter_name_or_path=adapter_name_or_path,
                 checkpoint_path=checkpoint_path,
                 max_tokens=max_tokens,
                 max_new_tokens=1,
@@ -137,6 +136,7 @@ class NemoGuard(GuardLLM):
     @property
     def valid_outputs(self):
         return ["unsafe", "safe"]
+
 
 if __name__ == "__main__":
     model = NemoGuard()
