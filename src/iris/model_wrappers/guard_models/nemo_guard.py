@@ -120,14 +120,14 @@ class NemoGuard(GuardLLM):
         if logprobs is None:
             logprobs = [[(token, 0) for token in self.valid_outputs]]
 
-        tokens = [token for token, _, _ in logprobs[0]]
-        tokens_logprobs = [logprob for _, logprob, _ in logprobs[0]]
-        tokens_logits = [logit for _, _, logit in logprobs[0]]
+        tokens = [token for token, _, _ in logprobs[5]]
+        tokens_logprobs = [logprob for _, logprob, _ in logprobs[5]]
+        tokens_logits = [logit for _, _, logit in logprobs[5]]
         tokens_probs = np.exp(tokens_logprobs) / np.sum(np.exp(tokens_logprobs))   # Convert logprobs to probabilities
 
-        labels = ["Harmful" if token == "unsafe" else "Benign" for token, _, _ in logprobs[0] if token in self.valid_outputs]
-        labels_logprobs = [logprob for token, logprob, _ in logprobs[0] if token in self.valid_outputs]
-        labels_logits = [logit for token, _, logit in logprobs[0] if token in self.valid_outputs]
+        labels = ["Harmful" if token == "unsafe" else "Benign" for token, _, _ in logprobs[5] if token in self.valid_outputs]
+        labels_logprobs = [logprob for token, logprob, _ in logprobs[5] if token in self.valid_outputs]
+        labels_logits = [logit for token, _, logit in logprobs[5] if token in self.valid_outputs]
         labels_probs = np.exp(labels_logprobs) / np.sum(np.exp(labels_logprobs))   # Convert logprobs to probabilities
 
         outputs = list(zip(labels, labels_probs, labels_logits))
