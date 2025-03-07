@@ -34,6 +34,7 @@ class JailbreakDataset(Dataset):
         path: str,
         intention: str = None,
         category: str = None,
+        language: str = "en",
         attack_engine: str = None,
     ):
         if intention:
@@ -42,7 +43,9 @@ class JailbreakDataset(Dataset):
             assert category in self.categories_available(), f"Category {category} not available"
         if attack_engine:
             assert attack_engine in self.attack_engines_available(), f"Attack engine {attack_engine} not available"
-
+        assert language in self.language_available(), f"Language {language} not available"
+        
+        self.language = language
         self.intention = intention
         self.category = category
         self.attack_engine = attack_engine
@@ -55,6 +58,10 @@ class JailbreakDataset(Dataset):
     @classmethod
     def intentions_available(cls) -> List[str]:
         return ["harmful", "benign"]
+    
+    @classmethod
+    def language_available(cls) -> List[str]:
+        return ["en"]
     
     @classmethod
     def categories_available(cls) -> List[str]:

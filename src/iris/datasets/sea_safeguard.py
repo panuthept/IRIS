@@ -14,13 +14,12 @@ class SEASafeguardDataset(JailbreakDataset):
             path: str = "./data/datasets/sea_safeguard",
             cache_dir: str = "./data/datasets/sea_safeguard",
     ):
-        assert language in self.language_available(), f"Language {language} not available"
-        self.language = language
         self.cache_dir = cache_dir
         super().__init__(
             path=path,
             category=category,
             intention=intention,
+            language=language,
             attack_engine=attack_engine
         )
 

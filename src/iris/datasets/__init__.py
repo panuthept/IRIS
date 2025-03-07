@@ -44,9 +44,11 @@ def load_dataset(
     dataset_name: str, 
     intention: Optional[str] = None, 
     attack_engine: Optional[str] = None,
+    language: Optional[str] = "en",
 ) -> Dataset:
     assert dataset_name in AVAILABLE_DATASETS, f"Invalid dataset name: {dataset_name}"
     return AVAILABLE_DATASETS[dataset_name](
         intention=intention,
         attack_engine=attack_engine,
+        language=language,
     )

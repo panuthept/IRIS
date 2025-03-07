@@ -9,6 +9,42 @@ from iris.metrics.safeguard_metrics import SafeGuardMetric
 from iris.model_wrappers.guard_models import load_safeguard, AVAILABLE_GUARDS
 
 """
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-9b \
+--dataset_name SEASafeguardDataset \
+--dataset_split test \
+--language en \
+--output_path ./outputs/wildguard/SEASafeguardDataset/en/test/all_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+--safeguard_name LlamaGuard \
+--model_name meta-llama/Llama-Guard-3-8B \
+--dataset_name SEASafeguardDataset \
+--dataset_split test \
+--language en \
+--output_path ./outputs/wildguard/SEASafeguardDataset/en/test/all_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
+--dataset_name SEASafeguardDataset \
+--dataset_split test \
+--language en \
+--output_path ./outputs/wildguard/SEASafeguardDataset/en/test/all_prompts.jsonl
+
+CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+--safeguard_name NemoGuard \
+--model_name meta-llama/Llama-3.1-8B-Instruct \
+--checkpoint_path ./data/models/llama-3.1-nemoguard-8b-content-safety-lora-adapter \
+--dataset_name SEASafeguardDataset \
+--dataset_split test \
+--language en \
+--output_path ./outputs/wildguard/SEASafeguardDataset/en/test/all_prompts.jsonl
+
+
+
+
 CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
 --safeguard_name NemoGuard \
 --model_name meta-llama/Llama-3.1-8B-Instruct \
@@ -45,7 +81,7 @@ CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
 --disable_logitlens \
 --output_path ./outputs/NemoGuard/OpenAIModerationDataset/test/all_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
+CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
 --safeguard_name NemoGuard \
 --model_name meta-llama/Llama-3.1-8B-Instruct \
 --checkpoint_path ./data/models/llama-3.1-nemoguard-8b-content-safety-lora-adapter \
@@ -102,6 +138,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, default="meta-llama/Llama-Guard-3-1B")
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="WildGuardMixDataset", choices=list(AVAILABLE_DATASETS.keys()))
+    parser.add_argument("--language", type=str, default="en")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--top_logprobs", type=int, default=128)
     parser.add_argument("--max_samples", type=int, default=None)
@@ -156,7 +193,7 @@ if __name__ == "__main__":
     # print(len(safeguard.suffix_token_ids))
 
     # Initial dataset
-    dataset = load_dataset(args.dataset_name, args.prompt_intention, args.attack_engine)
+    dataset = load_dataset(args.dataset_name, args.prompt_intention, args.attack_engine, args.language)
     samples = dataset.as_samples(split=args.dataset_split)
     random.shuffle(samples)
 
