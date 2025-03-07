@@ -98,7 +98,7 @@ class NemoGuard(GuardLLM):
             "{{\"User Safety\": safe or unsafe rating for the user message, \"Response Safety\": safe or unsafe rating for the agent response. Omit if no agent response present. \"Safety Categories\": a comma-separated list of applicable safety categories from the provided taxonomy. Omit if all safe.}}\n"
             "Do not include anything other than the output JSON in your response.\n"
             "Output JSON:\n"
-            '{"User Safety": '
+            '{{"User Safety": '
         )
     
     def _prompt_classify(
