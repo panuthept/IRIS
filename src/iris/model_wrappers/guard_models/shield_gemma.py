@@ -144,19 +144,21 @@ class ShieldGemma(GuardLLM):
         )
 
         if logprobs is None:
-            logprobs = [[(token, 0) for token in self.valid_outputs]]
+            logprobs = [[(token, 0, 0) for token in self.valid_outputs]]
 
-        tokens = [token for token, _ in logprobs[0]]
-        tokens_scores = [logprob for _, logprob in logprobs[0]]
-        tokens_scores = np.exp(tokens_scores) / np.sum(np.exp(tokens_scores))   # Convert logprobs to probabilities
+        tokens = [token for token, _, _ in logprobs[0]]
+        tokens_logprobs = [logprob for _, logprob, _ in logprobs[0]]
+        tokens_logits = [logit for _, _, logit in logprobs[0]]
+        tokens_probs = np.exp(tokens_logprobs) / np.sum(np.exp(tokens_logprobs))   # Convert logprobs to probabilities
 
-        labels = ["Harmful" if token == "Yes" else "Benign" for token, _ in logprobs[0] if token in self.valid_outputs]
-        labels_scores = [logprob for token, logprob in logprobs[0] if token in self.valid_outputs]
-        labels_scores = np.exp(labels_scores) / np.sum(np.exp(labels_scores))   # Convert logprobs to probabilities
+        labels = ["Harmful" if token == "Yes" else "Benign" for token, _, _ in logprobs[0] if token in self.valid_outputs]
+        labels_logprobs = [logprob for token, logprob, _ in logprobs[0] if token in self.valid_outputs]
+        labels_logits = [logit for token, _, logit in logprobs[0] if token in self.valid_outputs]
+        labels_probs = np.exp(labels_logprobs) / np.sum(np.exp(labels_logprobs))   # Convert logprobs to probabilities
 
-        outputs = list(zip(labels, labels_scores))
+        outputs = list(zip(labels, labels_probs, labels_logits))
         if return_ori_tokens:
-            outputs = (outputs, list(zip(tokens, tokens_scores)))
+            outputs = (outputs, list(zip(tokens, tokens_probs, tokens_logits)))
         return outputs
 
     def _response_classify(self, prompt: str, response: str, **kwargs) -> str:

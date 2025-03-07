@@ -116,7 +116,7 @@ class NemoGuard(GuardLLM):
         )
         # print(logprobs)
         if logprobs is None:
-            logprobs = [[(token, 0) for token in self.valid_outputs]]
+            logprobs = [[(token, 0, 0) for token in self.valid_outputs]]
 
         tokens = [token for token, _, _ in logprobs[5]]
         tokens_logprobs = [logprob for _, logprob, _ in logprobs[5]]
