@@ -36,7 +36,7 @@ class NemoGuard(GuardLLM):
                     api_key=api_key,
                     api_base=api_base,
                 ),
-                max_new_tokens=6,
+                max_new_tokens=1,
                 temperature=temperature,
                 logprobs=True,
                 top_logprobs=top_logprobs,
@@ -49,7 +49,7 @@ class NemoGuard(GuardLLM):
                 model_name_or_path,
                 checkpoint_path=checkpoint_path,
                 max_tokens=max_tokens,
-                max_new_tokens=6,
+                max_new_tokens=1,
                 temperature=temperature,
                 logprobs=True,
                 top_logprobs=top_logprobs,
@@ -98,6 +98,7 @@ class NemoGuard(GuardLLM):
             "{{\"User Safety\": safe or unsafe rating for the user message, \"Response Safety\": safe or unsafe rating for the agent response. Omit if no agent response present. \"Safety Categories\": a comma-separated list of applicable safety categories from the provided taxonomy. Omit if all safe.}}\n"
             "Do not include anything other than the output JSON in your response.\n"
             "Output JSON:\n"
+            '{"User Safety": '
         )
     
     def _prompt_classify(
@@ -115,7 +116,7 @@ class NemoGuard(GuardLLM):
             **kwargs
         )
         print(response)
-        # print(logprobs)
+        print(logprobs)
         if logprobs is None:
             logprobs = [[(token, 0, 0) for token in self.valid_outputs]]
 
