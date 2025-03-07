@@ -7,6 +7,7 @@ from iris.datasets.wildchat import WildChatDataset
 from iris.datasets.toxic_chat import ToxicChatDataset
 from iris.datasets.base import Dataset, JailbreakDataset
 from iris.datasets.wildguardmix import WildGuardMixDataset
+from iris.datasets.sea_safeguard import SEASafeguardDataset
 from iris.datasets.jailbreakv_28k import JailbreaKV28kDataset
 from iris.datasets.awesome_prompts import AwesomePromptsDataset
 from iris.datasets.jailbreak_bench import JailbreakBenchDataset
@@ -25,6 +26,7 @@ AVAILABLE_DATASETS = {
     "ORBenchDataset": ORBenchDataset,
     "WildChatDataset": WildChatDataset,
     "ToxicChatDataset": ToxicChatDataset,
+    "SEASafeguardDataset": SEASafeguardDataset,
     "WildGuardMixDataset": WildGuardMixDataset,
     "JailbreaKV28kDataset": JailbreaKV28kDataset,
     "AwesomePromptsDataset": AwesomePromptsDataset,
