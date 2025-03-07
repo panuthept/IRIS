@@ -760,6 +760,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         # Ensure that the last token is not masked
         encoded_texts["attention_mask"][:, -1] = 1
         # Generate the response
+        print(encoded_texts["input_ids"].size())
         self.llm.eval()
         completed_ids, logprobs, logits = self._generate(
             input_ids=encoded_texts["input_ids"],
