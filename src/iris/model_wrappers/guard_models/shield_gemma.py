@@ -67,7 +67,7 @@ class ShieldGemma(GuardLLM):
             api_key: str = None,
             api_base: str = None,
             top_logprobs: int = 10,
-            max_tokens: int = 3000,
+            max_tokens: int = 4000,
             temperature: float = 0,
             use_cache: bool = False,
             cache_path: str = "./cache",
