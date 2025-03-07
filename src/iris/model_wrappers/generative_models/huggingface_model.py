@@ -696,8 +696,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             # Tokenize the messages
             encoded_texts = self.tokenizer.apply_chat_template(
                 messages,
-                # max_length=self.max_tokens,
-                # truncation=True,
+                max_length=self.max_tokens,
+                truncation=True,
                 add_generation_prompt=True,
                 return_dict=True,
                 padding=True,
@@ -710,8 +710,8 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             # Tokenize the prompt
             encoded_texts = self.tokenizer(
                 texts,
-                # max_length=self.max_tokens,
-                # truncation=True,
+                max_length=self.max_tokens,
+                truncation=True,
                 add_special_tokens=add_special_tokens,
                 padding=True,
                 return_tensors="pt",
