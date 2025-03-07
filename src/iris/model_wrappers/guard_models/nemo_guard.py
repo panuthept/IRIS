@@ -18,7 +18,7 @@ class NemoGuard(GuardLLM):
             api_key: str = None,
             api_base: str = None,
             top_logprobs: int = 2,
-            max_tokens: int = 2500,
+            max_tokens: int = 3000,
             temperature: float = 0,
             use_cache: bool = False,
             cache_path: str = "./cache",
@@ -114,6 +114,7 @@ class NemoGuard(GuardLLM):
             return_logprobs=True, 
             **kwargs
         )
+        print(response)
         # print(logprobs)
         if logprobs is None:
             logprobs = [[(token, 0, 0) for token in self.valid_outputs]]
