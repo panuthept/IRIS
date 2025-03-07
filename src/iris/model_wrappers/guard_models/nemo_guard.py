@@ -18,7 +18,7 @@ class NemoGuard(GuardLLM):
             api_key: str = None,
             api_base: str = None,
             top_logprobs: int = 2,
-            max_tokens: int = 2990,
+            max_tokens: int = 2500,
             temperature: float = 0,
             use_cache: bool = False,
             cache_path: str = "./cache",
