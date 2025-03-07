@@ -749,6 +749,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             add_special_tokens=add_special_tokens,
             special_tokenizer_kwargs=special_tokenizer_kwargs,
         )
+        print(encoded_texts["input_ids"].size())
         if mask_first_n_tokens:
             encoded_texts["attention_mask"][:, :mask_first_n_tokens] = 0
         if mask_last_n_tokens:
