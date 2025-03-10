@@ -7,22 +7,14 @@ from iris.datasets import load_dataset, AVAILABLE_DATASETS
 from iris.model_wrappers.guard_models import load_safeguard, AVAILABLE_GUARDS
 
 """
-
+CUDA_VISIBLE_DEVICES=0 python scripts/tokenize_safeguard.py \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
+--dataset_name SEASafeguardDataset \
+--dataset_split test \
+--language en \
 """
 
-def prompt_intervention(prompt, preserve_tokens, tokenizer):
-    intervented_prompt_tokens = []
-    prompt_tokens = tokenizer(prompt, add_special_tokens=False)["input_ids"]
-    for token_id in prompt_tokens:
-        if token_id not in preserve_tokens:
-            continue
-        intervented_prompt_tokens.append(token_id)
-    return tokenizer.decode(intervented_prompt_tokens)
-
-def prompt_intervention_2(prompt):
-    suffled_prompt = prompt.split()
-    random.shuffle(suffled_prompt)
-    return " ".join(suffled_prompt)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
