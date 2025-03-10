@@ -101,6 +101,18 @@ class NemoGuard(GuardLLM):
             '{{"User Safety": "'
             # '{{"User Safety":'
         )
+
+    def _prompt_classification_tokenizer(self, prompt: str) -> dict:
+        inputs = self.sample_clf_prompt_template.format(instruction=prompt)
+        encoded_inputs = self.model.tokenize(
+            texts=[inputs], 
+            apply_chat_template=False, 
+            add_special_tokens=True,
+        )
+        return encoded_inputs
+    
+    def _response_classification_tokenizer(self, prompt: str, prompt_label: str, response: str) -> dict:
+        pass
     
     def _prompt_classify(
             self, 
