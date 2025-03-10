@@ -8,8 +8,8 @@ from iris.model_wrappers.guard_models import load_safeguard, AVAILABLE_GUARDS
 
 """
 CUDA_VISIBLE_DEVICES=0 python scripts/tokenize_safeguard.py \
---safeguard_name WildGuard \
---model_name allenai/wildguard \
+--safeguard_name ShieldGemma \
+--model_name google/shieldgemma-9b \
 --dataset_name SEASafeguardDataset \
 --dataset_split test \
 --language en
@@ -66,8 +66,8 @@ if __name__ == "__main__":
             seq_lengths.append(encoded_inputs["input_ids"].shape[-1])
     seq_lengths = np.array(seq_lengths)
     print(f"Max sequence length: {round(seq_lengths.max(), 0)}")
-    print(f"Min sequence length: {round(seq_lengths.min(), 0)}")
     print(f"Mean sequence length: {round(seq_lengths.mean(), 0)}")
     print(f"Median sequence length: {round(np.median(seq_lengths), 0)}")
+    print(f"Min sequence length: {round(seq_lengths.min(), 0)}")
     print(f"Standard deviation of sequence length: {round(seq_lengths.std(), 0)}")
     print(f"99th percentile of sequence length: {round(np.percentile(seq_lengths, 99), 0)}")
