@@ -12,7 +12,7 @@ CUDA_VISIBLE_DEVICES=0 python scripts/tokenize_safeguard.py \
 --model_name allenai/wildguard \
 --dataset_name SEASafeguardDataset \
 --dataset_split test \
---language en \
+--language en
 """
 
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         samples = samples[:args.max_samples]
 
     # Create save directory
-    os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
+    # os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
 
     seq_lengths = []
     for sample in tqdm(samples):
