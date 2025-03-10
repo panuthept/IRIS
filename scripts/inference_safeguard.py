@@ -14,33 +14,37 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
 --model_name google/shieldgemma-9b \
 --dataset_name SEASafeguardDataset \
 --dataset_split test \
---language en \
---output_path ./outputs/wildguard/SEASafeguardDataset/en/test/all_prompts.jsonl
+--language vi \
+--disable_logitlens \
+--output_path ./outputs/ShieldGemma9B/SEASafeguardDataset/vi/test/all_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+CUDA_VISIBLE_DEVICES=1 python scripts/inference_safeguard.py \
 --safeguard_name LlamaGuard \
 --model_name meta-llama/Llama-Guard-3-8B \
 --dataset_name SEASafeguardDataset \
 --dataset_split test \
---language en \
---output_path ./outputs/wildguard/SEASafeguardDataset/en/test/all_prompts.jsonl
+--language vi \
+--disable_logitlens \
+--output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/vi/test/all_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --safeguard_name WildGuard \
 --model_name allenai/wildguard \
 --dataset_name SEASafeguardDataset \
 --dataset_split test \
 --language en \
---output_path ./outputs/wildguard/SEASafeguardDataset/en/test/all_prompts.jsonl
+--disable_logitlens \
+--output_path ./outputs/WildGuard/SEASafeguardDataset/en/test/all_prompts.jsonl
 
-CUDA_VISIBLE_DEVICES=0 python scripts/inference_safeguard.py \
+CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
 --safeguard_name NemoGuard \
 --model_name meta-llama/Llama-3.1-8B-Instruct \
 --checkpoint_path ./data/models/llama-3.1-nemoguard-8b-content-safety-lora-adapter \
 --dataset_name SEASafeguardDataset \
 --dataset_split test \
---language en \
---output_path ./outputs/wildguard/SEASafeguardDataset/en/test/all_prompts.jsonl
+--language vi \
+--disable_logitlens \
+--output_path ./outputs/NemoGuard/SEASafeguardDataset/vi/test/all_prompts.jsonl
 
 
 
