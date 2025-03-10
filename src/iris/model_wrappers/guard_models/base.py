@@ -1,7 +1,7 @@
 from tqdm import tqdm
-from typing import List
 from copy import deepcopy
 from abc import abstractmethod
+from typing import List, Optional
 from iris.model_wrappers import LLM
 from iris.data_types import Sample, ModelResponse
 
@@ -33,3 +33,19 @@ class GuardLLM(LLM):
     
     def generate(self, *args, **kwargs):
         return self._prompt_classify(*args, **kwargs)
+    
+    def predict(self, prompt: str, response: Optional[str] = None):
+        pass
+
+    @abstractmethod
+    def _prompt_classification_tokenizer(self, prompt: str) -> dict:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def _response_classification_tokenizer(self, prompt: str, response: str) -> dict:
+        raise NotImplementedError
+
+    def tokenize(self, prompt: str, prompt_label: Optional[str] = None, response: Optional[str] = None):
+        if prompt_label is not None and response is not None:
+            return self._response_classification_tokenizer(prompt, prompt_label, response)
+        return self._prompt_classification_tokenizer(prompt)
