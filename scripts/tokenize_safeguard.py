@@ -25,6 +25,7 @@ if __name__ == "__main__":
     parser.add_argument("--language", type=str, default="en")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--top_logprobs", type=int, default=128)
+    parser.add_argument("--max_tokens", type=int, default=100000)
     parser.add_argument("--max_samples", type=int, default=None)
     parser.add_argument("--prompt_intention", type=str, default=None)
     parser.add_argument("--attack_engine", type=str, default=None)
@@ -40,6 +41,7 @@ if __name__ == "__main__":
         checkpoint_path=args.checkpoint_path,
         disable_logitlens=True,
         top_logprobs=args.top_logprobs,
+        max_tokens=args.max_tokens,
     )
 
     # Initial dataset
