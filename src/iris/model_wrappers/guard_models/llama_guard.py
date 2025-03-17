@@ -273,6 +273,7 @@ class LlamaGuard(GuardLLM):
             [{"role": "user", "content": prompt}],
             tokenize=False,
         )
+        prompt = prompt + "\n\n"
         print(prompt)
         # prompt = self.sample_clf_prompt_template.format(instruction=prompt)
         response, logprobs = self.model.complete(
