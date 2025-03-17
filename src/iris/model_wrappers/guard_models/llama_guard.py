@@ -246,7 +246,8 @@ class LlamaGuard(GuardLLM):
 
     @property
     def valid_outputs(self):
-        return ["safe", "unsafe"]
+        # return ["safe", "unsafe"]
+        return ["Safe", "Unsafe"]
 
     def get_model_name(self) -> str:
         return self.model_name
@@ -273,8 +274,7 @@ class LlamaGuard(GuardLLM):
             [{"role": "user", "content": prompt}],
             tokenize=False,
         )
-        prompt = prompt + "\n\n"
-        print(prompt)
+        # prompt = prompt + "\n\n"
         # prompt = self.sample_clf_prompt_template.format(instruction=prompt)
         response, logprobs = self.model.complete(
             prompt, 
@@ -283,7 +283,6 @@ class LlamaGuard(GuardLLM):
             return_logprobs=True, 
             **kwargs
         )
-        print(logprobs[0])
 
         if logprobs is None:
             logprobs = [[(token, 0, 0) for token in self.valid_outputs]]
