@@ -269,7 +269,12 @@ class LlamaGuard(GuardLLM):
             return_ori_tokens: bool = False, 
             **kwargs
     ) -> str:
-        prompt = self.sample_clf_prompt_template.format(instruction=prompt)
+        prompt = self.model.tokenizer.apply_chat_template(
+            [{"role": "user", "message": prompt}],
+            tokenize=False,
+        )
+        print(prompt)
+        # prompt = self.sample_clf_prompt_template.format(instruction=prompt)
         response, logprobs = self.model.complete(
             prompt, 
             apply_chat_template=False, 
@@ -277,6 +282,7 @@ class LlamaGuard(GuardLLM):
             return_logprobs=True, 
             **kwargs
         )
+        print(logprobs[0])
 
         if logprobs is None:
             logprobs = [[(token, 0, 0) for token in self.valid_outputs]]
