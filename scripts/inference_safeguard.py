@@ -36,6 +36,15 @@ CUDA_VISIBLE_DEVICES=2 python scripts/inference_safeguard.py \
 --disable_logitlens \
 --output_path ./outputs/WildGuard/SEASafeguardDataset/en/test/all_prompts.jsonl
 
+CUDA_VISIBLE_DEVICES=0,1 python scripts/inference_safeguard.py \
+--safeguard_name WildGuard \
+--model_name allenai/wildguard \
+--dataset_name SEASafeguardDataset \
+--dataset_split test \
+--language my \
+--disable_logitlens \
+--output_path ./outputs/WildGuard/SEASafeguardDataset/my/test/all_prompts.jsonl
+
 CUDA_VISIBLE_DEVICES=3 python scripts/inference_safeguard.py \
 --safeguard_name NemoGuard \
 --model_name meta-llama/Llama-3.1-8B-Instruct \
@@ -138,10 +147,10 @@ def prompt_intervention_2(prompt):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--safeguard_name", type=str, default="ShieldGemma", choices=list(AVAILABLE_GUARDS.keys()))
-    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-Guard-3-1B")
+    parser.add_argument("--safeguard_name", type=str, default="LlamaGuard", choices=list(AVAILABLE_GUARDS.keys()))
+    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-Guard-3-8B")
     parser.add_argument("--checkpoint_path", type=str, default=None)
-    parser.add_argument("--dataset_name", type=str, default="WildGuardMixDataset", choices=list(AVAILABLE_DATASETS.keys()))
+    parser.add_argument("--dataset_name", type=str, default="SEASafeguardDataset", choices=list(AVAILABLE_DATASETS.keys()))
     parser.add_argument("--language", type=str, default="en")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--top_logprobs", type=int, default=128)
