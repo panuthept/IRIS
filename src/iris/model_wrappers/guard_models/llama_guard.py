@@ -270,7 +270,7 @@ class LlamaGuard(GuardLLM):
             **kwargs
     ) -> str:
         prompt = self.model.tokenizer.apply_chat_template(
-            [{"role": "user", "message": prompt}],
+            [{"role": "user", "content": prompt}],
             tokenize=False,
         )
         print(prompt)
