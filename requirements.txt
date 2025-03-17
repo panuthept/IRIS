@@ -4,6 +4,7 @@ peft
 seaborn
 datasets
 jaxtyping
+scikit-learn
 transformers
 easyjailbreak
 transformer-lens
