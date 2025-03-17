@@ -7,7 +7,7 @@
 #SBATCH --output=inference_llamaguard.out
 #SBATCH --time=1:00:00 
 #SBATCH --gres=gpu:1
-#SBATCH --nodelist=a3mega-a3meganodeset-${1}
+#SBATCH --nodelist=a3mega-a3meganodeset-0
 
 /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 --safeguard_name LlamaGuard \
