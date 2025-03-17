@@ -6,7 +6,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --nodelist=a3mega-a3meganodeset-4
 
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_wildguard.py \
+/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 --safeguard_name LlamaGuard \
 --model_name meta-llama/Llama-Guard-3-8B \
 --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-5000 \
