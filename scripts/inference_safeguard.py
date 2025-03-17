@@ -242,6 +242,9 @@ if __name__ == "__main__":
                     mask_tokens=mask_tokens,
                     invert_mask=args.invert_mask,
                 )
+                print(pred_labels)
+                print(gold_label)
+                print("-" * 100)
                 # if pred_tokens[0][0] not in safeguard.valid_outputs:
                 #     unknown_count += 1
 
