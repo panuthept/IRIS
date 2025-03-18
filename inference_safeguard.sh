@@ -30,68 +30,68 @@ echo "Language: ta"
 --disable_logitlens \
 --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/ta/test/all_prompts.jsonl
 
-echo "Language: th"
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---dataset_name SEASafeguardDataset \
---dataset_split test \
---language th \
---max_tokens 3000 \
---disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/th/test/all_prompts.jsonl
+# echo "Language: th"
+# /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+# --safeguard_name LlamaGuard \
+# --model_name meta-llama/Llama-Guard-3-8B \
+# --dataset_name SEASafeguardDataset \
+# --dataset_split test \
+# --language th \
+# --max_tokens 3000 \
+# --disable_logitlens \
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/th/test/all_prompts.jsonl
 
-echo "Language: tl"
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---dataset_name SEASafeguardDataset \
---dataset_split test \
---language tl \
---max_tokens 3000 \
---disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/tl/test/all_prompts.jsonl
+# echo "Language: tl"
+# /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+# --safeguard_name LlamaGuard \
+# --model_name meta-llama/Llama-Guard-3-8B \
+# --dataset_name SEASafeguardDataset \
+# --dataset_split test \
+# --language tl \
+# --max_tokens 3000 \
+# --disable_logitlens \
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/tl/test/all_prompts.jsonl
 
-echo "Language: ms"
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---dataset_name SEASafeguardDataset \
---dataset_split test \
---language ms \
---max_tokens 3000 \
---disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/ms/test/all_prompts.jsonl
+# echo "Language: ms"
+# /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+# --safeguard_name LlamaGuard \
+# --model_name meta-llama/Llama-Guard-3-8B \
+# --dataset_name SEASafeguardDataset \
+# --dataset_split test \
+# --language ms \
+# --max_tokens 3000 \
+# --disable_logitlens \
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/ms/test/all_prompts.jsonl
 
-echo "Language: in"
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---dataset_name SEASafeguardDataset \
---dataset_split test \
---language in \
---max_tokens 3000 \
---disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/in/test/all_prompts.jsonl
+# echo "Language: in"
+# /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+# --safeguard_name LlamaGuard \
+# --model_name meta-llama/Llama-Guard-3-8B \
+# --dataset_name SEASafeguardDataset \
+# --dataset_split test \
+# --language in \
+# --max_tokens 3000 \
+# --disable_logitlens \
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/in/test/all_prompts.jsonl
 
-echo "Language: my"
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---dataset_name SEASafeguardDataset \
---dataset_split test \
---language my \
---max_tokens 3000 \
---disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/my/test/all_prompts.jsonl
+# echo "Language: my"
+# /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+# --safeguard_name LlamaGuard \
+# --model_name meta-llama/Llama-Guard-3-8B \
+# --dataset_name SEASafeguardDataset \
+# --dataset_split test \
+# --language my \
+# --max_tokens 3000 \
+# --disable_logitlens \
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/my/test/all_prompts.jsonl
 
-echo "Language: vi"
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---dataset_name SEASafeguardDataset \
---dataset_split test \
---language vi \
---max_tokens 3000 \
---disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/vi/test/all_prompts.jsonl
+# echo "Language: vi"
+# /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+# --safeguard_name LlamaGuard \
+# --model_name meta-llama/Llama-Guard-3-8B \
+# --dataset_name SEASafeguardDataset \
+# --dataset_split test \
+# --language vi \
+# --max_tokens 3000 \
+# --disable_logitlens \
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/vi/test/all_prompts.jsonl
