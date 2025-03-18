@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=inference_llamaguard_ms
+#SBATCH --job-name=inference_llamaguard_in
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=10
-#SBATCH --output=inference_llamaguard_ms.out
+#SBATCH --output=inference_llamaguard_in.out
 #SBATCH --time=1:00:00 
 #SBATCH --gres=gpu:1
 #SBATCH --nodelist=a3mega-a3meganodeset-0
@@ -14,7 +14,7 @@
 --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-5000 \
 --dataset_name SEASafeguardDataset \
 --dataset_split test \
---language ms \
+--language in \
 --max_tokens 3000 \
 --disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/ms/test/all_prompts.jsonl
+--output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/in/test/all_prompts.jsonl
