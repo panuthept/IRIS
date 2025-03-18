@@ -283,8 +283,8 @@ class LlamaGuard(GuardLLM):
             return_logprobs=True, 
             **kwargs
         )
-        print(logprobs[0])
-        print("-" * 100)
+        # print(logprobs[0])
+        # print("-" * 100)
 
         if logprobs is None:
             logprobs = [[(token, 0, 0) for token in self.valid_outputs]]
