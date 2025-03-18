@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=inference_llamaguard_all
+#SBATCH --job-name=inference_llamaguard_en_ta
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=10
-#SBATCH --output=inference_llamaguard_all.out
+#SBATCH --output=inference_llamaguard_en_ta.out
 #SBATCH --time=1:00:00 
 #SBATCH --gres=gpu:1
 #SBATCH --nodelist=a3mega-a3meganodeset-0
