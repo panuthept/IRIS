@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH --job-name=inference_llamaguard_in
+#SBATCH --job-name=inference_llamaguard_my
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=10
-#SBATCH --output=inference_llamaguard_in.out
+#SBATCH --output=inference_llamaguard_my.out
 #SBATCH --time=1:00:00 
 #SBATCH --gres=gpu:1
-#SBATCH --nodelist=a3mega-a3meganodeset-0
+#SBATCH --nodelist=a3mega-a3meganodeset-2
 
 /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 --safeguard_name LlamaGuard \
@@ -14,7 +14,7 @@
 --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-5000 \
 --dataset_name SEASafeguardDataset \
 --dataset_split test \
---language in \
+--language my \
 --max_tokens 3000 \
 --disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/in/test/all_prompts.jsonl
+--output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/my/test/all_prompts.jsonl
