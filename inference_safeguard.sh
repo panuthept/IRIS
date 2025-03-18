@@ -15,5 +15,6 @@
 --dataset_name SEASafeguardDataset \
 --dataset_split test \
 --language ta \
+--max_tokens 4000 \
 --disable_logitlens \
 --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/ta/test/all_prompts.jsonl
