@@ -108,8 +108,8 @@ class SEASafeguardDataset(JailbreakDataset):
                 if self.intention is not None and intention != self.intention:
                     continue
                 data["test"].append({
-                    "instructions": [sample["prompt"]],
-                    "reference_answers": [sample["response"]],
+                    "instructions": [sample["en_prompt"] if self.language == "en" else sample["local_prompt"]],
+                    "reference_answers": [sample["en_response"]],
                     "instructions_true_label": [intention.capitalize()],
                 })
         return data
