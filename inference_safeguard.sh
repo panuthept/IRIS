@@ -36,86 +36,86 @@ echo "Language: ta"
 --disable_logitlens \
 --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/ta/train/all_prompts.jsonl
 
-echo "Language: th"
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-3500 \
---dataset_name SEASafeguardDataset \
---dataset_split train \
---cultural th \
---subset general \
---max_tokens 3000 \
---max_samples 1000 \
---disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/th/train/all_prompts.jsonl
+# echo "Language: th"
+# /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+# --safeguard_name LlamaGuard \
+# --model_name meta-llama/Llama-Guard-3-8B \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-3500 \
+# --dataset_name SEASafeguardDataset \
+# --dataset_split train \
+# --cultural th \
+# --subset general \
+# --max_tokens 3000 \
+# --max_samples 1000 \
+# --disable_logitlens \
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/th/train/all_prompts.jsonl
 
-echo "Language: tl"
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-3500 \
---dataset_name SEASafeguardDataset \
---dataset_split train \
---cultural tl \
---subset general \
---max_tokens 3000 \
---max_samples 1000 \
---disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/tl/train/all_prompts.jsonl
+# echo "Language: tl"
+# /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+# --safeguard_name LlamaGuard \
+# --model_name meta-llama/Llama-Guard-3-8B \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-3500 \
+# --dataset_name SEASafeguardDataset \
+# --dataset_split train \
+# --cultural tl \
+# --subset general \
+# --max_tokens 3000 \
+# --max_samples 1000 \
+# --disable_logitlens \
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/tl/train/all_prompts.jsonl
 
-echo "Language: ms"
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-3500 \
---dataset_name SEASafeguardDataset \
---dataset_split train \
---cultural ms \
---subset general \
---max_tokens 3000 \
---max_samples 1000 \
---disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/ms/train/all_prompts.jsonl
+# echo "Language: ms"
+# /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+# --safeguard_name LlamaGuard \
+# --model_name meta-llama/Llama-Guard-3-8B \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-3500 \
+# --dataset_name SEASafeguardDataset \
+# --dataset_split train \
+# --cultural ms \
+# --subset general \
+# --max_tokens 3000 \
+# --max_samples 1000 \
+# --disable_logitlens \
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/ms/train/all_prompts.jsonl
 
-echo "Language: in"
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-3500 \
---dataset_name SEASafeguardDataset \
---dataset_split train \
---cultural in \
---subset general \
---max_tokens 3000 \
---max_samples 1000 \
---disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/in/train/all_prompts.jsonl
+# echo "Language: in"
+# /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+# --safeguard_name LlamaGuard \
+# --model_name meta-llama/Llama-Guard-3-8B \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-3500 \
+# --dataset_name SEASafeguardDataset \
+# --dataset_split train \
+# --cultural in \
+# --subset general \
+# --max_tokens 3000 \
+# --max_samples 1000 \
+# --disable_logitlens \
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/in/train/all_prompts.jsonl
 
-echo "Language: my"
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-3500 \
---dataset_name SEASafeguardDataset \
---dataset_split train \
---cultural my \
---subset general \
---max_tokens 3000 \
---max_samples 1000 \
---disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/my/train/all_prompts.jsonl
+# echo "Language: my"
+# /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+# --safeguard_name LlamaGuard \
+# --model_name meta-llama/Llama-Guard-3-8B \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-3500 \
+# --dataset_name SEASafeguardDataset \
+# --dataset_split train \
+# --cultural my \
+# --subset general \
+# --max_tokens 3000 \
+# --max_samples 1000 \
+# --disable_logitlens \
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/my/train/all_prompts.jsonl
 
-echo "Language: vi"
-/home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
---safeguard_name LlamaGuard \
---model_name meta-llama/Llama-Guard-3-8B \
---checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-3500 \
---dataset_name SEASafeguardDataset \
---dataset_split train \
---cultural vi \
---subset general \
---max_tokens 3000 \
---max_samples 1000 \
---disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/vi/train/all_prompts.jsonl
+# echo "Language: vi"
+# /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+# --safeguard_name LlamaGuard \
+# --model_name meta-llama/Llama-Guard-3-8B \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-3500 \
+# --dataset_name SEASafeguardDataset \
+# --dataset_split train \
+# --cultural vi \
+# --subset general \
+# --max_tokens 3000 \
+# --max_samples 1000 \
+# --disable_logitlens \
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/vi/train/all_prompts.jsonl
