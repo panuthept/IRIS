@@ -152,6 +152,8 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="SEASafeguardDataset", choices=list(AVAILABLE_DATASETS.keys()))
     parser.add_argument("--language", type=str, default="en")
+    parser.add_argument("--cultural", type=str, default="th")
+    parser.add_argument("--subset", type=str, default="general")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--top_logprobs", type=int, default=128)
     parser.add_argument("--max_tokens", type=int, default=100000)
@@ -203,6 +205,8 @@ if __name__ == "__main__":
         disable_logitlens=args.disable_logitlens,
         top_logprobs=args.top_logprobs,
         max_tokens=args.max_tokens,
+        cultural=args.cultural,
+        subset=args.subset,
     )
     # print(len(safeguard.prefix_token_ids))
     # print(len(safeguard.suffix_token_ids))
