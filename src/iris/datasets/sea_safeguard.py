@@ -11,11 +11,19 @@ class SEASafeguardDataset(JailbreakDataset):
             category: str = None,
             intention: str = None,
             language: str = "en",
+            cultural: str = "th",
+            subset: str = "general",
+            sensitive_as_harmful: bool = False,
             attack_engine: str = None,
             path: str = "./data/datasets/sea_safeguard",
             cache_dir: str = "./data/datasets/sea_safeguard",
     ):
         self.cache_dir = cache_dir
+        assert cultural in self.cultural_available(), f"Invalid cultural: {cultural}"
+        self.cultural = cultural
+        assert subset in self.subset_available(), f"Invalid subset: {subset}"
+        self.subset = subset
+        self.sensitive_as_harmful = sensitive_as_harmful
         super().__init__(
             path=path,
             category=category,
@@ -29,57 +37,81 @@ class SEASafeguardDataset(JailbreakDataset):
         return ["dev", "test"]
     
     @classmethod
+    def subset_available(cls) -> List[str]:
+        return ["general", "cultural_specific"]
+    
+    @classmethod
+    def cultural_available(cls) -> List[str]:
+        return ["ta", "th", "tl", "ms", "in", "my", "vi"]
+    
+    @classmethod
     def language_available(cls) -> List[str]:
         return ["en", "ta", "th", "tl", "ms", "in", "my", "vi"]
     
     def _load_dataset(self, path: str) -> Dict[str, List]:
         data: Dict[str, List] = defaultdict(list)
 
-        # # Load train dataset
-        # train_dataset = load_dataset("aisingapore/SEASafeguardMix", self.language, cache_dir=self.cache_dir)
-        # for sample in train_dataset["train"]:
-        #     if sample["prompt_label"] is None:
-        #         continue
-        #     intention = "benign" if sample["prompt_label"] == "Safe" else "harmful"
-        #     if self.intention is not None and intention != self.intention:
-        #         continue
-        #     data["train"].append({
-        #         "instructions": [sample["prompt"]],
-        #         "reference_answers": [sample["response"]],
-        #         "instructions_true_label": [intention.capitalize()],
-        #     })
+        if self.subset == "general":
+            # Load train dataset
+            train_dataset = load_dataset("aisingapore/SEASafeguardMix", self.language, cache_dir=self.cache_dir)
+            for sample in train_dataset["train"]:
+                if sample["prompt_label"] is None:
+                    continue
+                intention = "benign" if sample["prompt_label"] == "Safe" else "harmful"
+                if self.intention is not None and intention != self.intention:
+                    continue
+                data["train"].append({
+                    "instructions": [sample["prompt"]],
+                    "reference_answers": [sample["response"]],
+                    "instructions_true_label": [intention.capitalize()],
+                })
 
-        # Load dev dataset
-        dev_dataset = pd.read_csv(f"{path}/dev.csv")
-        # Read dev dataset
-        for i in range(len(dev_dataset)):
-            sample = dev_dataset.iloc[i]
-            if sample["prompt_label"] is None:
-                continue
-            intention = "benign" if sample["prompt_label"] == "Safe" else "harmful"
-            if self.intention is not None and intention != self.intention:
-                continue
-            data["dev"].append({
-                "instructions": [sample[f"{self.language}_prompt"]],
-                "reference_answers": [sample[f"{self.language}_response"]],
-                "instructions_true_label": [intention.capitalize()],
-            })
+            # Load dev dataset
+            dev_dataset = pd.read_csv(f"{path}/dev.csv")
+            # Read dev dataset
+            for i in range(len(dev_dataset)):
+                sample = dev_dataset.iloc[i]
+                if sample["prompt_label"] is None:
+                    continue
+                intention = "benign" if sample["prompt_label"] == "Safe" else "harmful"
+                if self.intention is not None and intention != self.intention:
+                    continue
+                data["dev"].append({
+                    "instructions": [sample[f"{self.language}_prompt"]],
+                    "reference_answers": [sample[f"{self.language}_response"]],
+                    "instructions_true_label": [intention.capitalize()],
+                })
 
-        # Load test dataset
-        test_dataset = pd.read_csv(f"{path}/test.csv")
-        # Read dev dataset
-        for i in range(len(test_dataset)):
-            sample = test_dataset.iloc[i]
-            if sample["prompt_label"] is None:
-                continue
-            intention = "benign" if sample["prompt_label"] == "Safe" else "harmful"
-            if self.intention is not None and intention != self.intention:
-                continue
-            data["test"].append({
-                "instructions": [sample[f"{self.language}_prompt"]],
-                "reference_answers": [sample[f"{self.language}_response"]],
-                "instructions_true_label": [intention.capitalize()],
-            })
+            # Load test dataset
+            test_dataset = pd.read_csv(f"{path}/test.csv")
+            # Read test dataset
+            for i in range(len(test_dataset)):
+                sample = test_dataset.iloc[i]
+                if sample["prompt_label"] is None:
+                    continue
+                intention = "benign" if sample["prompt_label"] == "Safe" else "harmful"
+                if self.intention is not None and intention != self.intention:
+                    continue
+                data["test"].append({
+                    "instructions": [sample[f"{self.language}_prompt"]],
+                    "reference_answers": [sample[f"{self.language}_response"]],
+                    "instructions_true_label": [intention.capitalize()],
+                })
+        else:
+            # Load test dataset
+            test_dataset = load_dataset("aisingapore/SEASafeguardMix", f"{self.cultural}_cultural_specific", cache_dir=self.cache_dir)
+            # Read test dataset
+            for sample in test_dataset:
+                if sample["prompt_label_final"] is None:
+                    continue
+                intention = "benign" if sample["prompt_label_final"] == "Safe" else "harmful" if sample["prompt_label_final"] == "Harmful" else "harmful" if sample["prompt_label_final"] == "Sensitive" and self.sensitive_as_harmful else "benign"
+                if self.intention is not None and intention != self.intention:
+                    continue
+                data["test"].append({
+                    "instructions": [sample["prompt"]],
+                    "reference_answers": [sample["response"]],
+                    "instructions_true_label": [intention.capitalize()],
+                })
         return data
 
 
