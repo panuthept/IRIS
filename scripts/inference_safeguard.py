@@ -205,14 +205,19 @@ if __name__ == "__main__":
         disable_logitlens=args.disable_logitlens,
         top_logprobs=args.top_logprobs,
         max_tokens=args.max_tokens,
-        cultural=args.cultural,
-        subset=args.subset,
     )
     # print(len(safeguard.prefix_token_ids))
     # print(len(safeguard.suffix_token_ids))
 
     # Initial dataset
-    dataset = load_dataset(args.dataset_name, args.prompt_intention, args.attack_engine, args.language)
+    dataset = load_dataset(
+        args.dataset_name, 
+        args.prompt_intention, 
+        args.attack_engine, 
+        args.language,
+        cultural=args.cultural,
+        subset=args.subset,
+    )
     samples = dataset.as_samples(split=args.dataset_split)
     random.shuffle(samples)
 
