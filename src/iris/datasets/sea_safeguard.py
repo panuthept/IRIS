@@ -101,7 +101,7 @@ class SEASafeguardDataset(JailbreakDataset):
             # Load test dataset
             test_dataset = load_dataset("aisingapore/SEASafeguardMix", f"{self.cultural}_cultural_specific", cache_dir=self.cache_dir)
             # Read test dataset
-            for sample in test_dataset:
+            for sample in test_dataset["test"]:
                 if sample["prompt_label_final"] is None:
                     continue
                 intention = "benign" if sample["prompt_label_final"] == "Safe" else "harmful" if sample["prompt_label_final"] == "Harmful" else "harmful" if sample["prompt_label_final"] == "Sensitive" and self.sensitive_as_harmful else "benign"
