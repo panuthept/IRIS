@@ -6,7 +6,7 @@
 #SBATCH --output=inference_finetuned_llamaguard_trainset_en_ta.out
 #SBATCH --time=1:00:00 
 #SBATCH --gres=gpu:1
-#SBATCH --nodelist=a3mega-a3meganodeset-0
+#SBATCH --nodelist=a3mega-a3meganodeset-2
 
 echo "Language: en"
 /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
