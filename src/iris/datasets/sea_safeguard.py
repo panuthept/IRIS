@@ -34,20 +34,20 @@ class SEASafeguardDataset(JailbreakDataset):
     
     def _load_dataset(self, path: str) -> Dict[str, List]:
         data: Dict[str, List] = defaultdict(list)
-        
-        # Load train dataset
-        train_dataset = load_dataset("aisingapore/SEASafeguardMix", self.language, cache_dir=self.cache_dir)
-        for sample in train_dataset["train"]:
-            if sample["prompt_label"] is None:
-                continue
-            intention = "benign" if sample["prompt_label"] == "Safe" else "harmful"
-            if self.intention is not None and intention != self.intention:
-                continue
-            data["train"].append({
-                "instructions": [sample["prompt"]],
-                "reference_answers": [sample["response"]],
-                "instructions_true_label": [intention.capitalize()],
-            })
+
+        # # Load train dataset
+        # train_dataset = load_dataset("aisingapore/SEASafeguardMix", self.language, cache_dir=self.cache_dir)
+        # for sample in train_dataset["train"]:
+        #     if sample["prompt_label"] is None:
+        #         continue
+        #     intention = "benign" if sample["prompt_label"] == "Safe" else "harmful"
+        #     if self.intention is not None and intention != self.intention:
+        #         continue
+        #     data["train"].append({
+        #         "instructions": [sample["prompt"]],
+        #         "reference_answers": [sample["response"]],
+        #         "instructions_true_label": [intention.capitalize()],
+        #     })
 
         # Load dev dataset
         dev_dataset = pd.read_csv(f"{path}/dev.csv")
