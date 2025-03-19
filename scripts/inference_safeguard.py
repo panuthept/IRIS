@@ -257,7 +257,7 @@ if __name__ == "__main__":
                 gold_label = int(gold_label == "Harmful")
                 # NOTE: This implementation handles the case when the safeguard predicts invalid token
                 pred_score = 0.0
-                if len(pred_labels) == 2:
+                if len(pred_labels) > 0:
                     if len(pred_labels[0]) == 2:
                         _pred_scores = [score for label, score in pred_labels if label == "Harmful"]
                         if len(_pred_scores) > 0:

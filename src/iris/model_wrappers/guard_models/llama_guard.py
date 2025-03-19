@@ -300,7 +300,7 @@ class LlamaGuard(GuardLLM):
         labels_logits = [logit for token, _, logit in logprobs[0] if token in self.valid_outputs]
         labels_probs = np.exp(labels_logprobs) / np.sum(np.exp(labels_logprobs))   # Convert logprobs to probabilities
 
-        outputs = list(zip(labels, labels_probs, labels_logits))[:2]
+        outputs = list(zip(labels, labels_probs, labels_logits))
         if return_ori_tokens:
             outputs = (outputs, list(zip(tokens, tokens_probs, tokens_logits)))
         return outputs
