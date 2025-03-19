@@ -34,7 +34,7 @@ class SEASafeguardDataset(JailbreakDataset):
 
     @classmethod
     def split_available(cls) -> List[str]:
-        return ["dev", "test"]
+        return ["train", "dev", "test"]
     
     @classmethod
     def subset_available(cls) -> List[str]:
