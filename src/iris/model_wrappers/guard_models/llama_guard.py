@@ -246,7 +246,7 @@ class LlamaGuard(GuardLLM):
 
     @property
     def valid_outputs(self):
-        return ["safe", "unsafe", "h"]
+        return ["safe", "unsafe"]
         # return ["Safe", "Unsafe"]
 
     def get_model_name(self) -> str:
@@ -294,7 +294,7 @@ class LlamaGuard(GuardLLM):
         tokens_logits = [logit for _, _, logit in logprobs[0]]
         tokens_probs = np.exp(tokens_logprobs) / np.sum(np.exp(tokens_logprobs))   # Convert logprobs to probabilities
 
-        labels = ["Harmful" if token == "unsafe" or token == "h" else "Benign" for token, _, _ in logprobs[0] if token in self.valid_outputs]
+        labels = ["Harmful" if token == "unsafe" else "Benign" for token, _, _ in logprobs[0] if token in self.valid_outputs]
         # labels = ["Harmful" if token == "Unsafe" else "Benign" for token, _, _ in logprobs[0] if token in self.valid_outputs]
         labels_logprobs = [logprob for token, logprob, _ in logprobs[0] if token in self.valid_outputs]
         labels_logits = [logit for token, _, logit in logprobs[0] if token in self.valid_outputs]
