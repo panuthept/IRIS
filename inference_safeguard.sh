@@ -6,7 +6,7 @@
 #SBATCH --output=inference_finetuned_llamaguard_en_ta.out
 #SBATCH --time=1:00:00 
 #SBATCH --gres=gpu:1
-#SBATCH --nodelist=a3mega-a3meganodeset-2
+#SBATCH --nodelist=a3mega-a3meganodeset-0
 
 echo "Language: en"
 /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
@@ -14,13 +14,12 @@ echo "Language: en"
 --model_name meta-llama/Llama-Guard-3-8B \
 --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 --dataset_name SEASafeguardDataset \
---dataset_split train \
+--dataset_split test \
 --language en \
 --subset general \
 --max_tokens 3000 \
---max_samples 1000 \
 --disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/en/train/all_prompts.jsonl
+--output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/en/test/all_prompts.jsonl
 
 echo "Language: ta"
 /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
@@ -28,13 +27,12 @@ echo "Language: ta"
 --model_name meta-llama/Llama-Guard-3-8B \
 --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 --dataset_name SEASafeguardDataset \
---dataset_split train \
+--dataset_split test \
 --language ta \
 --subset general \
 --max_tokens 3000 \
---max_samples 1000 \
 --disable_logitlens \
---output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/ta/train/all_prompts.jsonl
+--output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/ta/test/all_prompts.jsonl
 
 # echo "Language: th"
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
@@ -42,13 +40,12 @@ echo "Language: ta"
 # --model_name meta-llama/Llama-Guard-3-8B \
 # --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
-# --dataset_split train \
+# --dataset_split test \
 # --language th \
 # --subset general \
 # --max_tokens 3000 \
-# --max_samples 1000 \
 # --disable_logitlens \
-# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/th/train/all_prompts.jsonl
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/th/test/all_prompts.jsonl
 
 # echo "Language: tl"
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
@@ -56,13 +53,12 @@ echo "Language: ta"
 # --model_name meta-llama/Llama-Guard-3-8B \
 # --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
-# --dataset_split train \
+# --dataset_split test \
 # --language tl \
 # --subset general \
 # --max_tokens 3000 \
-# --max_samples 1000 \
 # --disable_logitlens \
-# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/tl/train/all_prompts.jsonl
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/tl/test/all_prompts.jsonl
 
 # echo "Language: ms"
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
@@ -70,13 +66,12 @@ echo "Language: ta"
 # --model_name meta-llama/Llama-Guard-3-8B \
 # --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
-# --dataset_split train \
+# --dataset_split test \
 # --language ms \
 # --subset general \
 # --max_tokens 3000 \
-# --max_samples 1000 \
 # --disable_logitlens \
-# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/ms/train/all_prompts.jsonl
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/ms/test/all_prompts.jsonl
 
 # echo "Language: in"
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
@@ -84,13 +79,12 @@ echo "Language: ta"
 # --model_name meta-llama/Llama-Guard-3-8B \
 # --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
-# --dataset_split train \
+# --dataset_split test \
 # --language in \
 # --subset general \
 # --max_tokens 3000 \
-# --max_samples 1000 \
 # --disable_logitlens \
-# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/in/train/all_prompts.jsonl
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/in/test/all_prompts.jsonl
 
 # echo "Language: my"
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
@@ -98,13 +92,12 @@ echo "Language: ta"
 # --model_name meta-llama/Llama-Guard-3-8B \
 # --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
-# --dataset_split train \
+# --dataset_split test \
 # --language my \
 # --subset general \
 # --max_tokens 3000 \
-# --max_samples 1000 \
 # --disable_logitlens \
-# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/my/train/all_prompts.jsonl
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/my/test/all_prompts.jsonl
 
 # echo "Language: vi"
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
@@ -112,10 +105,9 @@ echo "Language: ta"
 # --model_name meta-llama/Llama-Guard-3-8B \
 # --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
-# --dataset_split train \
+# --dataset_split test \
 # --language vi \
 # --subset general \
 # --max_tokens 3000 \
-# --max_samples 1000 \
 # --disable_logitlens \
-# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/vi/train/all_prompts.jsonl
+# --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/vi/test/all_prompts.jsonl
