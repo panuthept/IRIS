@@ -40,16 +40,30 @@ class GuardLLM(LLM):
         prompt: Optional[str] = None,
         response: Optional[str] = None,
     ) -> SafeGuardResponse:
+        prompt_gold_label = None
+        response_gold_label = None
         if input is not None:
             prompt = input.prompt
             response = input.response
+            prompt_gold_label = input.prompt_gold_label
+            response_gold_label = input.response_gold_label
         assert prompt is not None, "Prompt cannot be None"
         # Prompt classification
         prompt_label: List[Tuple[str, float, float]] = self._prompt_classify(prompt)
+        # Response classification
+        response_label = None
         if response is not None:
-            # Response classification
             response_label: List[Tuple[str, float, float]] = self._response_classify(prompt, response)
-        output = SafeGuardResponse(prompt=prompt_label, response=response_label)
+        # Output formatting
+        output = SafeGuardResponse(
+            prompt=prompt, 
+            response=response,
+            prompt_gold_label=prompt_gold_label,
+            response_gold_label=response_gold_label,
+            prompt_label=prompt_label,
+            response_label=response_label,
+
+        )
         return output
 
     @abstractmethod
