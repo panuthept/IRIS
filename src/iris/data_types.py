@@ -3,7 +3,7 @@ from torch import Tensor
 from collections import ChainMap
 from dataclasses import dataclass, field
 from iris.prompt_template import PromptTemplate
-from typing import Union, Tuple, List, Dict, Any
+from typing import Optional, Tuple, List, Dict, Any
 
 
 def all_annotations(cls) -> ChainMap:
@@ -44,6 +44,20 @@ class IRISDiffTripletConfig(IRISL2Config):
 @dataclass
 class IRISCLConfig(IRISL2Config):
     pass
+
+
+@dataclass
+class SafeGuardInput:
+    prompt: str                                 # String of prompt
+    response: Optional[str] = None              # String of response
+    prompt_gold_label: Optional[str] = None     # String of class_name
+    response_gold_label: Optional[str] = None   # String of class_name
+
+
+@dataclass
+class SafeGuardResponse(SafeGuardInput):
+    prompt_label: List[Tuple[str, float, float]]                        # List of (class_name, class_prob, class_logit)
+    response_label: Optional[List[Tuple[str, float, float]]] = None     # List of (class_name, class_prob, class_logit)
 
 
 @dataclass
