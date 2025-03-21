@@ -56,8 +56,8 @@ class SafeGuardInput:
 
 @dataclass
 class SafeGuardResponse(SafeGuardInput):
-    prompt_label: List[Tuple[str, float, float]]                        # List of (class_name, class_prob, class_logit)
-    response_label: Optional[List[Tuple[str, float, float]]] = None     # List of (class_name, class_prob, class_logit)
+    prompt_labels: List[Tuple[str, float, float]]                        # List of (class_name, class_prob, class_logit)
+    response_labels: Optional[List[Tuple[str, float, float]]] = None     # List of (class_name, class_prob, class_logit)
 
 
 @dataclass

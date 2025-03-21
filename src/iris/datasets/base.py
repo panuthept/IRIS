@@ -1,7 +1,7 @@
 from typing import List, Dict
 from abc import ABC, abstractmethod
 from iris.prompt_template import PromptTemplate
-from iris.data_types import Sample, ModelResponse
+from iris.data_types import Sample, ModelResponse, SafeGuardInput
 
 
 class Dataset(ABC):
@@ -75,22 +75,31 @@ class JailbreakDataset(Dataset):
         assert split in self.split_available(), f"Split {split} not available"
         return len(self.data[split])
     
-    def as_samples(self, split: str = "test", prompt_template: PromptTemplate = None) -> List[Sample]:
+    def as_samples(self, split: str = "test") -> List[SafeGuardInput]:
         assert split in self.split_available(), f"Split {split} not available"
 
-        samples: List[Sample] = []
+        samples: List[SafeGuardInput] = []
         for datum in self.data[split]:
-            sample = Sample(**{key: value for key, value in datum.items() if key in Sample.__annotations__})
-            sample.prompt_template = self.default_prompt_template if prompt_template is None else prompt_template
+            sample = SafeGuardInput(**{key: value for key, value in datum.items() if key in SafeGuardInput.__annotations__})
             samples.append(sample)
         return samples
     
-    def as_responses(self, split="test", prompt_template: PromptTemplate = None) -> List[ModelResponse]:
-        assert split in self.split_available(), f"Split {split} not available"
+    # def as_samples(self, split: str = "test", prompt_template: PromptTemplate = None) -> List[Sample]:
+    #     assert split in self.split_available(), f"Split {split} not available"
 
-        responses: List[ModelResponse] = []
-        for datum in self.data[split]:
-            response = ModelResponse(**{key: value for key, value in datum.items() if key in ModelResponse.__annotations__ or key in Sample.__annotations__})
-            response.prompt_template = self.default_prompt_template if prompt_template is None else prompt_template
-            responses.append(response)
-        return responses
+    #     samples: List[Sample] = []
+    #     for datum in self.data[split]:
+    #         sample = Sample(**{key: value for key, value in datum.items() if key in Sample.__annotations__})
+    #         sample.prompt_template = self.default_prompt_template if prompt_template is None else prompt_template
+    #         samples.append(sample)
+    #     return samples
+    
+    # def as_responses(self, split="test", prompt_template: PromptTemplate = None) -> List[ModelResponse]:
+    #     assert split in self.split_available(), f"Split {split} not available"
+
+    #     responses: List[ModelResponse] = []
+    #     for datum in self.data[split]:
+    #         response = ModelResponse(**{key: value for key, value in datum.items() if key in ModelResponse.__annotations__ or key in Sample.__annotations__})
+    #         response.prompt_template = self.default_prompt_template if prompt_template is None else prompt_template
+    #         responses.append(response)
+    #     return responses

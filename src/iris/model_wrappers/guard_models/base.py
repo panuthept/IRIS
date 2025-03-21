@@ -88,8 +88,8 @@ class GuardLLM(LLM):
             response=response,
             prompt_gold_label=prompt_gold_label,
             response_gold_label=response_gold_label,
-            prompt_label=prompt_label,
-            response_label=response_label,
+            prompt_labels=prompt_label,
+            response_labels=response_label,
 
         )
         return output

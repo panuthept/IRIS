@@ -55,15 +55,11 @@ class SEASafeguardDataset(JailbreakDataset):
             # Load train dataset
             train_dataset = load_dataset("aisingapore/SEASafeguardMix", self.language, cache_dir=self.cache_dir)
             for sample in train_dataset["train"]:
-                if sample["prompt_label"] is None:
-                    continue
-                intention = "benign" if sample["prompt_label"] == "Safe" else "harmful"
-                if self.intention is not None and intention != self.intention:
-                    continue
                 data["train"].append({
-                    "instructions": [sample["prompt"]],
-                    "reference_answers": [sample["response"]],
-                    "instructions_true_label": [intention.capitalize()],
+                    "prompt": sample["prompt"],
+                    "response": sample["response"],
+                    "prompt_gold_label": sample["prompt_label"],
+                    "response_gold_label": sample["response_label"],
                 })
 
             # Load dev dataset
@@ -71,15 +67,11 @@ class SEASafeguardDataset(JailbreakDataset):
             # Read dev dataset
             for i in range(len(dev_dataset)):
                 sample = dev_dataset.iloc[i]
-                if sample["prompt_label"] is None:
-                    continue
-                intention = "benign" if sample["prompt_label"] == "Safe" else "harmful"
-                if self.intention is not None and intention != self.intention:
-                    continue
                 data["dev"].append({
-                    "instructions": [sample[f"{self.language}_prompt"]],
-                    "reference_answers": [sample[f"{self.language}_response"]],
-                    "instructions_true_label": [intention.capitalize()],
+                    "prompt": sample[f"{self.language}_prompt"],
+                    "response": sample[f"{self.language}_response"],
+                    "prompt_gold_label": sample["prompt_label"],
+                    "response_gold_label": sample["response_label"],
                 })
 
             # Load test dataset
@@ -87,30 +79,22 @@ class SEASafeguardDataset(JailbreakDataset):
             # Read test dataset
             for i in range(len(test_dataset)):
                 sample = test_dataset.iloc[i]
-                if sample["prompt_label"] is None:
-                    continue
-                intention = "benign" if sample["prompt_label"] == "Safe" else "harmful"
-                if self.intention is not None and intention != self.intention:
-                    continue
                 data["test"].append({
-                    "instructions": [sample[f"{self.language}_prompt"]],
-                    "reference_answers": [sample[f"{self.language}_response"]],
-                    "instructions_true_label": [intention.capitalize()],
+                    "prompt": sample[f"{self.language}_prompt"],
+                    "response": sample[f"{self.language}_response"],
+                    "prompt_gold_label": sample["prompt_label"],
+                    "response_gold_label": sample["response_label"],
                 })
         else:
             # Load test dataset
             test_dataset = load_dataset("aisingapore/SEASafeguardMix", f"{self.cultural}_cultural_specific", cache_dir=self.cache_dir)
             # Read test dataset
             for sample in test_dataset["test"]:
-                if sample["prompt_label_final"] is None:
-                    continue
-                intention = "benign" if sample["prompt_label_final"] == "Safe" else "harmful" if sample["prompt_label_final"] == "Harmful" else "harmful" if sample["prompt_label_final"] == "Sensitive" and self.sensitive_as_harmful else "benign"
-                if self.intention is not None and intention != self.intention:
-                    continue
                 data["test"].append({
-                    "instructions": [sample["en_prompt"] if self.language == "en" else sample["local_prompt"]],
-                    "reference_answers": [sample["en_response"]],
-                    "instructions_true_label": [intention.capitalize()],
+                    "prompt": sample["en_prompt"] if self.language == "en" else sample["local_prompt"],
+                    "response": sample["en_response"] if self.language == "en" else sample["local_response"],
+                    "prompt_gold_label": sample["prompt_label"],
+                    "response_gold_label": sample["response_label"],
                 })
         return data
 
@@ -121,14 +105,24 @@ if __name__ == "__main__":
     )
     samples = dataset.as_samples(split="test")
     print(len(samples))
-    print(samples[0].get_prompts()[0])
-    # print(samples[0].reference_answers[0])
-    print(samples[0].instructions_true_label[0])
+    print(samples[0].prompt)
+    print(samples[0].prompt_gold_label)
+    print(samples[0].response)
+    print(samples[0].response_gold_label)
     print("-" * 100)
 
     samples = dataset.as_samples(split="dev")
     print(len(samples))
-    print(samples[0].get_prompts()[0])
-    # print(samples[0].reference_answers[0])
-    print(samples[0].instructions_true_label[0])
+    print(samples[0].prompt)
+    print(samples[0].prompt_gold_label)
+    print(samples[0].response)
+    print(samples[0].response_gold_label)
+    print("-" * 100)
+
+    samples = dataset.as_samples(split="train")
+    print(len(samples))
+    print(samples[0].prompt)
+    print(samples[0].prompt_gold_label)
+    print(samples[0].response)
+    print(samples[0].response_gold_label)
     print("=" * 100)
