@@ -1,3 +1,4 @@
+import numpy as np
 from tqdm import tqdm
 from copy import deepcopy
 from abc import abstractmethod
@@ -7,13 +8,9 @@ from iris.data_types import Sample, ModelResponse, SafeGuardInput, SafeGuardResp
 
 
 class GuardLLM(LLM):
-    @abstractmethod
-    def _prompt_classify(self, prompt: str, **kwargs) -> str:
-        raise NotImplementedError
-    
-    @abstractmethod
-    def _response_classify(self, prompt: str, response: str, **kwargs) -> str:
-        raise NotImplementedError
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.valid_tokens = {} # Dictionary of {String: "Safe", String: "Harmful"}
 
     def prompt_classify(self, sample: Sample) -> Sample:
         sample = deepcopy(sample)
@@ -34,11 +31,42 @@ class GuardLLM(LLM):
     def generate(self, *args, **kwargs):
         return self._prompt_classify(*args, **kwargs)
     
+    @abstractmethod
+    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def _complete(self, instruction: str, **kwargs) -> str:
+        raise NotImplementedError
+    
+    def complete(self, instruction: str, **kwargs) -> List[Tuple[str, float, float]]:
+        outputs = self._complete(instruction, **kwargs)
+        if outputs is None:
+            outputs = [[(valid_token, 0.0, 0.0) for valid_token in self.valid_tokens.keys()]]
+        output = outputs[0]
+        # Filter out invalid tokens
+        output = [(self.valid_tokens[token], logprob, logit) for token, logprob, logit in output if token in self.valid_tokens]
+        # Convert logprobs to probabilities
+        labels = [label for label, _, _ in output]
+        labels_logprobs = [logprob for _, logprob, _ in output]
+        labels_logits = [logit for _, _, logit in output]
+        labels_probs = np.exp(labels_logprobs) / np.sum(np.exp(labels_logprobs))
+        return list(zip(labels, labels_probs, labels_logits))
+    
+    def _prompt_classify(self, prompt: str, **kwargs) -> List[Tuple[str, float, float]]:
+        instruction: str = self._apply_safeguard_template(prompt=prompt)
+        return self.complete(instruction, **kwargs)
+    
+    def _response_classify(self, prompt: str, response: str, **kwargs) -> List[Tuple[str, float, float]]:
+        instruction: str = self._apply_safeguard_template(prompt=prompt, response=response)
+        return self.complete(instruction, **kwargs)
+    
     def predict(
         self,
         input: Optional[SafeGuardInput] = None,
         prompt: Optional[str] = None,
         response: Optional[str] = None,
+        **kwargs,
     ) -> SafeGuardResponse:
         prompt_gold_label = None
         response_gold_label = None
@@ -49,11 +77,11 @@ class GuardLLM(LLM):
             response_gold_label = input.response_gold_label
         assert prompt is not None, "Prompt cannot be None"
         # Prompt classification
-        prompt_label: List[Tuple[str, float, float]] = self._prompt_classify(prompt)
+        prompt_label: List[Tuple[str, float, float]] = self._prompt_classify(prompt, **kwargs)
         # Response classification
         response_label = None
         if response is not None:
-            response_label: List[Tuple[str, float, float]] = self._response_classify(prompt, response)
+            response_label: List[Tuple[str, float, float]] = self._response_classify(prompt, response, **kwargs)
         # Output formatting
         output = SafeGuardResponse(
             prompt=prompt, 
