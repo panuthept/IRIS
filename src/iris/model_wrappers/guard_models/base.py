@@ -1,9 +1,19 @@
 from tqdm import tqdm
 from copy import deepcopy
 from abc import abstractmethod
+from dataclasses import dataclass
 from typing import List, Optional
 from iris.model_wrappers import LLM
 from iris.data_types import Sample, ModelResponse
+
+@dataclass
+class GuardLLMResponse:
+    prompt: str
+    response: Optional[str]
+    prompt_harmful_gold_label: Optional[str]
+    prompt_harmful_pred_label: str
+    response_harmful_gold_label: Optional[str]
+    response_harmful_pred_label: Optional[str]
 
 
 class GuardLLM(LLM):
@@ -34,7 +44,12 @@ class GuardLLM(LLM):
     def generate(self, *args, **kwargs):
         return self._prompt_classify(*args, **kwargs)
     
-    def predict(self, prompt: str, response: Optional[str] = None):
+    def predict(
+        self, 
+        sample: Optional[Sample] = None, 
+        prompt: Optional[str] = None, 
+        response: Optional[str] = None
+    ) -> GuardLLMResponse:
         pass
 
     @abstractmethod
