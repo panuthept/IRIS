@@ -50,7 +50,7 @@ class SealionGuard(GuardLLM):
                 model_name_or_path,
                 checkpoint_path=checkpoint_path,
                 max_tokens=max_tokens,
-                max_new_tokens=10,
+                max_new_tokens=1,
                 temperature=temperature,
                 logprobs=True,
                 top_logprobs=top_logprobs,
@@ -85,6 +85,7 @@ class SealionGuard(GuardLLM):
                 tokenize=False,
                 add_generation_prompt=False,
             )
+        instruction = instruction + "<start_of_turn>model\n"
         return instruction
     
     def _complete(self, instruction: str, **kwargs) -> str:
@@ -95,7 +96,7 @@ class SealionGuard(GuardLLM):
             return_logprobs=True,
             **kwargs
         )
-        outputs = [outputs[3]]
+        print(outputs[0])
         return outputs
 
 
