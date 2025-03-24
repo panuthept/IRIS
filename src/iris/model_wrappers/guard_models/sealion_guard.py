@@ -96,7 +96,6 @@ class SealionGuard(GuardLLM):
             **kwargs
         )
         outputs = [outputs[3]]
-        print(outputs)
         return outputs
 
 
