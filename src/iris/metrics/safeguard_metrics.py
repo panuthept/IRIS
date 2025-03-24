@@ -31,8 +31,6 @@ class SafeGuardMetric:
         # Convert to NumpyArray
         gold_labels = np.array(gold_labels)
         pred_scores = np.array(pred_scores)
-        print(gold_labels)
-        print(pred_scores)
         # Compute Recall, Precision, F1
         self.precision, self.recall, self.f1, _ = precision_recall_fscore_support(gold_labels, pred_scores > 0.5, average='binary')
         # Compute ROC curve and ROC area
