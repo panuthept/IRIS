@@ -239,21 +239,23 @@ if __name__ == "__main__":
             safeguard_response: SafeGuardResponse = safeguard.predict(input=sample)
             if sample.response is not None:
                 # Get response classification results
-                if len(safeguard_response.response_labels) == 0:
+                response_harmful_score = [score for label, score, logit in safeguard_response.response_labels if label == "Harmful"]
+                if len(response_harmful_score) == 0:
                     response_unknown += 1
                     response_harmful_score = 0.0
                 else:
-                    response_harmful_score = [score for label, score, logit in safeguard_response.response_labels if label == "Harmful"][0]
+                    response_harmful_score = response_harmful_score[0]
                 response_harmful_scores.append(response_harmful_score)
                 response_gold_labels.append(int(sample.response_gold_label == "Harmful"))
                 if not args.mixed_tasks_sample:
                     continue
             # Get prompt classification results
-            if len(safeguard_response.prompt_labels) == 0:
+            prompt_harmful_score = [score for label, score, logit in safeguard_response.prompt_labels if label == "Harmful"]
+            if len(prompt_harmful_score) == 0:
                 prompt_unknown += 1
                 prompt_harmful_score = 0.0
             else:
-                prompt_harmful_score = [score for label, score, logit in safeguard_response.prompt_labels if label == "Harmful"][0]
+                prompt_harmful_score = prompt_harmful_score[0]
             prompt_harmful_scores.append(prompt_harmful_score)
             prompt_gold_labels.append(int(sample.prompt_gold_label == "Harmful"))
             # Save results
