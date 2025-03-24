@@ -266,7 +266,8 @@ if __name__ == "__main__":
                 "prompt_gold_label": sample.prompt_gold_label,
                 "response": sample.response,
                 "response_labels": safeguard_response.response_labels,
-                "response_gold_label": sample.response_gold_label
+                "response_gold_label": sample.response_gold_label,
+                "metadata": safeguard_response.metadata,
             }, ensure_ascii=False) + "\n")
 
             # if not args.disable_logitlens:
