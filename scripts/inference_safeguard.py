@@ -3,9 +3,11 @@ import json
 import random
 import argparse
 from tqdm import tqdm
+from typing import List
 from transformers import AutoTokenizer
 from iris.datasets import load_dataset, AVAILABLE_DATASETS
 from iris.metrics.safeguard_metrics import SafeGuardMetric
+from iris.data_types import SafeGuardInput, SafeGuardResponse
 from iris.model_wrappers.guard_models import load_safeguard, AVAILABLE_GUARDS
 
 """
@@ -151,6 +153,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, default="meta-llama/Llama-Guard-3-8B")
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="SEASafeguardDataset", choices=list(AVAILABLE_DATASETS.keys()))
+    parser.add_argument("--mixed_tasks_sample", action="store_true")
     parser.add_argument("--language", type=str, default="en")
     parser.add_argument("--cultural", type=str, default="th")
     parser.add_argument("--subset", type=str, default="general")
@@ -206,8 +209,6 @@ if __name__ == "__main__":
         top_logprobs=args.top_logprobs,
         max_tokens=args.max_tokens,
     )
-    # print(len(safeguard.prefix_token_ids))
-    # print(len(safeguard.suffix_token_ids))
 
     # Initial dataset
     dataset = load_dataset(
@@ -218,7 +219,7 @@ if __name__ == "__main__":
         cultural=args.cultural,
         subset=args.subset,
     )
-    samples = dataset.as_samples(split=args.dataset_split)
+    samples: List[SafeGuardInput] = dataset.as_samples(split=args.dataset_split)
     random.shuffle(samples)
 
     if args.max_samples is not None:
@@ -229,63 +230,59 @@ if __name__ == "__main__":
 
     gold_labels = []
     pred_scores = []
-    unknown_count = 0
+
+    prompt_unknown = 0
+    prompt_harmful_scores = []
+    prompt_gold_labels = []
+    response_unknown = 0
+    response_harmful_scores = []
+    response_gold_labels = []
     with open(args.output_path, "w") as f:
         for sample in tqdm(samples):
-            prompts = sample.get_prompts()
-            _gold_labels = sample.instructions_true_label
-            for prompt, gold_label in zip(prompts, _gold_labels):
-                # Intervene prompt (Optional)
-                if args.prompt_intervention:
-                    if args.lmi_label == "Harmful":
-                        prompt = prompt_intervention(prompt, train_harmful_LMIs, tokenizer)
-                    else:
-                        prompt = prompt_intervention(prompt, train_safe_LMIs, tokenizer)
-                elif args.prompt_intervention_2:
-                    prompt = prompt_intervention_2(prompt)
-                pred_labels, pred_tokens = safeguard.generate(
-                    prompt, 
-                    return_ori_tokens=True,
-                    mask_first_n_tokens=args.mask_first_n_tokens,
-                    mask_last_n_tokens=args.mask_last_n_tokens,
-                    mask_tokens=mask_tokens,
-                    invert_mask=args.invert_mask,
-                )
-                # if pred_tokens[0][0] not in safeguard.valid_outputs:
-                #     unknown_count += 1
-
-                gold_label = int(gold_label == "Harmful")
-                # NOTE: This implementation handles the case when the safeguard predicts invalid token
-                pred_score = 0.0
-                if len(pred_labels) > 0:
-                    if len(pred_labels[0]) == 2:
-                        _pred_scores = [score for label, score in pred_labels if label == "Harmful"]
-                        if len(_pred_scores) > 0:
-                            pred_score = _pred_scores[0]
-                    else:
-                        _pred_scores = [score for label, score, logit in pred_labels if label == "Harmful"]
-                        if len(_pred_scores) > 0:
-                            pred_score = _pred_scores[0]
+            safeguard_response: SafeGuardResponse = safeguard.predict(input=sample)
+            if sample.response is not None:
+                # Get response classification results
+                if len(safeguard_response.response_labels) == 0:
+                    response_unknown += 1
+                    response_harmful_score = 0.0
                 else:
-                    unknown_count += 1
+                    response_harmful_score = [score for label, score, logit in safeguard_response.response_labels if label == "Harmful"][0]
+                response_harmful_scores.append(response_harmful_score)
+                response_gold_labels.append(int(sample.response_gold_label == "Harmful"))
+                if not args.mixed_tasks_sample:
+                    continue
+            # Get prompt classification results
+            if len(safeguard_response.prompt_labels) == 0:
+                prompt_unknown += 1
+                prompt_harmful_score = 0.0
+            else:
+                prompt_harmful_score = [score for label, score, logit in safeguard_response.prompt_labels if label == "Harmful"][0]
+            prompt_harmful_scores.append(prompt_harmful_score)
+            prompt_gold_labels.append(int(sample.prompt_gold_label == "Harmful"))
+            # Save results
+            f.write(json.dumps({
+                "prompt": sample.prompt,
+                "prompt_labels": safeguard_response.prompt_labels,
+                "prompt_gold_label": sample.prompt_gold_label,
+                "response": sample.response,
+                "response_labels": safeguard_response.response_labels,
+                "response_gold_label": sample.response_gold_label
+            }, ensure_ascii=False) + "\n")
 
-                gold_labels.append(gold_label)
-                pred_scores.append(pred_score)
-
-                if not args.disable_logitlens:
-                    cache = safeguard.model.logitlens.fetch_cache(return_tokens=args.save_tokens, return_logits=args.save_logits, return_activations=args.save_activations)
-                    cache = {key: {module_name: activation for module_name, activation in activations.items() if "self_attn" not in module_name and "mlp" not in module_name} for key, activations in cache.items()}
-                    # Get attention and inputs
-                    attentions, inputs = safeguard.model.logitlens.fetch_attentions()
-                f.write(json.dumps({
-                    "prompt": prompt,
-                    "response": pred_labels,
-                    "label": "Harmful" if gold_label == 1 else "Benign",
-                    "raw_response": pred_tokens,
-                    "cache": cache if not args.disable_logitlens else None,
-                    "attentions": attentions[0].tolist() if not args.disable_logitlens and args.save_attentions else None, # Only save the last token attentions
-                    "inputs": inputs[0].tolist() if not args.disable_logitlens else None,
-                }, ensure_ascii=False) + "\n")
+            # if not args.disable_logitlens:
+            #     cache = safeguard.model.logitlens.fetch_cache(return_tokens=args.save_tokens, return_logits=args.save_logits, return_activations=args.save_activations)
+            #     cache = {key: {module_name: activation for module_name, activation in activations.items() if "self_attn" not in module_name and "mlp" not in module_name} for key, activations in cache.items()}
+            #     # Get attention and inputs
+            #     attentions, inputs = safeguard.model.logitlens.fetch_attentions()
+            # f.write(json.dumps({
+            #     "prompt": prompt,
+            #     "response": pred_labels,
+            #     "label": "Harmful" if gold_label == 1 else "Benign",
+            #     "raw_response": pred_tokens,
+            #     "cache": cache if not args.disable_logitlens else None,
+            #     "attentions": attentions[0].tolist() if not args.disable_logitlens and args.save_attentions else None, # Only save the last token attentions
+            #     "inputs": inputs[0].tolist() if not args.disable_logitlens else None,
+            # }, ensure_ascii=False) + "\n")
     # Calculate metrics
     metrics = SafeGuardMetric()
     metrics.update(gold_labels, pred_scores)
