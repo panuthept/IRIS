@@ -31,6 +31,8 @@ class SafeGuardMetric:
         # Convert to NumpyArray
         gold_labels = np.array(gold_labels)
         pred_scores = np.array(pred_scores)
+        print(gold_labels)
+        print(pred_scores)
         # Compute Recall, Precision, F1
         self.precision, self.recall, self.f1, _ = precision_recall_fscore_support(gold_labels, pred_scores > 0.5, average='binary')
         # Compute ROC curve and ROC area
@@ -42,26 +44,33 @@ class SafeGuardMetric:
         # Compute F1 score
         self.f1s = 2 * self.precisions * self.recalls / (self.precisions + self.recalls + 1e-7)
 
-    def plot(self, dataset_name: str = None):
-        plt.figure(figsize=(13, 5))
-        plt.subplot(1, 2, 1)
-        plt.plot(self.recalls, self.precisions, color='darkorange', lw=1, label='AUC = %0.2f' % (self.pr_auc * 100))
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('Recall')
-        plt.ylabel('Precision')
-        plt.title('PR Curve')
-        plt.legend(loc="lower right")
+    def plot(
+            self, 
+            dataset_name: str = None, 
+            figsize=(13, 5),
+            show_pr_curve=True,
+            table_name: str = None
+    ):
+        plt.figure(figsize=figsize)
+        if show_pr_curve:
+            plt.subplot(1, 2, 1)
+            plt.plot(self.recalls, self.precisions, color='darkorange', lw=1, label='AUC = %0.2f' % (self.pr_auc * 100))
+            plt.xlim([0.0, 1.0])
+            plt.ylim([0.0, 1.05])
+            plt.xlabel('Recall')
+            plt.ylabel('Precision')
+            plt.title('PR Curve')
+            plt.legend(loc="lower right")
 
-        plt.subplot(1, 2, 2)
-        plt.plot(self.pr_thresholds, self.f1s, color='red', lw=1, label='F1')
+            plt.subplot(1, 2, 2)
         plt.plot(self.pr_thresholds, self.recalls, color='blue', lw=1, label='Recall')
         plt.plot(self.pr_thresholds, self.precisions, color='green', lw=1, label='Precision')
-        plt.xlim([0.0, 1.05])
+        plt.plot(self.pr_thresholds, self.f1s, color='red', lw=1, label='F1')
+        plt.xlim([0.0, 1.0])
         plt.ylim([0.0, 1.05])
         plt.xlabel('Threshold')
-        plt.ylabel('Score')
-        plt.title('Threshold Curve')
+        plt.ylabel('Performance')
+        plt.title(table_name if table_name else 'Threshold Curve')
         plt.legend(loc="lower right")
 
         if dataset_name:
