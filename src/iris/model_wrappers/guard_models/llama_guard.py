@@ -168,6 +168,11 @@ class LlamaGuard(GuardLLM):
         32783, 73792,  1160,   315, 34521, 11306,    13, 66028, 65562,    60,
     ]
 
+    valid_tokens = {
+        "safe": "Safe",
+        "unsafe": "Harmful",
+    }
+
     def __init__(
             self, 
             model_name_or_path: str = "meta-llama/Llama-Guard-3-8B", 
@@ -245,9 +250,9 @@ class LlamaGuard(GuardLLM):
             "- If unsafe, a second line must include a comma-separated list of violated categories. [/INST]"
         )
 
-    @property
-    def valid_outputs(self):
-        return ["safe", "unsafe"]
+    # @property
+    # def valid_outputs(self):
+    #     return ["safe", "unsafe"]
 
     def get_model_name(self) -> str:
         return self.model_name
