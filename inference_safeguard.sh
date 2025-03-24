@@ -6,7 +6,7 @@
 #SBATCH --output=inference_finetuned_llamaguard_culturals.out
 #SBATCH --time=1440:00:00 
 #SBATCH --gres=gpu:1
-#SBATCH --nodelist=a3mega-a3meganodeset-0
+#SBATCH --nodelist=a3mega-a3meganodeset-2
 
 echo "Evaluating Cultural Safety..."
 for lang in ta th tl ms in my vi
