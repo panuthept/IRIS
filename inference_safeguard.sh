@@ -15,7 +15,7 @@ do
     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
     --safeguard_name LlamaGuard \
     --model_name meta-llama/Llama-Guard-3-8B \
-    --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-11500 \
+    --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language en \
@@ -29,7 +29,7 @@ do
     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
     --safeguard_name LlamaGuard \
     --model_name meta-llama/Llama-Guard-3-8B \
-    --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-11500 \
+    --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language $lang \
@@ -44,7 +44,7 @@ done
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 # --safeguard_name LlamaGuard \
 # --model_name meta-llama/Llama-Guard-3-8B \
-# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-11500 \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
 # --dataset_split test \
 # --language en \
@@ -58,7 +58,7 @@ done
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 # --safeguard_name LlamaGuard \
 # --model_name meta-llama/Llama-Guard-3-8B \
-# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-11500 \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
 # --dataset_split test \
 # --language th \
@@ -75,7 +75,7 @@ done
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 # --safeguard_name LlamaGuard \
 # --model_name meta-llama/Llama-Guard-3-8B \
-# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-11500 \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
 # --dataset_split test \
 # --language en \
@@ -88,7 +88,7 @@ done
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 # --safeguard_name LlamaGuard \
 # --model_name meta-llama/Llama-Guard-3-8B \
-# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-11500 \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
 # --dataset_split test \
 # --language ta \
@@ -101,7 +101,7 @@ done
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 # --safeguard_name LlamaGuard \
 # --model_name meta-llama/Llama-Guard-3-8B \
-# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-11500 \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
 # --dataset_split test \
 # --language th \
@@ -114,7 +114,7 @@ done
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 # --safeguard_name LlamaGuard \
 # --model_name meta-llama/Llama-Guard-3-8B \
-# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-11500 \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
 # --dataset_split test \
 # --language tl \
@@ -127,7 +127,7 @@ done
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 # --safeguard_name LlamaGuard \
 # --model_name meta-llama/Llama-Guard-3-8B \
-# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-11500 \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
 # --dataset_split test \
 # --language ms \
@@ -140,7 +140,7 @@ done
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 # --safeguard_name LlamaGuard \
 # --model_name meta-llama/Llama-Guard-3-8B \
-# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-11500 \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
 # --dataset_split test \
 # --language in \
@@ -153,7 +153,7 @@ done
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 # --safeguard_name LlamaGuard \
 # --model_name meta-llama/Llama-Guard-3-8B \
-# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-11500 \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
 # --dataset_split test \
 # --language my \
@@ -166,7 +166,7 @@ done
 # /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
 # --safeguard_name LlamaGuard \
 # --model_name meta-llama/Llama-Guard-3-8B \
-# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-11500 \
+# --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-4500 \
 # --dataset_name SEASafeguardDataset \
 # --dataset_split test \
 # --language vi \
