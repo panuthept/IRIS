@@ -93,8 +93,8 @@ class SEASafeguardDataset(JailbreakDataset):
                 data["test"].append({
                     "prompt": sample["en_prompt"] if self.language == "en" else sample["local_prompt"],
                     "response": sample["en_response"] if self.language == "en" else sample["local_response"],
-                    "prompt_gold_label": sample["prompt_label"],
-                    "response_gold_label": sample["response_label"],
+                    "prompt_gold_label": sample["prompt_label_final"],
+                    "response_gold_label": sample["response_label_final"],
                 })
         return data
 
