@@ -95,7 +95,8 @@ class SealionGuard(GuardLLM):
             return_logprobs=True,
             **kwargs
         )
-        print(response)
+        print(outputs[0])
+        print("-" * 100)
         return outputs
 
 
