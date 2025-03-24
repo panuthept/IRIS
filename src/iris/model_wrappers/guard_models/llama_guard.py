@@ -248,7 +248,6 @@ class LlamaGuard(GuardLLM):
     @property
     def valid_outputs(self):
         return ["safe", "unsafe"]
-        # return ["Safe", "Unsafe"]
 
     def get_model_name(self) -> str:
         return self.model_name
