@@ -93,8 +93,8 @@ class SEASafeguardDataset(JailbreakDataset):
                 data["test"].append({
                     "prompt": sample["en_prompt"] if self.language == "en" else sample["local_prompt"],
                     "response": sample["en_response"] if self.language == "en" else sample["local_response"],
-                    "prompt_gold_label": sample["prompt_label_final"],
-                    "response_gold_label": sample["response_label_final"],
+                    "prompt_gold_label": sample["prompt_label_final"] if sample["prompt_label_final"] != "Sensitive" else "Harmful" if self.sensitive_as_harmful else "Safe",
+                    "response_gold_label": sample["response_label_final"] if sample["response_label_final"] != "Sensitive" else "Harmful" if self.sensitive_as_harmful else "Safe",
                 })
         return data
 
