@@ -52,6 +52,7 @@ class SafeGuardInput:
     response: Optional[str] = None              # String of response
     prompt_gold_label: Optional[str] = None     # String of class_name
     response_gold_label: Optional[str] = None   # String of class_name
+    metadata: Optional[Dict[str, Any]] = None   # Metadata for the input
 
 
 @dataclass
