@@ -290,6 +290,7 @@ class LlamaGuard(GuardLLM):
             instruction, 
             apply_chat_template=False, 
             add_special_tokens=True,
+            return_logprobs=True,
             **kwargs
         )
         return outputs
