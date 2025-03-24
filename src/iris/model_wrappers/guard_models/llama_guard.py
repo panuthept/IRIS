@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Optional
 from iris.cache import CacheMode
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
@@ -247,7 +248,6 @@ class LlamaGuard(GuardLLM):
     @property
     def valid_outputs(self):
         return ["safe", "unsafe"]
-        # return ["Safe", "Unsafe"]
 
     def get_model_name(self) -> str:
         return self.model_name
@@ -264,52 +264,82 @@ class LlamaGuard(GuardLLM):
     def _response_classification_tokenizer(self, prompt: str, prompt_label: str, response: str) -> dict:
         pass
 
-    def _prompt_classify(
-            self, 
-            prompt: str, 
-            return_ori_tokens: bool = False, 
-            **kwargs
-    ) -> str:
-        prompt = self.model.tokenizer.apply_chat_template(
-            [{"role": "user", "content": prompt}],
-            tokenize=False,
-        )
-        prompt = prompt + "\n\n"
-        # prompt = self.sample_clf_prompt_template.format(instruction=prompt)
-        response, logprobs = self.model.complete(
-            prompt, 
+    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
+        if response is None:
+            # Apply prompt classification template
+            instruction = self.model.tokenizer.apply_chat_template(
+                [
+                    {"role": "user", "content": prompt}
+                ],
+                tokenize=False,
+            )
+        else:
+            # Apply response classification template
+            instruction = self.model.tokenizer.apply_chat_template(
+                [
+                    {"role": "user", "content": prompt},
+                    {"role": "assistant", "content": response},
+                ],
+                tokenize=False,
+            )
+        instruction = instruction + "\n\n"
+        return instruction
+    
+    def _complete(self, instruction: str, **kwargs) -> str:
+        _, outputs = self.model.complete(
+            instruction, 
             apply_chat_template=False, 
             add_special_tokens=True,
-            return_logprobs=True, 
             **kwargs
         )
-        # print(logprobs[0])
-        # print("-" * 100)
-
-        if logprobs is None:
-            logprobs = [[(token, 0, 0) for token in self.valid_outputs]]
-
-        tokens = [token for token, _, _ in logprobs[0]]
-        tokens_logprobs = [logprob for _, logprob, _ in logprobs[0]]
-        tokens_logits = [logit for _, _, logit in logprobs[0]]
-        tokens_probs = np.exp(tokens_logprobs) / np.sum(np.exp(tokens_logprobs))   # Convert logprobs to probabilities
-
-        labels = ["Harmful" if token == "unsafe" else "Benign" for token, _, _ in logprobs[0] if token in self.valid_outputs]
-        # labels = ["Harmful" if token == "Unsafe" else "Benign" for token, _, _ in logprobs[0] if token in self.valid_outputs]
-        labels_logprobs = [logprob for token, logprob, _ in logprobs[0] if token in self.valid_outputs]
-        labels_logits = [logit for token, _, logit in logprobs[0] if token in self.valid_outputs]
-        labels_probs = np.exp(labels_logprobs) / np.sum(np.exp(labels_logprobs))   # Convert logprobs to probabilities
-
-        outputs = list(zip(labels, labels_probs, labels_logits))
-        if return_ori_tokens:
-            outputs = (outputs, list(zip(tokens, tokens_probs, tokens_logits)))
         return outputs
 
-    def _response_classify(self, prompt: str, response: str, **kwargs) -> str:
-        prompt = self.response_clf_prompt_template.format(instruction=prompt, response=response)
-        response = self.model.complete(prompt, apply_chat_template=False, **kwargs)
-        response = "Benign" if response.strip().capitalize() == "Safe" else "Harmful"
-        return response
+    # def _prompt_classify(
+    #         self, 
+    #         prompt: str, 
+    #         return_ori_tokens: bool = False, 
+    #         **kwargs
+    # ) -> str:
+    #     prompt = self.model.tokenizer.apply_chat_template(
+    #         [{"role": "user", "content": prompt}],
+    #         tokenize=False,
+    #     )
+    #     prompt = prompt + "\n\n"
+    #     # prompt = self.sample_clf_prompt_template.format(instruction=prompt)
+    #     response, logprobs = self.model.complete(
+    #         prompt, 
+    #         apply_chat_template=False, 
+    #         add_special_tokens=True,
+    #         return_logprobs=True, 
+    #         **kwargs
+    #     )
+    #     # print(logprobs[0])
+    #     # print("-" * 100)
+
+    #     if logprobs is None:
+    #         logprobs = [[(token, 0, 0) for token in self.valid_outputs]]
+
+    #     tokens = [token for token, _, _ in logprobs[0]]
+    #     tokens_logprobs = [logprob for _, logprob, _ in logprobs[0]]
+    #     tokens_logits = [logit for _, _, logit in logprobs[0]]
+    #     tokens_probs = np.exp(tokens_logprobs) / np.sum(np.exp(tokens_logprobs))   # Convert logprobs to probabilities
+
+    #     labels = ["Harmful" if token == "unsafe" else "Benign" for token, _, _ in logprobs[0] if token in self.valid_outputs]
+    #     # labels = ["Harmful" if token == "Unsafe" else "Benign" for token, _, _ in logprobs[0] if token in self.valid_outputs]
+    #     labels_logprobs = [logprob for token, logprob, _ in logprobs[0] if token in self.valid_outputs]
+    #     labels_logits = [logit for token, _, logit in logprobs[0] if token in self.valid_outputs]
+    #     labels_probs = np.exp(labels_logprobs) / np.sum(np.exp(labels_logprobs))   # Convert logprobs to probabilities
+
+    #     outputs = list(zip(labels, labels_probs, labels_logits))
+    #     if return_ori_tokens:
+    #         outputs = (outputs, list(zip(tokens, tokens_probs, tokens_logits)))
+    #     return outputs
+
+    # def _response_classify(self, prompt: str, response: str, **kwargs) -> str:
+    #     prompt = self.response_clf_prompt_template.format(instruction=prompt, response=response)
+    #     response = self.model.complete(prompt, apply_chat_template=False, **kwargs)
+    #     response = "Benign" if response.strip().capitalize() == "Safe" else "Harmful"
+    #     return response
     
 
 if __name__ == "__main__":
