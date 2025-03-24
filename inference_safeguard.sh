@@ -15,7 +15,7 @@ do
     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
     --safeguard_name SealionGuard \
     --model_name aisingapore/gemma2-9b-cpt-sea-lionv3-instruct \
-    --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-2000 \
+    --checkpoint_path ./data/model_checkpoints/sealion_guard/checkpoint-2000 \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language en \
@@ -30,7 +30,7 @@ do
     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
     --safeguard_name SealionGuard \
     --model_name aisingapore/gemma2-9b-cpt-sea-lionv3-instruct \
-    --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-2000 \
+    --checkpoint_path ./data/model_checkpoints/sealion_guard/checkpoint-2000 \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language $lang \
@@ -50,7 +50,7 @@ do
     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
     --safeguard_name SealionGuard \
     --model_name aisingapore/gemma2-9b-cpt-sea-lionv3-instruct \
-    --checkpoint_path ./data/model_checkpoints/finetuned_llamaguard/checkpoint-2000 \
+    --checkpoint_path ./data/model_checkpoints/sealion_guard/checkpoint-2000 \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language $lang \
