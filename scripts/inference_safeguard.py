@@ -228,9 +228,6 @@ if __name__ == "__main__":
     # Create save directory
     os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
 
-    gold_labels = []
-    pred_scores = []
-
     prompt_unknown = 0
     prompt_harmful_scores = []
     prompt_gold_labels = []
@@ -270,26 +267,20 @@ if __name__ == "__main__":
                 "metadata": safeguard_response.metadata,
             }, ensure_ascii=False) + "\n")
 
-            # if not args.disable_logitlens:
-            #     cache = safeguard.model.logitlens.fetch_cache(return_tokens=args.save_tokens, return_logits=args.save_logits, return_activations=args.save_activations)
-            #     cache = {key: {module_name: activation for module_name, activation in activations.items() if "self_attn" not in module_name and "mlp" not in module_name} for key, activations in cache.items()}
-            #     # Get attention and inputs
-            #     attentions, inputs = safeguard.model.logitlens.fetch_attentions()
-            # f.write(json.dumps({
-            #     "prompt": prompt,
-            #     "response": pred_labels,
-            #     "label": "Harmful" if gold_label == 1 else "Benign",
-            #     "raw_response": pred_tokens,
-            #     "cache": cache if not args.disable_logitlens else None,
-            #     "attentions": attentions[0].tolist() if not args.disable_logitlens and args.save_attentions else None, # Only save the last token attentions
-            #     "inputs": inputs[0].tolist() if not args.disable_logitlens else None,
-            # }, ensure_ascii=False) + "\n")
-    # Calculate metrics
+    # Report Prompt Classification Performance
     metrics = SafeGuardMetric()
-    metrics.update(gold_labels, pred_scores)
+    metrics.update(prompt_gold_labels, prompt_harmful_scores)
     print(f"Recall: {round(metrics.recall * 100, 1)}")
     print(f"Precision: {round(metrics.precision * 100, 1)}")
     print(f"F1: {round(metrics.f1 * 100, 1)}")
     print(f"AUPRC: {round(metrics.pr_auc * 100, 1)}")
-    print(f"Unknown prompt label: {prompt_unknown}")
-    print(f"Unknown response label: {response_unknown}")
+    print(f"Unknown label prediction: {prompt_unknown}")
+
+    # Report Response Classification Performance
+    metrics = SafeGuardMetric()
+    metrics.update(response_gold_labels, response_harmful_scores)
+    print(f"Recall: {round(metrics.recall * 100, 1)}")
+    print(f"Precision: {round(metrics.precision * 100, 1)}")
+    print(f"F1: {round(metrics.f1 * 100, 1)}")
+    print(f"AUPRC: {round(metrics.pr_auc * 100, 1)}")
+    print(f"Unknown label prediction: {prompt_unknown}")
