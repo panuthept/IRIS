@@ -268,6 +268,7 @@ if __name__ == "__main__":
             }, ensure_ascii=False) + "\n")
 
     # Report Prompt Classification Performance
+    assert len(prompt_gold_labels) > 0 and len(prompt_harmful_scores) > 0, "No prompt samples, make sure that the mixed_tasks_sample is set correctly."
     metrics = SafeGuardMetric()
     metrics.update(prompt_gold_labels, prompt_harmful_scores)
     print(f"Recall: {round(metrics.recall * 100, 1)}")
