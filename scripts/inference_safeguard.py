@@ -291,4 +291,5 @@ if __name__ == "__main__":
     print(f"Precision: {round(metrics.precision * 100, 1)}")
     print(f"F1: {round(metrics.f1 * 100, 1)}")
     print(f"AUPRC: {round(metrics.pr_auc * 100, 1)}")
-    print(f"Unknown count: {unknown_count}")
+    print(f"Unknown prompt label: {prompt_unknown}")
+    print(f"Unknown response label: {response_unknown}")
