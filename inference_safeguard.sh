@@ -9,7 +9,8 @@
 #SBATCH --nodelist=a3mega-a3meganodeset-2
 
 echo "Evaluating Cultural Safety..."
-for lang in ta th tl ms in my vi
+# for lang in ta th tl ms in my vi
+for lang in my
 do
     echo "Cultural: $lang - Language: en"
     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
