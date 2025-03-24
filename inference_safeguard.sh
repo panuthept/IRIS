@@ -54,6 +54,7 @@ do
     --dataset_split test \
     --language $lang \
     --subset general \
+    --mixed_tasks_sample \
     --max_tokens 3000 \
     --disable_logitlens \
     --output_path ./outputs/Finetuned_LlamaGuard8B/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
