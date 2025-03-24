@@ -20,6 +20,7 @@ do
     --language en \
     --cultural $lang \
     --subset cultural_specific \
+    --mixed_tasks_sample \
     --max_tokens 3000 \
     --disable_logitlens \
     --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
@@ -33,6 +34,7 @@ do
     --language $lang \
     --cultural $lang \
     --subset cultural_specific \
+    --mixed_tasks_sample \
     --max_tokens 3000 \
     --disable_logitlens \
     --output_path ./outputs/LlamaGuard8B/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
