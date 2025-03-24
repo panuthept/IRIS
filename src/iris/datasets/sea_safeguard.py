@@ -56,9 +56,9 @@ class SEASafeguardDataset(JailbreakDataset):
             train_dataset = load_dataset("aisingapore/SEASafeguardMix", self.language, cache_dir=self.cache_dir)
             for sample in train_dataset["train"]:
                 data["train"].append({
-                    "prompt": sample["prompt"] if isinstance(sample["response_label"], str) else None,
-                    "response": sample["response"] if isinstance(sample["response_label"], str) else None,
-                    "prompt_gold_label": sample["prompt_label"] if isinstance(sample["response_label"], str) else None,
+                    "prompt": sample["prompt"] if isinstance(sample["prompt"], str) else None,
+                    "response": sample["response"] if isinstance(sample["response"], str) else None,
+                    "prompt_gold_label": sample["prompt_label"] if isinstance(sample["prompt_label"], str) else None,
                     "response_gold_label": sample["response_label"] if isinstance(sample["response_label"], str) else None,
                 })
 
@@ -68,9 +68,9 @@ class SEASafeguardDataset(JailbreakDataset):
             for i in range(len(dev_dataset)):
                 sample = dev_dataset.iloc[i]
                 data["dev"].append({
-                    "prompt": sample[f"{self.language}_prompt"] if isinstance(sample["response_label"], str) else None,
-                    "response": sample[f"{self.language}_response"] if isinstance(sample["response_label"], str) else None,
-                    "prompt_gold_label": sample["prompt_label"] if isinstance(sample["response_label"], str) else None,
+                    "prompt": sample[f"{self.language}_prompt"] if isinstance(sample[f"{self.language}_prompt"], str) else None,
+                    "response": sample[f"{self.language}_response"] if isinstance(sample[f"{self.language}_response"], str) else None,
+                    "prompt_gold_label": sample["prompt_label"] if isinstance(sample["prompt_label"], str) else None,
                     "response_gold_label": sample["response_label"] if isinstance(sample["response_label"], str) else None,
                 })
 
@@ -80,9 +80,9 @@ class SEASafeguardDataset(JailbreakDataset):
             for i in range(len(test_dataset)):
                 sample = test_dataset.iloc[i]
                 data["test"].append({
-                    "prompt": sample[f"{self.language}_prompt"] if isinstance(sample["response_label"], str) else None,
-                    "response": sample[f"{self.language}_response"] if isinstance(sample["response_label"], str) else None,
-                    "prompt_gold_label": sample["prompt_label"] if isinstance(sample["response_label"], str) else None,
+                    "prompt": sample[f"{self.language}_prompt"] if isinstance(sample[f"{self.language}_prompt"], str) else None,
+                    "response": sample[f"{self.language}_response"] if isinstance(sample[f"{self.language}_response"], str) else None,
+                    "prompt_gold_label": sample["prompt_label"] if isinstance(sample["prompt_label"], str) else None,
                     "response_gold_label": sample["response_label"] if isinstance(sample["response_label"], str) else None,
                 })
         else:
