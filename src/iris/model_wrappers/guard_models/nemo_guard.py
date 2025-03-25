@@ -150,7 +150,7 @@ class NemoGuard(GuardLLM):
         else:
             # Apply response classification template
             instruction = self.response_clf_template.format(prompt=prompt, response=response)
-        print(instruction)
+        instruction = instruction + '{"User Safety": "'
         return instruction
 
     def _complete(self, instruction: str, **kwargs) -> str:
