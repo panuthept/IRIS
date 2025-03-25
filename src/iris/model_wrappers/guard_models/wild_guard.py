@@ -82,7 +82,7 @@ class WildGuard(GuardLLM):
                 max_logitlens_cache_size=max_logitlens_cache_size,
             )
             self.device = self.model.llm.device
-            self.response_template_ids = self._get_response_template_ids()
+            # self.response_template_ids = self._get_response_template_ids()
 
     def get_model_name(self) -> str:
         return self.model_name
