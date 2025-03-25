@@ -54,7 +54,7 @@ class NemoGuard(GuardLLM):
                 model_name_or_path,
                 checkpoint_path=checkpoint_path,
                 max_tokens=max_tokens,
-                max_new_tokens=3,
+                max_new_tokens=5,
                 temperature=temperature,
                 logprobs=True,
                 top_logprobs=top_logprobs,
@@ -89,7 +89,8 @@ class NemoGuard(GuardLLM):
                 ],
                 tokenize=False,
             )
-        instruction = instruction + "<|start_header_id|>assistant<|end_header_id|>\n\n"
+        instruction = instruction + "<|start_header_id|>assistant<|end_header_id|>\n\n<|python_tag|>"
+        print(instruction)
         return instruction
 
     def _complete(self, instruction: str, **kwargs) -> str:
@@ -105,6 +106,10 @@ class NemoGuard(GuardLLM):
         print(outputs[1][:2])
         print("-" * 100)
         print(outputs[2][:2])
+        print("-" * 100)
+        print(outputs[3][:2])
+        print("-" * 100)
+        print(outputs[4][:2])
         print("=" * 100)
         return outputs
 
