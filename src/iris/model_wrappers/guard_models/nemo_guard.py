@@ -89,7 +89,7 @@ class NemoGuard(GuardLLM):
                 ],
                 tokenize=False,
             )
-        instruction = instruction + "<|start_header_id|>"
+        instruction = instruction + "<|start_header_id|>assistant<|end_header_id|>\n\n"
         return instruction
 
     def _complete(self, instruction: str, **kwargs) -> str:
