@@ -162,8 +162,6 @@ class NemoGuard(GuardLLM):
             return_logprobs=True,
             **kwargs
         )
-        print(outputs[0][:2])
-        print("=" * 100)
         return outputs
     
     def predict(
@@ -198,8 +196,11 @@ class NemoGuard(GuardLLM):
             metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
             # Response classification
             instruction = instruction + prompt_clf["pred_tokens"][0][0] + '", "Response Safety": "'
+            print(instruction)
             response_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
             response_labels = response_clf["pred_labels"]
+            print(response_clf["pred_tokens"][0][:2])
+            print("-" * 100)
             metadata["response_tokens"] = response_clf["pred_tokens"]
         # Output formatting
         output = SafeGuardResponse(
