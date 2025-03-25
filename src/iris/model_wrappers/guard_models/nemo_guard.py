@@ -89,7 +89,7 @@ class NemoGuard(GuardLLM):
                 ],
                 tokenize=False,
             )
-        # instruction = instruction + "\n\n"
+        instruction = instruction + "<|start_header_id|>"
         return instruction
 
     def _complete(self, instruction: str, **kwargs) -> str:
@@ -101,6 +101,11 @@ class NemoGuard(GuardLLM):
             **kwargs
         )
         print(outputs[0][:2])
+        print("-" * 100)
+        print(outputs[1][:2])
+        print("-" * 100)
+        print(outputs[2][:2])
+        print("=" * 100)
         return outputs
 
 
