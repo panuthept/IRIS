@@ -54,7 +54,7 @@ class NemoGuard(GuardLLM):
                 model_name_or_path,
                 checkpoint_path=checkpoint_path,
                 max_tokens=max_tokens,
-                max_new_tokens=1,
+                max_new_tokens=3,
                 temperature=temperature,
                 logprobs=True,
                 top_logprobs=top_logprobs,
