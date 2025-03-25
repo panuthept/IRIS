@@ -102,7 +102,6 @@ class ShieldGemma(GuardLLM):
             return_logprobs=True,
             **kwargs
         )
-        print(outputs[0])
         return outputs
     
 
