@@ -80,7 +80,7 @@ class NemoGuard(GuardLLM):
         "<END UNSAFE CONTENT CATEGORIES>\n"
         "<BEGIN CONVERSATION>\n"
         "user: {prompt}\n"
-        "response: {response}\n"
+        "response: agent: {response}\n"
         "<END CONVERSATION>\n"
         "Provide your safety assessment for the above conversation in the below output JSON format:\n"
         "{{\"User Safety\": safe or unsafe rating for the user message, \"Response Safety\": safe or unsafe rating for the agent response. Omit if no agent response present. \"Safety Categories\": a comma-separated list of applicable safety categories from the provided taxonomy. Omit if all safe.}}\n"
@@ -199,7 +199,7 @@ class NemoGuard(GuardLLM):
             print(instruction)
             response_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
             response_labels = response_clf["pred_labels"]
-            print(response_clf["pred_tokens"][0][:2])
+            print(response_clf["pred_tokens"][:2])
             print("-" * 100)
             metadata["response_tokens"] = response_clf["pred_tokens"]
         # Output formatting
