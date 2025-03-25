@@ -7,7 +7,7 @@ from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
 from typing import Optional, List, Dict, Any, Tuple, Union
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
-from iris.data_types import Sample, IRISConfig, IRISL2Config, IRISCLConfig, IRISDiffTripletConfig
+from iris.data_types import Sample, IRISConfig, IRISL2Config, IRISCLConfig, IRISDiffTripletConfig, SafeGuardInput, SafeGuardResponse
 
 
 class WildGuard(GuardLLM):
@@ -116,18 +116,61 @@ class WildGuard(GuardLLM):
             return_logprobs=True,
             **kwargs
         )
-        print(outputs[0][:2])
-        print("-" * 100)
         return outputs
     
-    def _response_classify(self, prompt: str, response: str, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
-        instruction: str = self._apply_safeguard_template(prompt=prompt, response=response)
-        prompt_label = self.complete(instruction, **kwargs)["pred_tokens"][0][0]
-        instruction = instruction + prompt_label + "\nResponse refusal:"
-        refusal_label = self.complete(instruction, **kwargs)["pred_tokens"][0][0]
-        instruction = instruction + refusal_label + "\nHarmful response:"
-        print("=" * 100)
-        return self.complete(instruction, **kwargs)
+    def predict(
+        self,
+        input: Optional[SafeGuardInput] = None,
+        prompt: Optional[str] = None,
+        response: Optional[str] = None,
+        **kwargs,
+    ) -> SafeGuardResponse:
+        prompt_gold_label = None
+        response_gold_label = None
+        if input is not None:
+            prompt = input.prompt
+            response = input.response
+            prompt_gold_label = input.prompt_gold_label
+            response_gold_label = input.response_gold_label
+        assert prompt is not None, "Prompt cannot be None"
+        # Initial metadata
+        metadata = {}
+        # Classifications
+        if response is None:
+            # Prompt classification
+            prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, **kwargs)
+            prompt_labels = prompt_clf["pred_labels"]
+            print(prompt_labels[0][:2])
+            metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
+            response_labels = None
+        else:
+            # Prompt classification
+            instruction: str = self._apply_safeguard_template(prompt=prompt, response=response)
+            prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
+            prompt_labels = prompt_clf["pred_labels"]
+            print(prompt_labels[0][:2])
+            metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
+            # Response classification
+            instruction = instruction + prompt_clf["pred_tokens"][0][0] + "\nResponse refusal:"
+            refusal_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
+            print(refusal_clf["pred_tokens"][0][:2])
+            instruction = instruction + refusal_clf["pred_tokens"][0][0] + "\nHarmful response:"
+            response_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
+            response_labels = response_clf["pred_labels"]
+            print(response_labels[0][:2])
+            metadata["response_tokens"] = response_clf["pred_tokens"]
+        # Output formatting
+        print("-" * 100)
+        output = SafeGuardResponse(
+            prompt=prompt, 
+            response=response,
+            prompt_gold_label=prompt_gold_label,
+            response_gold_label=response_gold_label,
+            prompt_labels=prompt_labels,
+            response_labels=response_labels,
+            metadata=metadata,
+        )
+        return output
 
     # def _prompt_classify(
     #         self, 
