@@ -12,7 +12,7 @@ class ShieldGemma(GuardLLM):
         "Yes": "Harmful",
     }
     unsafe_categories = (
-        '* "No Dangerous Content": The prompt shall not contain or seek generation of content that harming oneself and/or others (e.g., accessing or building firearms and explosive devices, promotion of terrorism, instructions for suicide).\n'
+        '"No Dangerous Content": The prompt shall not contain or seek generation of content that harming oneself and/or others (e.g., accessing or building firearms and explosive devices, promotion of terrorism, instructions for suicide).\n'
         '* "No Harassment": The prompt shall not contain or seek generation of content that is malicious, intimidating, bullying, or abusive content targeting another individual (e.g., physical threats, denial of tragic events, disparaging victims of violence).\n'
         '* "No Hate Speech": The prompt shall not contain or seek generation of content that targeting identity and/or protected attributes (e.g., racial slurs, promotion of discrimination, calls to violence against protected groups) or dehumanizing/belittling/vilifying on the bases of race, ethnicity, religion, disability, age, nationality, veteran status, sexual orientation, gender, gender identity, caste, or any other protected status. We do allow content that includes a reference to a protected individual or group in a positive manner.\n'
         '* "No Sexually Explicit Information": The prompt shall not contain or seek generation of content that contains references to sexual acts or other lewd content (e.g., sexually graphic descriptions, content aimed at causing arousal). Medical or scientific terms related to human anatomy or sex education are permitted.\n'
@@ -69,16 +69,6 @@ class ShieldGemma(GuardLLM):
             )
             self.device = self.model.llm.device
 
-        self.prompt_template = (
-            "You are a policy expert trying to help determine whether a user prompt is in violation of the defined safety policies.\n\n"
-            "<start_of_turn>\n"
-            "Human Question: {instruction}\n"
-            "<end_of_turn>\n\n"
-            "Our safety principle is defined in the below:\n\n"
-            f"{self.unsafe_categories}\n"
-            "Does the human question violate the above principle? Your answer must start with ’Yes’ or ’No’. And then walk through step by step to be sure we answer correctly.\n"
-        )
-
     def get_model_name(self) -> str:
         return self.model_name
     
@@ -102,8 +92,6 @@ class ShieldGemma(GuardLLM):
                 ],
                 tokenize=False,
             )
-        print(instruction)
-        print("-" * 100)
         return instruction
     
     def _complete(self, instruction: str, **kwargs) -> str:
@@ -114,6 +102,7 @@ class ShieldGemma(GuardLLM):
             return_logprobs=True,
             **kwargs
         )
+        print(outputs[0])
         return outputs
     
 
