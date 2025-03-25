@@ -1,8 +1,9 @@
-import numpy as np
 from typing import Optional
 from iris.cache import CacheMode
+from typing import Optional, List, Dict, Tuple
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
+from iris.data_types import SafeGuardInput, SafeGuardResponse
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
 
 
@@ -126,7 +127,7 @@ class NemoGuard(GuardLLM):
                 model_name_or_path,
                 checkpoint_path=checkpoint_path,
                 max_tokens=max_tokens,
-                max_new_tokens=5,
+                max_new_tokens=1,
                 temperature=temperature,
                 logprobs=True,
                 top_logprobs=top_logprobs,
@@ -162,16 +163,55 @@ class NemoGuard(GuardLLM):
             **kwargs
         )
         print(outputs[0][:2])
-        print("-" * 100)
-        print(outputs[1][:2])
-        print("-" * 100)
-        print(outputs[2][:2])
-        print("-" * 100)
-        print(outputs[3][:2])
-        print("-" * 100)
-        print(outputs[4][:2])
         print("=" * 100)
         return outputs
+    
+    def predict(
+        self,
+        input: Optional[SafeGuardInput] = None,
+        prompt: Optional[str] = None,
+        response: Optional[str] = None,
+        **kwargs,
+    ) -> SafeGuardResponse:
+        prompt_gold_label = None
+        response_gold_label = None
+        if input is not None:
+            prompt = input.prompt
+            response = input.response
+            prompt_gold_label = input.prompt_gold_label
+            response_gold_label = input.response_gold_label
+        assert prompt is not None, "Prompt cannot be None"
+        # Initial metadata
+        metadata = {}
+        # Classifications
+        if response is None:
+            # Prompt classification
+            prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, **kwargs)
+            prompt_labels = prompt_clf["pred_labels"]
+            metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
+            response_labels = None
+        else:
+            # Prompt classification
+            instruction: str = self._apply_safeguard_template(prompt=prompt, response=response)
+            prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
+            prompt_labels = prompt_clf["pred_labels"]
+            metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
+            # Response classification
+            instruction = instruction + prompt_clf["pred_tokens"][0][0] + '", "Response Safety": "'
+            response_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
+            response_labels = response_clf["pred_labels"]
+            metadata["response_tokens"] = response_clf["pred_tokens"]
+        # Output formatting
+        output = SafeGuardResponse(
+            prompt=prompt, 
+            response=response,
+            prompt_gold_label=prompt_gold_label,
+            response_gold_label=response_gold_label,
+            prompt_labels=prompt_labels,
+            response_labels=response_labels,
+            metadata=metadata,
+        )
+        return output
 
 
 if __name__ == "__main__":
