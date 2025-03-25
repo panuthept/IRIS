@@ -87,7 +87,8 @@ class ShieldGemma(GuardLLM):
             # Apply prompt classification template
             instruction = self.model.tokenizer.apply_chat_template(
                 [
-                    {"role": "user", "content": prompt}
+                    {"role": "system", "content": self.unsafe_categories},
+                    {"role": "user", "content": prompt},
                 ],
                 tokenize=False,
             )
@@ -95,6 +96,7 @@ class ShieldGemma(GuardLLM):
             # Apply response classification template
             instruction = self.model.tokenizer.apply_chat_template(
                 [
+                    {"role": "system", "content": self.unsafe_categories},
                     {"role": "user", "content": prompt},
                     {"role": "assistant", "content": response},
                 ],
