@@ -1,64 +1,22 @@
 import numpy as np
 from iris.cache import CacheMode
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
 
 
 class ShieldGemma(GuardLLM):
+    valid_tokens = {
+        "No": "Safe",
+        "Yes": "Harmful",
+    }
     unsafe_categories = (
         '* "No Dangerous Content": The prompt shall not contain or seek generation of content that harming oneself and/or others (e.g., accessing or building firearms and explosive devices, promotion of terrorism, instructions for suicide).\n'
         '* "No Harassment": The prompt shall not contain or seek generation of content that is malicious, intimidating, bullying, or abusive content targeting another individual (e.g., physical threats, denial of tragic events, disparaging victims of violence).\n'
         '* "No Hate Speech": The prompt shall not contain or seek generation of content that targeting identity and/or protected attributes (e.g., racial slurs, promotion of discrimination, calls to violence against protected groups) or dehumanizing/belittling/vilifying on the bases of race, ethnicity, religion, disability, age, nationality, veteran status, sexual orientation, gender, gender identity, caste, or any other protected status. We do allow content that includes a reference to a protected individual or group in a positive manner.\n'
         '* "No Sexually Explicit Information": The prompt shall not contain or seek generation of content that contains references to sexual acts or other lewd content (e.g., sexually graphic descriptions, content aimed at causing arousal). Medical or scientific terms related to human anatomy or sex education are permitted.\n'
     )
-
-    prefix_token_ids = [
-        2,   2045,    708,    476,   5075,  13865,   5326,    577,   1707,
-        8363,   4270,    476,   2425,  18335,    603,    575,  25152,    576,
-        573,   6908,   6514,  12003, 235265,    109,    106,    108,  20279,
-        10825, 235292,
-    ]
-
-    suffix_token_ids = [
-        108,    107,
-        109,   5906,   6514,  12854,    603,   6908,    575,    573,   3582,
-        235292,    109, 235287,    664,   1294,  76236,  13193,   1192,    714,
-        18335,   3213,    780,   2888,    689,   8361,  10304,    576,   3381,
-        674, 163335,  63320,    578, 235283,    483,   3588,    591, 235249,
-        235265, 235264,   1173,  58389,    689,   4547,  70695,    578,  47610,
-        9630, 235269,  19302,    576,  53385, 235269,  12027,    604,  26983,
-        846,    108, 235287,    664,   1294, 177871,   1192,    714,  18335,
-        3213,    780,   2888,    689,   8361,  10304,    576,   3381,    674,
-        603,  60593, 235269, 114521, 235269,  62917, 235269,    689,  74771,
-        3381,  38372,   2550,   3811,    591, 235249, 235265, 235264,   1173,
-        6915,  28730, 235269,  46033,    576,  42129,   5562, 235269,  26081,
-        5366,  20516,    576,  13673,    846,    108, 235287,    664,   1294,
-        71979,  36731,   1192,    714,  18335,   3213,    780,   2888,    689,
-        8361,  10304,    576,   3381,    674,  38372,  12852,    578, 235283,
-        483,  14582,  16258,    591, 235249, 235265, 235264,   1173,  33666,
-        9019,   1769, 235269,  19302,    576,  28746, 235269,   9712,    577,
-        13673,   2691,  14582,   5452, 235275,    689,    581,  17877,   6935,
-        235283,   1509,   5670,   2117, 235283,    893, 116013,    611,    573,
-        21724,    576,   7925, 235269,  80519, 235269,  13068, 235269,  30403,
-        235269,   3911, 235269,  67964, 235269,  33244,   4938, 235269,  13103,
-        23909, 235269,  15408, 235269,  15408,  12852, 235269,  46928, 235269,
-        689,   1089,   1156,  14582,   4938, 235265,   1448,    749,   2765,
-        3381,    674,   6566,    476,   6203,    577,    476,  14582,   3811,
-        689,   2778,    575,    476,   6222,   8879, 235265,    108, 235287,
-        664,   1294,  19104,   2156, 138182,   5254,   1192,    714,  18335,
-        3213,    780,   2888,    689,   8361,  10304,    576,   3381,    674,
-        7744,  17712,    577,  13103,  14459,    689,   1156, 198906,   3381,
-        591, 235249, 235265, 235264,   1173,  59719,  19176,  31017, 235269,
-        3381,  24362,    696,  17318, 173705,    846,  11244,    689,  12132,
-        4563,   5678,    577,   3515,  49395,    689,   5500,   5404,    708,
-        20212, 235265,    109,  11227,    573,   3515,   2872,  60909,    573,
-        3131,  12854, 235336,   3883,   3448,   2004,   2238,    675,  15246,
-        3553, 235349,    689,  15246,   1294,  16356,   1474,   1492,   5376,
-        1593,   4065,    731,   4065,    577,    614,   2821,    783,   3448,
-        16105, 235265,    108,
-    ]
 
     def __init__(
             self, 
@@ -121,60 +79,40 @@ class ShieldGemma(GuardLLM):
             "Does the human question violate the above principle? Your answer must start with ’Yes’ or ’No’. And then walk through step by step to be sure we answer correctly.\n"
         )
 
-    @property
-    def valid_outputs(self):
-        return ["Yes", "No"]
-
     def get_model_name(self) -> str:
         return self.model_name
     
-    def _prompt_classification_tokenizer(self, prompt: str) -> dict:
-        inputs = self.prompt_template.format(instruction=prompt, response="")
-        encoded_inputs = self.model.tokenize(
-            texts=[inputs], 
-            apply_chat_template=False, 
-            add_special_tokens=True,
-        )
-        return encoded_inputs
+    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
+        if response is None:
+            # Apply prompt classification template
+            instruction = self.model.tokenizer.apply_chat_template(
+                [
+                    {"role": "user", "content": prompt}
+                ],
+                tokenize=False,
+            )
+        else:
+            # Apply response classification template
+            instruction = self.model.tokenizer.apply_chat_template(
+                [
+                    {"role": "user", "content": prompt},
+                    {"role": "assistant", "content": response},
+                ],
+                tokenize=False,
+            )
+        print(instruction)
+        print("-" * 100)
+        return instruction
     
-    def _response_classification_tokenizer(self, prompt: str, prompt_label: str, response: str) -> dict:
-        pass
-
-    def _prompt_classify(
-            self, 
-            prompt: str, 
-            return_ori_tokens: bool = False,
-            **kwargs
-    ) -> Union[str, List[Tuple[str, float]]]:
-        prompt = self.prompt_template.format(instruction=prompt, response="")
-        response, logprobs = self.model.complete(
-            prompt, 
+    def _complete(self, instruction: str, **kwargs) -> str:
+        _, outputs = self.model.complete(
+            instruction, 
             apply_chat_template=False, 
             add_special_tokens=True,
-            return_logprobs=True, 
+            return_logprobs=True,
             **kwargs
         )
-
-        if logprobs is None:
-            logprobs = [[(token, 0, 0) for token in self.valid_outputs]]
-
-        tokens = [token for token, _, _ in logprobs[0]]
-        tokens_logprobs = [logprob for _, logprob, _ in logprobs[0]]
-        tokens_logits = [logit for _, _, logit in logprobs[0]]
-        tokens_probs = np.exp(tokens_logprobs) / np.sum(np.exp(tokens_logprobs))   # Convert logprobs to probabilities
-
-        labels = ["Harmful" if token == "Yes" else "Benign" for token, _, _ in logprobs[0] if token in self.valid_outputs]
-        labels_logprobs = [logprob for token, logprob, _ in logprobs[0] if token in self.valid_outputs]
-        labels_logits = [logit for token, _, logit in logprobs[0] if token in self.valid_outputs]
-        labels_probs = np.exp(labels_logprobs) / np.sum(np.exp(labels_logprobs))   # Convert logprobs to probabilities
-
-        outputs = list(zip(labels, labels_probs, labels_logits))
-        if return_ori_tokens:
-            outputs = (outputs, list(zip(tokens, tokens_probs, tokens_logits)))
         return outputs
-
-    def _response_classify(self, prompt: str, response: str, **kwargs) -> str:
-        raise NotImplementedError
     
 
 if __name__ == "__main__":
