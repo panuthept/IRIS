@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --output=inference_sealionguard.out
 #SBATCH --time=1440:00:00 
-#SBATCH --gres=gpu:3
+#SBATCH --gres=gpu:1
 #SBATCH --nodelist=a3mega-a3meganodeset-0
 
 echo "Evaluating Cultural Safety..."
