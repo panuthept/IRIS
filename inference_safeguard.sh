@@ -1,11 +1,11 @@
 #!/bin/bash
 
-#SBATCH --job-name=inference_sealionguard
+#SBATCH --job-name=inference_sealionguard_longcontext
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=10
-#SBATCH --output=inference_sealionguard.out
+#SBATCH --output=inference_sealionguard_longcontext.out
 #SBATCH --time=1440:00:00 
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:4
 #SBATCH --nodelist=a3mega-a3meganodeset-0
 
 echo "Evaluating Cultural Safety..."
@@ -22,7 +22,7 @@ do
     --cultural $lang \
     --subset cultural_specific \
     --mixed_tasks_sample \
-    --max_tokens 3000 \
+    --max_tokens 8000 \
     --disable_logitlens \
     --output_path ./outputs/SealionGuard-ckp5500/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
 
@@ -37,7 +37,7 @@ do
     --cultural $lang \
     --subset cultural_specific \
     --mixed_tasks_sample \
-    --max_tokens 3000 \
+    --max_tokens 8000 \
     --disable_logitlens \
     --output_path ./outputs/SealionGuard-ckp5500/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
 done
@@ -56,7 +56,7 @@ do
     --language $lang \
     --subset general \
     --mixed_tasks_sample \
-    --max_tokens 3000 \
+    --max_tokens 8000 \
     --disable_logitlens \
     --output_path ./outputs/SealionGuard-ckp5500/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
 done
