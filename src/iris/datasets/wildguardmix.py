@@ -12,6 +12,7 @@ class WildGuardMixDataset(JailbreakDataset):
             attack_engine: str = None,
             path: str = "./data/datasets/wildguardmix",
             cache_dir: str = "./data/datasets/wildguardmix",
+            **kwargs,
     ):
         self.cache_dir = cache_dir
         super().__init__(
@@ -63,16 +64,19 @@ class WildGuardMixDataset(JailbreakDataset):
                 ]
                 for augmented_prompt in augmented_prompts:
                     data["train"].append({
-                        "instructions": [augmented_prompt],
-                        "instructions_true_label": [intention.capitalize()],
+                        "prompt": augmented_prompt,
+                        "response": None,
+                        "prompt_gold_label": intention.capitalize(),
+                        "response_gold_label": None,
                     })
             else:
                 if self.intention is not None and intention != self.intention:
                     continue
                 data["train"].append({
-                    "instructions": [sample["prompt"]],
-                    "reference_answers": [sample["response"]],
-                    "instructions_true_label": [intention.capitalize()],
+                    "prompt": sample["prompt"],
+                    "response": sample["response"],
+                    "prompt_gold_label": intention.capitalize(),
+                    "response_gold_label": None,
                 })
 
         # Load test dataset
@@ -103,16 +107,19 @@ class WildGuardMixDataset(JailbreakDataset):
                 ]
                 for augmented_prompt in augmented_prompts:
                     data["test"].append({
-                        "instructions": [augmented_prompt],
-                        "instructions_true_label": [intention.capitalize()],
+                        "prompt": augmented_prompt,
+                        "response": None,
+                        "prompt_gold_label": intention.capitalize(),
+                        "response_gold_label": None,
                     })
             else:
                 if self.intention is not None and intention != self.intention:
                     continue
                 data["test"].append({
-                    "instructions": [sample["prompt"]],
-                    "reference_answers": [sample["response"]],
-                    "instructions_true_label": [intention.capitalize()],
+                    "prompt": sample["prompt"],
+                    "response": sample["response"],
+                    "prompt_gold_label": intention.capitalize(),
+                    "response_gold_label": None,
                 })
         return data
 

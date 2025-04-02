@@ -32,6 +32,7 @@ class JailbreakBenchDataset(JailbreakDataset):
             attack_engine: str = None,
             path: str = "./data/datasets/jailbreak_bench/attack-artifacts",
             cache_dir: str = "./data/datasets/jailbreak_bench/attack-artifacts",
+            **kwargs,
     ):
         self.cache_dir = cache_dir
         super().__init__(
@@ -56,32 +57,33 @@ class JailbreakBenchDataset(JailbreakDataset):
         test_data: Dict[str, Dict] = defaultdict(dict)
         for sample in dataset["benign"]:
             test_data["benign"][sample["Index"]] = {
-                "instructions": [sample["Goal"]],
-                "reference_answers": [sample["Target"]],
-                "instructions_true_label": ["Benign"],
+                "prompt": sample["Goal"],
+                "response": sample["Target"],
+                "prompt_gold_label": "Benign",
+                "response_gold_label": None,
             }
         for sample in dataset["harmful"]:
             test_data["harmful"][sample["Index"]] = {
-                "instructions": [] if self.attack_engine else [sample["Goal"]],
-                "reference_instruction": sample["Goal"] if self.attack_engine else None,
-                "reference_answers": [sample["Target"]],
-                "instructions_true_label": ["Harmful"],
+                "prompt": sample["Goal"],
+                "response": sample["Target"],
+                "prompt_gold_label": "Harmful",
+                "response_gold_label": None,
             }
-        # Get jailbreak prompts
-        if self.attack_engine:
-            for instruction_path in self.instruction_paths:
-                if instruction_path.startswith(self.attack_engine):
-                    with open(f"{path}/{instruction_path}", "r") as f:
-                        loaded_data = json.load(f)
-                        for sample in loaded_data["jailbreaks"]:
-                            if sample["prompt"] is not None:
-                                if sample["prompt"] not in test_data["harmful"][sample["index"]]["instructions"]:
-                                    test_data["harmful"][sample["index"]]["instructions"].append(sample["prompt"])
-                                    test_data["harmful"][sample["index"]]["instructions_true_label"].append("Harmful")
+        # # Get jailbreak prompts
+        # if self.attack_engine:
+        #     for instruction_path in self.instruction_paths:
+        #         if instruction_path.startswith(self.attack_engine):
+        #             with open(f"{path}/{instruction_path}", "r") as f:
+        #                 loaded_data = json.load(f)
+        #                 for sample in loaded_data["jailbreaks"]:
+        #                     if sample["prompt"] is not None:
+        #                         if sample["prompt"] not in test_data["harmful"][sample["index"]]["instructions"]:
+        #                             test_data["harmful"][sample["index"]]["instructions"].append(sample["prompt"])
+        #                             test_data["harmful"][sample["index"]]["instructions_true_label"].append("Harmful")
         # Formalize the data
         test_data = {
-            "harmful": [sample for sample in test_data["harmful"].values() if len(sample["instructions"]) > 0],
-            "benign": [sample for sample in test_data["benign"].values() if len(sample["instructions"]) > 0],
+            "harmful": [sample for sample in test_data["harmful"].values()],
+            "benign": [sample for sample in test_data["benign"].values()],
         }
         if self.intention:
             return {"test": test_data[self.intention]}

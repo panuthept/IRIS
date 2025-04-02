@@ -12,6 +12,7 @@ class ORBenchDataset(JailbreakDataset):
             attack_engine: str = None,
             path: str = "./data/datasets/or_bench",
             cache_dir: str = "./data/datasets/or_bench",
+            **kwargs,
     ):
         self.cache_dir = cache_dir
         super().__init__(
@@ -36,8 +37,10 @@ class ORBenchDataset(JailbreakDataset):
             dataset = load_dataset("bench-llm/or-bench", "or-bench-toxic", cache_dir=self.cache_dir)
             for sample in dataset["train"]:
                 data["test"].append({
-                    "instructions": [sample["prompt"]],
-                    "instructions_true_label": ["Harmful"],
+                    "prompt": sample["prompt"],
+                    "response": None,
+                    "prompt_gold_label": "Harmful",
+                    "response_gold_label": None,
                 })
         # if self.intention is None or self.intention == "benign":
         #     dataset = load_dataset("bench-llm/or-bench", "or-bench-80k", cache_dir=self.cache_dir)
@@ -50,8 +53,10 @@ class ORBenchDataset(JailbreakDataset):
             dataset = load_dataset("bench-llm/or-bench", "or-bench-hard-1k", cache_dir=self.cache_dir)
             for sample in dataset["train"]:
                 data["test"].append({
-                    "instructions": [sample["prompt"]],
-                    "instructions_true_label": ["Benign"],
+                    "prompt": sample["prompt"],
+                    "response": None,
+                    "prompt_gold_label": "Benign",
+                    "response_gold_label": None,
                 })
         return data
     

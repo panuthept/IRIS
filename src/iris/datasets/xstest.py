@@ -11,6 +11,7 @@ class XSTestDataset(JailbreakDataset):
             intention: str = None,
             attack_engine: str = None,
             path: str = "./data/datasets/xstest",
+            **kwargs,
     ):
         self.category_mapper = {
             "contrast_homonyms": ["homonyms"],
@@ -64,13 +65,17 @@ class XSTestDataset(JailbreakDataset):
 
             if is_harmful:
                 test_data["harmful"].append({
-                    "instructions": [sample["prompt"]],
-                    "instructions_true_label": ["Harmful"],
+                    "prompt": sample["prompt"],
+                    "response": None,
+                    "prompt_gold_label": "Harmful",
+                    "response_gold_label": None,
                 })
             else:
                 test_data["benign"].append({
-                    "instructions": [sample["prompt"]],
-                    "instructions_true_label": ["Benign"],
+                    "prompt": sample["prompt"],
+                    "response": None,
+                    "prompt_gold_label": "Benign",
+                    "response_gold_label": None,
                 })
         # Formalize the data
         if self.intention:

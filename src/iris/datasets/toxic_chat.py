@@ -12,6 +12,7 @@ class ToxicChatDataset(JailbreakDataset):
             attack_engine: str = None,
             path: str = "./data/datasets/toxic_chat",
             cache_dir: str = "./data/datasets/toxic_chat",
+            **kwargs,
     ):
         self.cache_dir = cache_dir
         super().__init__(
@@ -48,8 +49,10 @@ class ToxicChatDataset(JailbreakDataset):
                 continue
 
             data["train"].append({
-                "instructions": [sample["user_input"]],
-                "instructions_true_label": [intention.capitalize()],
+                "prompt": sample["user_input"],
+                "response": None,
+                "prompt_gold_label": intention.capitalize(),
+                "response_gold_label": None,
             })
 
         # Read test dataset
@@ -67,8 +70,10 @@ class ToxicChatDataset(JailbreakDataset):
                 continue
 
             data["test"].append({
-                "instructions": [sample["user_input"]],
-                "instructions_true_label": [intention.capitalize()],
+                "prompt": sample["user_input"],
+                "response": None,
+                "prompt_gold_label": intention.capitalize(),
+                "response_gold_label": None,
             })
         return data
 

@@ -12,6 +12,7 @@ class OpenAIModerationDataset(JailbreakDataset):
             attack_engine: str = None,
             path: str = "./data/datasets/openai_moderation",
             cache_dir: str = "./data/datasets/openai_moderation",
+            **kwargs,
     ):
         self.cache_dir = cache_dir
         super().__init__(
@@ -42,9 +43,13 @@ class OpenAIModerationDataset(JailbreakDataset):
                 if sample[label] is not None and sample[label] == 1:
                     intention = "harmful"
                     break
+            if self.intention is not None and intention != self.intention:
+                continue
             data["test"].append({
-                "instructions": [content],
-                "instructions_true_label": [intention.capitalize()],
+                "prompt": content,
+                "response": None,
+                "prompt_gold_label": intention.capitalize(),
+                "response_gold_label": None,
             })
         return data
 
