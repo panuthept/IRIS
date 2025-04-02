@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=inference_sealionguard_llama
+#SBATCH --job-name=inference_sealionguard_llama_2690
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=10
-#SBATCH --output=inference_sealionguard_llama.out
+#SBATCH --output=inference_sealionguard_llama_2690.out
 #SBATCH --time=1440:00:00 
 #SBATCH --gres=gpu:1
 #SBATCH --nodelist=a3mega-a3meganodeset-0
@@ -14,7 +14,7 @@ do
     echo "Cultural: $lang - Language: en"
     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
     --safeguard_name SealionGuard \
-    --model_name ./data/model_checkpoints/sealion_guard_llama/checkpoint-5500 \
+    --model_name ./data/model_checkpoints/sealion_guard_llama/checkpoint-2690 \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language en \
@@ -23,12 +23,12 @@ do
     --mixed_tasks_sample \
     --max_tokens 3000 \
     --disable_logitlens \
-    --output_path ./outputs/SealionGuardLlama-ckp5500/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
+    --output_path ./outputs/SealionGuardLlama-ckp2690/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
 
     echo "Cultural: $lang - Language: $lang"
     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
     --safeguard_name SealionGuard \
-    --model_name ./data/model_checkpoints/sealion_guard_llama/checkpoint-5500 \
+    --model_name ./data/model_checkpoints/sealion_guard_llama/checkpoint-2690 \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language $lang \
@@ -37,7 +37,7 @@ do
     --mixed_tasks_sample \
     --max_tokens 3000 \
     --disable_logitlens \
-    --output_path ./outputs/SealionGuardLlama-ckp5500/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
+    --output_path ./outputs/SealionGuardLlama-ckp2690/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
 done
 
 
@@ -47,7 +47,7 @@ do
     echo "Language: $lang"
     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
     --safeguard_name SealionGuard \
-    --model_name ./data/model_checkpoints/sealion_guard_llama/checkpoint-5500 \
+    --model_name ./data/model_checkpoints/sealion_guard_llama/checkpoint-2690 \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language $lang \
@@ -55,5 +55,5 @@ do
     --mixed_tasks_sample \
     --max_tokens 3000 \
     --disable_logitlens \
-    --output_path ./outputs/SealionGuardLlama-ckp5500/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
+    --output_path ./outputs/SealionGuardLlama-ckp2690/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
 done
