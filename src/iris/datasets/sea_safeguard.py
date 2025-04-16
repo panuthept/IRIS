@@ -53,14 +53,15 @@ class SEASafeguardDataset(JailbreakDataset):
 
         if self.subset == "general":
             # Load train dataset
-            train_dataset = load_dataset("aisingapore/SEASafeguardMix", self.language, cache_dir=self.cache_dir)
-            for sample in train_dataset["train"]:
-                data["train"].append({
-                    "prompt": sample["prompt"] if isinstance(sample["prompt"], str) else None,
-                    "response": sample["response"] if isinstance(sample["response"], str) else None,
-                    "prompt_gold_label": sample["prompt_label"] if isinstance(sample["prompt_label"], str) else None,
-                    "response_gold_label": sample["response_label"] if isinstance(sample["response_label"], str) else None,
-                })
+            dataset = load_dataset("aisingapore/SEASafeguardMix", self.language, cache_dir=self.cache_dir)
+            for split in ["train", "test"]:
+                for sample in dataset[split]:
+                    data[split].append({
+                        "prompt": sample["prompt"] if isinstance(sample["prompt"], str) else None,
+                        "response": sample["response"] if isinstance(sample["response"], str) else None,
+                        "prompt_gold_label": sample["prompt_label"] if isinstance(sample["prompt_label"], str) else None,
+                        "response_gold_label": sample["response_label"] if isinstance(sample["response_label"], str) else None,
+                    })
 
             # Load dev dataset
             dev_dataset = pd.read_csv(f"{path}/dev.csv")
@@ -74,17 +75,17 @@ class SEASafeguardDataset(JailbreakDataset):
                     "response_gold_label": sample["response_label"] if isinstance(sample["response_label"], str) else None,
                 })
 
-            # Load test dataset
-            test_dataset = pd.read_csv(f"{path}/test.csv")
-            # Read test dataset
-            for i in range(len(test_dataset)):
-                sample = test_dataset.iloc[i]
-                data["test"].append({
-                    "prompt": sample[f"{self.language}_prompt"] if isinstance(sample[f"{self.language}_prompt"], str) else None,
-                    "response": sample[f"{self.language}_response"] if isinstance(sample[f"{self.language}_response"], str) else None,
-                    "prompt_gold_label": sample["prompt_label"] if isinstance(sample["prompt_label"], str) else None,
-                    "response_gold_label": sample["response_label"] if isinstance(sample["response_label"], str) else None,
-                })
+            # # Load test dataset
+            # test_dataset = pd.read_csv(f"{path}/test.csv")
+            # # Read test dataset
+            # for i in range(len(test_dataset)):
+            #     sample = test_dataset.iloc[i]
+            #     data["test"].append({
+            #         "prompt": sample[f"{self.language}_prompt"] if isinstance(sample[f"{self.language}_prompt"], str) else None,
+            #         "response": sample[f"{self.language}_response"] if isinstance(sample[f"{self.language}_response"], str) else None,
+            #         "prompt_gold_label": sample["prompt_label"] if isinstance(sample["prompt_label"], str) else None,
+            #         "response_gold_label": sample["response_label"] if isinstance(sample["response_label"], str) else None,
+            #     })
         else:
             # Load test dataset
             test_dataset = load_dataset("aisingapore/SEASafeguardMix", f"{self.cultural}_cultural_specific", cache_dir=self.cache_dir)
