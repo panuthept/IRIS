@@ -5,7 +5,7 @@ import random
 import argparse
 from tqdm import tqdm
 from typing import List
-from transformers import AutoTokenizer
+# from transformers import AutoTokenizer
 from iris.datasets import load_dataset, AVAILABLE_DATASETS
 from iris.metrics.safeguard_metrics import SafeGuardMetric
 from iris.data_types import SafeGuardInput, SafeGuardResponse
