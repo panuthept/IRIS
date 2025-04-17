@@ -522,6 +522,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 model_name_or_path,
                 cache_dir="./data/models",
                 device_map="auto",
+                tp_plan="auto",
                 local_files_only=True,
             )
         except:
@@ -529,6 +530,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 model_name_or_path,
                 cache_dir="./data/models",
                 device_map="auto",
+                tp_plan="auto",
                 local_files_only=False,
             )
         return model
@@ -555,6 +557,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             model = AutoModelForCausalLM.from_pretrained(
                 checkpoint_path,
                 device_map="auto",
+                tp_plan="auto",
                 local_files_only=True,
             )
             print(f"Loaded model from full checkpoint: {checkpoint_path} successfully.")
