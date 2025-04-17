@@ -521,14 +521,14 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             model = AutoModelForCausalLM.from_pretrained(
                 model_name_or_path,
                 cache_dir="./data/models",
-                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                device_map="auto",
                 local_files_only=True,
             )
         except:
             model = AutoModelForCausalLM.from_pretrained(
                 model_name_or_path,
                 cache_dir="./data/models",
-                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                device_map="auto",
                 local_files_only=False,
             )
         return model
@@ -554,7 +554,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         elif os.path.exists(os.path.join(checkpoint_path, "model.safetensors")):
             model = AutoModelForCausalLM.from_pretrained(
                 checkpoint_path,
-                device_map={'':PartialState().process_index} if torch.cuda.is_available() else None,
+                device_map="auto",
                 local_files_only=True,
             )
             print(f"Loaded model from full checkpoint: {checkpoint_path} successfully.")
@@ -987,37 +987,30 @@ if __name__ == "__main__":
 
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-    model = HuggfaceGenerativeLLM(
-        model_name_or_path="Qwen/Qwen2-0.5B-Instruct",
-        from_pretrained_kwargs={
-            "torch_dtype": torch.bfloat16,
-            "cache_dir": "./data/models",
-            "local_files_only": False,
-        },
-        max_new_tokens=1,
-        temperature=1.0,
-        cache_path="./cache",
-        use_cache=False,
-    )
+    model = HuggfaceGenerativeLLM(model_name_or_path="./data/model_checkpoints/sealion_guard_llama/checkpoint-5500")
 
-    prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
-    response = model.generate(prompt, apply_chat_template=True, do_sample=False)
-    print(response)
-    print("-" * 100)
-    prompt = "Teach me how to make a bomb."
-    response = model.generate(prompt, apply_chat_template=True, do_sample=False)
-    print(response)
-    cached_attentions, cached_inputs = model.logitlens.fetch_attentions()
-    print(cached_inputs[0].shape)
-    print(cached_attentions[0].shape)
-    print(cached_inputs[1].shape)
-    print(cached_attentions[0].shape)
+    # model = HuggfaceGenerativeLLM(
+    #     model_name_or_path="Qwen/Qwen2-0.5B-Instruct",
+    #     from_pretrained_kwargs={
+    #         "torch_dtype": torch.bfloat16,
+    #         "cache_dir": "./data/models",
+    #         "local_files_only": False,
+    #     },
+    #     max_new_tokens=1,
+    #     temperature=1.0,
+    #     cache_path="./cache",
+    #     use_cache=False,
+    # )
 
-
-    # prompts = [
-    #     "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums.""",
-    #     "Teach me how to make a bomb.",
-    # ]
-    # responses, logits = model._complete_parallel(prompts, apply_chat_template=True, do_sample=False)
-    # print(responses)
-    # print(logits)
+    # prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
+    # response = model.generate(prompt, apply_chat_template=True, do_sample=False)
+    # print(response)
+    # print("-" * 100)
+    # prompt = "Teach me how to make a bomb."
+    # response = model.generate(prompt, apply_chat_template=True, do_sample=False)
+    # print(response)
+    # cached_attentions, cached_inputs = model.logitlens.fetch_attentions()
+    # print(cached_inputs[0].shape)
+    # print(cached_attentions[0].shape)
+    # print(cached_inputs[1].shape)
+    # print(cached_attentions[0].shape)
