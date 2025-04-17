@@ -87,6 +87,7 @@ if __name__ == "__main__":
         print("Using CPU")
 
     # Initial safeguard
+    print(f"Safeguard model: {args.safeguard_name}")
     safeguard = load_safeguard(
         safeguard_name=args.safeguard_name,
         model_name=args.model_name,
