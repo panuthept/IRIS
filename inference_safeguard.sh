@@ -13,8 +13,8 @@ for lang in ta th tl ms in my vi
 do
     echo "Cultural: $lang - Language: en"
     /shared/miniconda3/envs/iris/bin/python scripts/inference_safeguard.py \
-    --safeguard_name LlamaGuard \
-    --model_name meta-llama/Llama-Guard-3-8B \
+    --safeguard_name SealionGuard \
+    --model_name aisingapore/Llama-SEA-LION-Guard \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language en \
@@ -23,12 +23,12 @@ do
     --mixed_tasks_sample \
     --max_tokens 4000 \
     --disable_logitlens \
-    --output_path ./outputs/LlamaGuard/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
+    --output_path ./outputs/Llama-SealionGuard/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
 
     echo "Cultural: $lang - Language: $lang"
     /shared/miniconda3/envs/iris/bin/python scripts/inference_safeguard.py \
-    --safeguard_name LlamaGuard \
-    --model_name meta-llama/Llama-Guard-3-8B \
+    --safeguard_name SealionGuard \
+    --model_name aisingapore/Llama-SEA-LION-Guard \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language $lang \
@@ -37,7 +37,7 @@ do
     --mixed_tasks_sample \
     --max_tokens 4000 \
     --disable_logitlens \
-    --output_path ./outputs/LlamaGuard/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
+    --output_path ./outputs/Llama-SealionGuard/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
 done
 
 
@@ -46,8 +46,8 @@ done
 # do
 #     echo "Language: $lang"
 #     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
-#     --safeguard_name LlamaGuard \
-#     --model_name meta-llama/Llama-Guard-3-8B \
+#     --safeguard_name SealionGuard \
+#     --model_name aisingapore/Llama-SEA-LION-Guard \
 #     --dataset_name SEASafeguardDataset \
 #     --dataset_split test \
 #     --language $lang \
@@ -55,5 +55,5 @@ done
 #     --mixed_tasks_sample \
 #     --max_tokens 4000 \
 #     --disable_logitlens \
-#     --output_path ./outputs/LlamaGuard/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
+#     --output_path ./outputs/Llama-SealionGuard/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
 # done
