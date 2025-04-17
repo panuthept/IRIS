@@ -521,7 +521,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             model = AutoModelForCausalLM.from_pretrained(
                 model_name_or_path,
                 cache_dir="./data/models",
-                device_map="auto",
+                # device_map="auto",
                 tp_plan="auto",
                 local_files_only=True,
             )
@@ -529,7 +529,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
             model = AutoModelForCausalLM.from_pretrained(
                 model_name_or_path,
                 cache_dir="./data/models",
-                device_map="auto",
+                # device_map="auto",
                 tp_plan="auto",
                 local_files_only=False,
             )
@@ -556,7 +556,7 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         elif os.path.exists(os.path.join(checkpoint_path, "model.safetensors")):
             model = AutoModelForCausalLM.from_pretrained(
                 checkpoint_path,
-                device_map="auto",
+                # device_map="auto",
                 tp_plan="auto",
                 local_files_only=True,
             )
