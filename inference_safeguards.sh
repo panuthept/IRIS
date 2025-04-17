@@ -1,5 +1,5 @@
-echo "Evaluating ShieldGemma..."
-sh inference_safeguard.sh ShieldGemma google/shieldgemma-9b ShieldGemma > inference_safeguard_shieldgemma.out
+# echo "Evaluating ShieldGemma..."
+# sh inference_safeguard.sh ShieldGemma google/shieldgemma-9b ShieldGemma > inference_safeguard_shieldgemma.out
 
 # echo "Evaluating LlamaGuard..."
 # sh inference_safeguard.sh LlamaGuard meta-llama/Llama-Guard-3-8B LlamaGuard > inference_safeguard_llamaguard.out
