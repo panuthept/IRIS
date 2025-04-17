@@ -82,8 +82,6 @@ if __name__ == "__main__":
     # Report gpu availability
     if torch.cuda.is_available():
         print(f"Using GPU: {torch.cuda.get_device_name(0)}")
-        print(f"GPU memory allocated: {torch.cuda.memory_allocated(0) / 1024 ** 3:.2f} GB")
-        print(f"GPU memory cached: {torch.cuda.memory_reserved(0) / 1024 ** 3:.2f} GB")
         print(f"GPU number of devices: {torch.cuda.device_count()}")
     else:
         print("Using CPU")
