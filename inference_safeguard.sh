@@ -12,7 +12,7 @@ echo "Evaluating Cultural Safety..."
 for lang in ta th tl ms in my vi
 do
     echo "Cultural: $lang - Language: en"
-    /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+    /shared/miniconda3/envs/iris/bin/python scripts/inference_safeguard.py \
     --safeguard_name LlamaGuard \
     --model_name meta-llama/Llama-Guard-3-8B \
     --dataset_name SEASafeguardDataset \
@@ -23,10 +23,10 @@ do
     --mixed_tasks_sample \
     --max_tokens 3000 \
     --disable_logitlens \
-    --output_path ./outputs/SealionGuardGemma-FULL/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
+    --output_path ./outputs/LlamaGuard/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
 
     echo "Cultural: $lang - Language: $lang"
-    /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+    /shared/miniconda3/envs/iris/bin/python scripts/inference_safeguard.py \
     --safeguard_name LlamaGuard \
     --model_name meta-llama/Llama-Guard-3-8B \
     --dataset_name SEASafeguardDataset \
@@ -37,7 +37,7 @@ do
     --mixed_tasks_sample \
     --max_tokens 3000 \
     --disable_logitlens \
-    --output_path ./outputs/SealionGuardGemma-FULL/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
+    --output_path ./outputs/LlamaGuard/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
 done
 
 
@@ -55,5 +55,5 @@ done
 #     --mixed_tasks_sample \
 #     --max_tokens 3000 \
 #     --disable_logitlens \
-#     --output_path ./outputs/SealionGuardGemma-FULL/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
+#     --output_path ./outputs/LlamaGuard/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
 # done
