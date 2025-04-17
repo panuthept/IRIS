@@ -183,22 +183,22 @@ if __name__ == "__main__":
 
     random.seed(args.seed)
 
-    with open("./data/LMI_scores.jsonl", "r") as f:
-        data = json.load(f)
-        tokenizer = AutoTokenizer.from_pretrained(data["tokenizer"])
-        train_harmful_LMIs = [(k, v) for k, v in data["LMI"]["harmful"].items() if v > args.lmi_threshold][:args.lmi_k]
-        train_harmful_LMIs = {int(k): v for k, v in train_harmful_LMIs}
-        train_safe_LMIs = [(k, v) for k, v in data["LMI"]["benign"].items() if v > args.lmi_threshold][:args.lmi_k]
-        train_safe_LMIs = {int(k): v for k, v in train_safe_LMIs}
+    # with open("./data/LMI_scores.jsonl", "r") as f:
+    #     data = json.load(f)
+    #     tokenizer = AutoTokenizer.from_pretrained(data["tokenizer"])
+    #     train_harmful_LMIs = [(k, v) for k, v in data["LMI"]["harmful"].items() if v > args.lmi_threshold][:args.lmi_k]
+    #     train_harmful_LMIs = {int(k): v for k, v in train_harmful_LMIs}
+    #     train_safe_LMIs = [(k, v) for k, v in data["LMI"]["benign"].items() if v > args.lmi_threshold][:args.lmi_k]
+    #     train_safe_LMIs = {int(k): v for k, v in train_safe_LMIs}
 
-    # Get mask_tokens
-    mask_tokens = None
-    if args.mask_topk_tokens is not None:
-        with open("./data/LMI_scores.jsonl", "r") as f:
-            data = json.load(f)
-            train_harmful_LMIs = list(data["LMI"]["harmful"])[:args.mask_topk_tokens]
-            mask_tokens = [int(k) for k in train_harmful_LMIs]
-        print(f"Mask tokens: {mask_tokens}")
+    # # Get mask_tokens
+    # mask_tokens = None
+    # if args.mask_topk_tokens is not None:
+    #     with open("./data/LMI_scores.jsonl", "r") as f:
+    #         data = json.load(f)
+    #         train_harmful_LMIs = list(data["LMI"]["harmful"])[:args.mask_topk_tokens]
+    #         mask_tokens = [int(k) for k in train_harmful_LMIs]
+    #     print(f"Mask tokens: {mask_tokens}")
 
     # Initial safeguard
     safeguard = load_safeguard(
