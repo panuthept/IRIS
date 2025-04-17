@@ -6,7 +6,6 @@ datasets
 jaxtyping
 scikit-learn
 transformers
-transformer-lens
 accelerate
 rouge-score
 llama-index
