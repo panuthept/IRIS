@@ -1,4 +1,4 @@
-huggingface-cli login --token $1 --add-to-git-credential
+# huggingface-cli login --token $1 --add-to-git-credential
 
 # echo "Evaluating ShieldGemma..."
 # sh inference_safeguard.sh ShieldGemma google/shieldgemma-9b ShieldGemma > inference_safeguard_shieldgemma.out
@@ -6,8 +6,8 @@ huggingface-cli login --token $1 --add-to-git-credential
 # echo "Evaluating LlamaGuard..."
 # sh inference_safeguard.sh LlamaGuard meta-llama/Llama-Guard-3-8B LlamaGuard > inference_safeguard_llamaguard.out
 
-echo "Evaluating WildGuard..."
-sh inference_safeguard.sh WildGuard allenai/wildguard WildGuard > inference_safeguard_wildguard.out
+# echo "Evaluating WildGuard..."
+# sh inference_safeguard.sh WildGuard allenai/wildguard WildGuard > inference_safeguard_wildguard.out
 
 echo "Evaluating Llama-SealionGuard..."
 sh inference_safeguard.sh SealionGuard aisingapore/Llama-SEA-LION-Guard Llama-SealionGuard > inference_safeguard_llama_sealionguard.out
