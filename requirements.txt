@@ -6,7 +6,6 @@ datasets
 jaxtyping
 scikit-learn
 transformers
-easyjailbreak
 transformer-lens
 accelerate
 rouge-score
