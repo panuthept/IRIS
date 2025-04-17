@@ -13,8 +13,8 @@ for lang in ta th tl ms in my vi
 do
     echo "Cultural: $lang - Language: en"
     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
-    --safeguard_name SealionGuard \
-    --model_name ./data/model_checkpoints/sealion_guard_gemma/checkpoint-7000 \
+    --safeguard_name LlamaGuard \
+    --model_name meta-llama/Llama-Guard-3-8B \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language en \
@@ -27,8 +27,8 @@ do
 
     echo "Cultural: $lang - Language: $lang"
     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
-    --safeguard_name SealionGuard \
-    --model_name ./data/model_checkpoints/sealion_guard_gemma/checkpoint-7000 \
+    --safeguard_name LlamaGuard \
+    --model_name meta-llama/Llama-Guard-3-8B \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language $lang \
@@ -41,19 +41,19 @@ do
 done
 
 
-echo "Evaluating General Safety..."
-for lang in en ta th tl ms in my vi
-do
-    echo "Language: $lang"
-    /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
-    --safeguard_name SealionGuard \
-    --model_name ./data/model_checkpoints/sealion_guard_gemma/checkpoint-7000 \
-    --dataset_name SEASafeguardDataset \
-    --dataset_split test \
-    --language $lang \
-    --subset general \
-    --mixed_tasks_sample \
-    --max_tokens 3000 \
-    --disable_logitlens \
-    --output_path ./outputs/SealionGuardGemma-FULL/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
-done
+# echo "Evaluating General Safety..."
+# for lang in en ta th tl ms in my vi
+# do
+#     echo "Language: $lang"
+#     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+#     --safeguard_name LlamaGuard \
+#     --model_name meta-llama/Llama-Guard-3-8B \
+#     --dataset_name SEASafeguardDataset \
+#     --dataset_split test \
+#     --language $lang \
+#     --subset general \
+#     --mixed_tasks_sample \
+#     --max_tokens 3000 \
+#     --disable_logitlens \
+#     --output_path ./outputs/SealionGuardGemma-FULL/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
+# done
