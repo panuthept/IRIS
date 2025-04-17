@@ -79,15 +79,15 @@ if __name__ == "__main__":
     #         mask_tokens = [int(k) for k in train_harmful_LMIs]
     #     print(f"Mask tokens: {mask_tokens}")
 
-    # Report gpu availability
-    if torch.cuda.is_available():
-        print(f"Using GPU: {torch.cuda.get_device_name(0)}")
-        print(f"GPU number of devices: {torch.cuda.device_count()}")
-    else:
-        print("Using CPU")
+    # # Report gpu availability
+    # if torch.cuda.is_available():
+    #     print(f"Using GPU: {torch.cuda.get_device_name(0)}")
+    #     print(f"GPU number of devices: {torch.cuda.device_count()}")
+    # else:
+    #     print("Using CPU")
 
     # Initial safeguard
-    print(f"Safeguard model: {args.safeguard_name}")
+    # print(f"Safeguard model: {args.safeguard_name}")
     safeguard = load_safeguard(
         safeguard_name=args.safeguard_name,
         model_name=args.model_name,
