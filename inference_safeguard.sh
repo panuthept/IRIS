@@ -16,7 +16,7 @@ echo "Evaluating Cultural Safety..."
 for lang in ta th tl ms in my vi
 do
     echo "Cultural: $lang - Language: en"
-    /shared/miniconda3/envs/iris/bin/python scripts/inference_safeguard.py \
+    torchrun --nproc-per-node 8 scripts/inference_safeguard.py \
     --safeguard_name $safeguard_name \
     --model_name $model_name \
     --dataset_name SEASafeguardDataset \
@@ -30,7 +30,7 @@ do
     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
 
     echo "Cultural: $lang - Language: $lang"
-    /shared/miniconda3/envs/iris/bin/python scripts/inference_safeguard.py \
+    torchrun --nproc-per-node 8 scripts/inference_safeguard.py \
     --safeguard_name $safeguard_name \
     --model_name $model_name \
     --dataset_name SEASafeguardDataset \
@@ -49,7 +49,7 @@ done
 # for lang in en ta th tl ms in my vi
 # do
 #     echo "Language: $lang"
-#     /home/panuthep/.conda/envs/iris/bin/python scripts/inference_safeguard.py \
+#     torchrun --nproc-per-node 8 scripts/inference_safeguard.py \
 #     --safeguard_name $safeguard_name \
 #     --model_name $model_name \
 #     --dataset_name SEASafeguardDataset \
