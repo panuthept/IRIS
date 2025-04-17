@@ -10,13 +10,6 @@ if __name__ == "__main__":
 
     model = HuggfaceGenerativeLLM(
         args.model_name,
-        pipeline_kwargs={
-            "torch_dtype": torch.bfloat16,
-            "model_kwargs": {
-                "cache_dir": "./models",
-                "local_files_only": False,
-            }
-        },
     )
     print(model)
     print(f"Downloaded model: {model} successfully!")
