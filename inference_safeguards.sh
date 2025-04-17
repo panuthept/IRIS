@@ -1,3 +1,5 @@
+huggingface-cli login --token $1 --add-to-git-credential
+
 # echo "Evaluating ShieldGemma..."
 # sh inference_safeguard.sh ShieldGemma google/shieldgemma-9b ShieldGemma > inference_safeguard_shieldgemma.out
 
