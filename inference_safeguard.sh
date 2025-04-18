@@ -25,7 +25,7 @@ do
     --cultural $lang \
     --subset cultural_specific \
     --mixed_tasks_sample \
-    --max_tokens 6000 \
+    --max_tokens 8000 \
     --disable_logitlens \
     --sensitive_as_harmful \
     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
@@ -40,7 +40,7 @@ do
     --cultural $lang \
     --subset cultural_specific \
     --mixed_tasks_sample \
-    --max_tokens 6000 \
+    --max_tokens 8000 \
     --disable_logitlens \
     --sensitive_as_harmful \
     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
@@ -59,7 +59,7 @@ do
     --language $lang \
     --subset general \
     --mixed_tasks_sample \
-    --max_tokens 6000 \
+    --max_tokens 8000 \
     --disable_logitlens \
     --sensitive_as_harmful \
     --output_path ./outputs/${output_name}/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
