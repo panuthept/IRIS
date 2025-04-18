@@ -15,7 +15,7 @@ class SealionGuard(GuardLLM):
 
     def __init__(
             self, 
-            model_name_or_path: str = "aisingapore/gemma2-9b-cpt-sea-lionv3-instruct", 
+            model_name_or_path: str = "aisingapore/Llama-SEA-LION-Guard-EN-Cultural", 
             checkpoint_path: str = None,
             api_key: str = None,
             api_base: str = None,
@@ -101,7 +101,7 @@ class SealionGuard(GuardLLM):
 
 
 if __name__ == "__main__":
-    model = SealionGuard()
+    model = SealionGuard("aisingapore/Llama-SEA-LION-Guard-EN-Cultural")
     prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
     response = model.predict(prompt=prompt)
     print(response)
