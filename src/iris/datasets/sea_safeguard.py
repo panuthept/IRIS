@@ -32,7 +32,8 @@ class SEASafeguardDataset(JailbreakDataset):
 
     @classmethod
     def split_available(cls) -> List[str]:
-        return ["train", "dev", "test"]
+        # return ["train", "dev", "test"]
+        return ["train", "test"]
     
     @classmethod
     def subset_available(cls) -> List[str]:
@@ -61,17 +62,17 @@ class SEASafeguardDataset(JailbreakDataset):
                         "response_gold_label": sample["response_label"] if isinstance(sample["response_label"], str) else None,
                     })
 
-            # Load dev dataset
-            dev_dataset = pd.read_csv(f"{path}/dev.csv")
-            # Read dev dataset
-            for i in range(len(dev_dataset)):
-                sample = dev_dataset.iloc[i]
-                data["dev"].append({
-                    "prompt": sample[f"{self.language}_prompt"] if isinstance(sample[f"{self.language}_prompt"], str) else None,
-                    "response": sample[f"{self.language}_response"] if isinstance(sample[f"{self.language}_response"], str) else None,
-                    "prompt_gold_label": sample["prompt_label"] if isinstance(sample["prompt_label"], str) else None,
-                    "response_gold_label": sample["response_label"] if isinstance(sample["response_label"], str) else None,
-                })
+            # # Load dev dataset
+            # dev_dataset = pd.read_csv(f"{path}/dev.csv")
+            # # Read dev dataset
+            # for i in range(len(dev_dataset)):
+            #     sample = dev_dataset.iloc[i]
+            #     data["dev"].append({
+            #         "prompt": sample[f"{self.language}_prompt"] if isinstance(sample[f"{self.language}_prompt"], str) else None,
+            #         "response": sample[f"{self.language}_response"] if isinstance(sample[f"{self.language}_response"], str) else None,
+            #         "prompt_gold_label": sample["prompt_label"] if isinstance(sample["prompt_label"], str) else None,
+            #         "response_gold_label": sample["response_label"] if isinstance(sample["response_label"], str) else None,
+            #     })
 
             # # Load test dataset
             # test_dataset = pd.read_csv(f"{path}/test.csv")
@@ -114,13 +115,13 @@ if __name__ == "__main__":
     print(samples[0].response_gold_label)
     print("-" * 100)
 
-    samples = dataset.as_samples(split="dev")
-    print(len(samples))
-    print(samples[0].prompt)
-    print(samples[0].prompt_gold_label)
-    print(samples[0].response)
-    print(samples[0].response_gold_label)
-    print("-" * 100)
+    # samples = dataset.as_samples(split="dev")
+    # print(len(samples))
+    # print(samples[0].prompt)
+    # print(samples[0].prompt_gold_label)
+    # print(samples[0].response)
+    # print(samples[0].response_gold_label)
+    # print("-" * 100)
 
     samples = dataset.as_samples(split="train")
     print(len(samples))
