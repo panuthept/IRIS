@@ -9,6 +9,7 @@ from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGene
 class SealionGuard(GuardLLM):
     valid_tokens = {
         "safe": "Safe",
+        "sensitive": "Sensitive",
         "unsafe": "Harmful",
     }
 
@@ -37,7 +38,7 @@ class SealionGuard(GuardLLM):
                     api_key=api_key,
                     api_base=api_base,
                 ),
-                max_new_tokens=1,
+                max_new_tokens=10,
                 temperature=temperature,
                 logprobs=True,
                 top_logprobs=top_logprobs,
@@ -50,7 +51,7 @@ class SealionGuard(GuardLLM):
                 model_name_or_path,
                 checkpoint_path=checkpoint_path,
                 max_tokens=max_tokens,
-                max_new_tokens=1,
+                max_new_tokens=10,
                 temperature=temperature,
                 logprobs=True,
                 top_logprobs=top_logprobs,
@@ -96,7 +97,7 @@ class SealionGuard(GuardLLM):
             return_logprobs=True,
             **kwargs
         )
-        return outputs
+        return outputs, response
 
 
 if __name__ == "__main__":

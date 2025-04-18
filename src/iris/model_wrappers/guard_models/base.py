@@ -21,7 +21,7 @@ class GuardLLM(LLM):
         raise NotImplementedError
     
     def complete(self, instruction: str, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
-        outputs = self._complete(instruction, **kwargs)
+        outputs, response = self._complete(instruction, **kwargs)
         if outputs is None:
             outputs = [[(valid_token, 0.0, 0.0) for valid_token in self.valid_tokens.keys()]]
         output = outputs[0]
@@ -40,6 +40,8 @@ class GuardLLM(LLM):
         return {
             "pred_labels": list(zip(labels, labels_probs, labels_logits)),
             "pred_tokens": list(zip(tokens, tokens_probs, tokens_logits)),
+            "instruction": instruction,
+            "response": response,
         }
     
     def _prompt_classify(self, prompt: str, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
@@ -71,12 +73,16 @@ class GuardLLM(LLM):
         prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, **kwargs)
         prompt_labels = prompt_clf["pred_labels"]
         metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
+        metadata["prompt_instruction"] = prompt_clf["instruction"]
+        metadata["prompt_response"] = prompt_clf["response"]
         # Response classification
         response_labels = None
         if response is not None:
             response_clf: Dict[str, List[Tuple[str, float, float]]] = self._response_classify(prompt, response, **kwargs)
             response_labels = response_clf["pred_labels"]
             metadata["response_tokens"] = response_clf["pred_tokens"]
+            metadata["response_instruction"] = response_clf["instruction"]
+            metadata["response_response"] = response_clf["response"]
         # Output formatting
         output = SafeGuardResponse(
             prompt=prompt, 
