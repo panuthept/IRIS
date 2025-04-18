@@ -526,13 +526,21 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 local_files_only=True,
             )
         except:
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name_or_path,
-                cache_dir="./data/models",
-                # device_map="auto",
-                tp_plan="auto",
-                local_files_only=False,
-            )
+            try:
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_name_or_path,
+                    cache_dir="./data/models",
+                    # device_map="auto",
+                    tp_plan="auto",
+                    local_files_only=False,
+                )
+            except:
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_name_or_path,
+                    cache_dir="./data/models",
+                    device_map="auto",
+                    local_files_only=False,
+                )
         return model
 
     def load_adapter_model(self, model_name: str, adapter_name: str) -> AutoModelForCausalLM:
