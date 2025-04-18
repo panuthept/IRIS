@@ -13,7 +13,6 @@ class SEASafeguardDataset(JailbreakDataset):
             language: str = "en",
             cultural: str = "th",
             subset: str = "general",
-            sensitive_as_harmful: bool = False,
             attack_engine: str = None,
             path: str = "./data/datasets/sea_safeguard",
             cache_dir: str = "./data/datasets/sea_safeguard",
@@ -23,7 +22,6 @@ class SEASafeguardDataset(JailbreakDataset):
         self.cultural = cultural
         assert subset in self.subset_available(), f"Invalid subset: {subset}"
         self.subset = subset
-        self.sensitive_as_harmful = sensitive_as_harmful
         super().__init__(
             path=path,
             category=category,
@@ -93,8 +91,8 @@ class SEASafeguardDataset(JailbreakDataset):
             for sample in test_dataset["test"]:
                 prompt = sample["en_prompt"] if self.language == "en" else sample["local_prompt"]
                 response = sample["en_response"] if self.language == "en" else sample["local_response"]
-                prompt_gold_label = sample["prompt_label_final"] if sample["prompt_label_final"] != "Sensitive" else "Harmful" if self.sensitive_as_harmful else "Safe"
-                response_gold_label = sample["response_label_final"] if sample["response_label_final"] != "Sensitive" else "Harmful" if self.sensitive_as_harmful else "Safe"
+                prompt_gold_label = sample["prompt_label_final"]
+                response_gold_label = sample["response_label_final"]
                 data["test"].append({
                     "prompt": prompt if isinstance(prompt, str) else None,
                     "response": response if isinstance(response, str) else None,

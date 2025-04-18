@@ -51,6 +51,7 @@ if __name__ == "__main__":
     parser.add_argument("--mask_first_n_tokens", type=int, default=None)
     parser.add_argument("--mask_last_n_tokens", type=int, default=None)
     parser.add_argument("--mask_topk_tokens", type=int, default=None)
+    parser.add_argument("--sensitive_as_harmful", action="store_true")
     parser.add_argument("--invert_mask", action="store_true")
     parser.add_argument("--prompt_intervention", action="store_true")
     parser.add_argument("--prompt_intervention_2", action="store_true")
@@ -97,7 +98,6 @@ if __name__ == "__main__":
         max_tokens=args.max_tokens,
     )
 
-
     # Initial dataset
     dataset = load_dataset(
         args.dataset_name, 
@@ -127,25 +127,25 @@ if __name__ == "__main__":
             safeguard_response: SafeGuardResponse = safeguard.predict(input=sample)
             if sample.response is not None:
                 # Get response classification results
-                response_harmful_score = [score for label, score, logit in safeguard_response.response_labels if label == "Harmful"]
+                response_harmful_score = [score for label, score, logit in safeguard_response.response_labels if label == "Harmful" or (args.sensitive_as_harmful and label == "Sensitive")]
                 if len(response_harmful_score) == 0:
                     response_unknown += 1
                     response_harmful_score = 0.0
                 else:
                     response_harmful_score = response_harmful_score[0]
                 response_harmful_scores.append(response_harmful_score)
-                response_gold_labels.append(int(sample.response_gold_label == "Harmful"))
+                response_gold_labels.append(int(sample.response_gold_label == "Harmful" or (args.sensitive_as_harmful and sample.response_gold_label == "Sensitive")))
                 if not args.mixed_tasks_sample:
                     continue
             # Get prompt classification results
-            prompt_harmful_score = [score for label, score, logit in safeguard_response.prompt_labels if label == "Harmful"]
+            prompt_harmful_score = [score for label, score, logit in safeguard_response.prompt_labels if label == "Harmful" or (args.sensitive_as_harmful and label == "Sensitive")]
             if len(prompt_harmful_score) == 0:
                 prompt_unknown += 1
                 prompt_harmful_score = 0.0
             else:
                 prompt_harmful_score = prompt_harmful_score[0]
             prompt_harmful_scores.append(prompt_harmful_score)
-            prompt_gold_labels.append(int(sample.prompt_gold_label == "Harmful"))
+            prompt_gold_labels.append(int(sample.prompt_gold_label == "Harmful" or (args.sensitive_as_harmful and sample.response_gold_label == "Sensitive")))
             # Save results
             f.write(json.dumps({
                 "prompt": sample.prompt,

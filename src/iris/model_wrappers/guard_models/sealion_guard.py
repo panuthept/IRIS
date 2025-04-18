@@ -9,7 +9,7 @@ from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGene
 class SealionGuard(GuardLLM):
     valid_tokens = {
         "safe": "Safe",
-        "sensitive": "Sensitive",
+        "s": "Sensitive",
         "unsafe": "Harmful",
     }
 
