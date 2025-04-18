@@ -27,6 +27,7 @@ do
     --mixed_tasks_sample \
     --max_tokens 8000 \
     --disable_logitlens \
+    --sensitive_as_harmful \
     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
 
     echo "Cultural: $lang - Language: $lang"
@@ -41,6 +42,7 @@ do
     --mixed_tasks_sample \
     --max_tokens 8000 \
     --disable_logitlens \
+    --sensitive_as_harmful \
     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
 done
 
@@ -59,5 +61,6 @@ do
     --mixed_tasks_sample \
     --max_tokens 8000 \
     --disable_logitlens \
+    --sensitive_as_harmful \
     --output_path ./outputs/${output_name}/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
 done
