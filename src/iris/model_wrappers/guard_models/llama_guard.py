@@ -88,14 +88,14 @@ class LlamaGuard(GuardLLM):
         return instruction
     
     def _complete(self, instruction: str, **kwargs) -> str:
-        _, outputs = self.model.complete(
+        response, outputs = self.model.complete(
             instruction, 
             apply_chat_template=False, 
             add_special_tokens=True,
             return_logprobs=True,
             **kwargs
         )
-        return outputs
+        return outputs, response
     
 
 if __name__ == "__main__":
