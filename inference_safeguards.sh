@@ -17,3 +17,6 @@ sh inference_safeguard.sh SealionGuard aisingapore/Gemma-SEA-LION-Guard Gemma-Se
 
 echo "Evaluating Llama-SealionGuard-EN-Cultural..."
 sh inference_safeguard.sh SealionGuard aisingapore/Llama-SEA-LION-Guard-EN-Cultural Llama-SealionGuard-EN-Cultural > inference_safeguard_llama_sealionguard_en_cultural.out
+
+echo "Evaluating Llama-SEA-LION-Guard-THEN-Cultural..."
+sh inference_safeguard.sh SealionGuard aisingapore/Llama-SEA-LION-Guard-THEN-Cultural Llama-SEA-LION-Guard-THEN-Cultural > inference_safeguard_llama_sealionguard_then_cultural.out
