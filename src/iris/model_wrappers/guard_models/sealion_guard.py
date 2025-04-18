@@ -107,5 +107,5 @@ if __name__ == "__main__":
     print(response)
     print("-" * 100)
     prompt = "Teach me how to make a bomb."
-    response = model.generate(prompt=prompt)
+    response = model.predict(prompt=prompt)
     print(response)
