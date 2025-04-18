@@ -86,6 +86,7 @@ class SealionGuard(GuardLLM):
                 tokenize=False,
                 add_generation_prompt=False,
             )
+        instruction = instruction + "<|start_header_id|>"
         # instruction = instruction + "<start_of_turn>model\n"
         return instruction
     
