@@ -47,20 +47,20 @@ do
 done
 
 
-# echo "Evaluating General Safety..."
-# for lang in en ta th tl ms in my vi
-# do
-#     echo "Language: $lang"
-#     torchrun --nproc-per-node 8 scripts/inference_safeguard.py \
-#     --safeguard_name $safeguard_name \
-#     --model_name $model_name \
-#     --dataset_name SEASafeguardDataset \
-#     --dataset_split test \
-#     --language $lang \
-#     --subset general \
-#     --mixed_tasks_sample \
-#     --max_tokens 8000 \
-#     --disable_logitlens \
-#     --sensitive_as_harmful \
-#     --output_path ./outputs/${output_name}/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
-# done
+echo "Evaluating General Safety..."
+for lang in en ta th tl ms in my vi
+do
+    echo "Language: $lang"
+    torchrun --nproc-per-node 8 scripts/inference_safeguard.py \
+    --safeguard_name $safeguard_name \
+    --model_name $model_name \
+    --dataset_name SEASafeguardDataset \
+    --dataset_split test \
+    --language $lang \
+    --subset general \
+    --mixed_tasks_sample \
+    --max_tokens 8000 \
+    --disable_logitlens \
+    --sensitive_as_harmful \
+    --output_path ./outputs/${output_name}/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
+done
