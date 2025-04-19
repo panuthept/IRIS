@@ -141,14 +141,10 @@ class WildGuard(GuardLLM):
         metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
         metadata["prompt_instruction"] = prompt_clf["instruction"]
         metadata["prompt_response"] = prompt_clf["response"]
-        response_labels = None
         # Response classification
         response_labels = None
         if response is not None:
             instruction: str = self._apply_safeguard_template(prompt=prompt, response=response)
-            prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
-            # prompt_labels = prompt_clf["pred_labels"]
-            # metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
             instruction = instruction + prompt_clf["pred_tokens"][0][0] + "\nResponse refusal:"
             refusal_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
             instruction = instruction + refusal_clf["pred_tokens"][0][0] + "\nHarmful response:"
