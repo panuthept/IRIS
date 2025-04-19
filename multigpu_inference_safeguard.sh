@@ -16,7 +16,7 @@ echo "Evaluating Cultural Safety..."
 for lang in ta th tl ms in my vi
 do
     echo "Cultural: $lang - Language: en"
-    python scripts/inference_safeguard.py \
+    torchrun --nproc-per-node 8 scripts/inference_safeguard.py \
     --safeguard_name $safeguard_name \
     --model_name $model_name \
     --dataset_name SEASafeguardDataset \
@@ -25,13 +25,13 @@ do
     --cultural $lang \
     --subset cultural_specific \
     --mixed_tasks_sample \
-    --max_tokens 4000 \
+    --max_tokens 8000 \
     --disable_logitlens \
     --sensitive_as_harmful \
     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
 
     echo "Cultural: $lang - Language: $lang"
-    python scripts/inference_safeguard.py \
+    torchrun --nproc-per-node 8 scripts/inference_safeguard.py \
     --safeguard_name $safeguard_name \
     --model_name $model_name \
     --dataset_name SEASafeguardDataset \
@@ -40,7 +40,7 @@ do
     --cultural $lang \
     --subset cultural_specific \
     --mixed_tasks_sample \
-    --max_tokens 4000 \
+    --max_tokens 8000 \
     --disable_logitlens \
     --sensitive_as_harmful \
     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
@@ -51,7 +51,7 @@ echo "Evaluating General Safety..."
 for lang in en ta th tl ms in my vi
 do
     echo "Language: $lang"
-    python scripts/inference_safeguard.py \
+    torchrun --nproc-per-node 8 scripts/inference_safeguard.py \
     --safeguard_name $safeguard_name \
     --model_name $model_name \
     --dataset_name SEASafeguardDataset \
@@ -59,7 +59,7 @@ do
     --language $lang \
     --subset general \
     --mixed_tasks_sample \
-    --max_tokens 4000 \
+    --max_tokens 8000 \
     --disable_logitlens \
     --sensitive_as_harmful \
     --output_path ./outputs/${output_name}/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
