@@ -1,4 +1,3 @@
-import numpy as np
 from typing import Optional
 from iris.cache import CacheMode
 from llama_index.llms.openai_like import OpenAILike
@@ -99,10 +98,40 @@ class SealionGuard(GuardLLM):
             **kwargs
         )
         return outputs, response
-
+    
+class GemmaSealionGuard(SealionGuard):
+    def __init__(
+            self, 
+            model_name_or_path: str = "aisingapore/Gemma-SEA-LION-Guard", 
+            **kwargs,
+    ):
+        super().__init__(model_name_or_path=model_name_or_path, **kwargs)
+        
+    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
+        if response is None:
+            # Apply prompt classification template
+            instruction = self.model.tokenizer.apply_chat_template(
+                [
+                    {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the human user's request is safe or unsafe.\nHuman user:{prompt}"}
+                ],
+                tokenize=False,
+                add_generation_prompt=False,
+            )
+        else:
+            # Apply response classification template
+            instruction = self.model.tokenizer.apply_chat_template(
+                [
+                    {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the AI assistant's response is safe or unsafe.\nHuman user:{prompt}\nAI assistant:{response}"},
+                ],
+                tokenize=False,
+                add_generation_prompt=False,
+            )
+        instruction = instruction + "<start_of_turn>model"
+        return instruction
+    
 
 if __name__ == "__main__":
-    model = SealionGuard("aisingapore/Llama-SEA-LION-Guard")
+    model = GemmaSealionGuard("aisingapore/Gemma-SEA-LION-Guard")
     prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
     response = model.predict(prompt=prompt)
     print(response)
