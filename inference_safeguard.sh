@@ -49,7 +49,7 @@ output_name=$3
 
 echo "Evaluating General Safety..."
 # for lang in en ta th tl ms in my vi
-for lang in tl ms in
+for lang in en ta th
 do
     echo "Language: $lang"
     python scripts/inference_safeguard.py \
