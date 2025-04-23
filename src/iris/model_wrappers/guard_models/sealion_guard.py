@@ -126,7 +126,7 @@ class GemmaSealionGuard(SealionGuard):
                 tokenize=False,
                 add_generation_prompt=False,
             )
-        instruction = instruction + "<start_of_turn>model"
+        instruction = instruction + "<start_of_turn>model\n"
         return instruction
     
 
