@@ -113,7 +113,11 @@ class APIGenerativeLLM(GenerativeLLM):
 
 if __name__ == "__main__":
     # Example usage
-    model = APIGenerativeLLM(model_name_or_path="google/shieldgemma-9b")
+    model = APIGenerativeLLM(
+        model_name_or_path="google/shieldgemma-9b",
+        api_key="EMPTY",
+        api_base="http://localhost:8000/v1",
+    )
     prompt = "What is the capital of France?"
     outputs = model._complete(prompt)
     print(outputs)
