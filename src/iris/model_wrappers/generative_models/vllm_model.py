@@ -1,3 +1,4 @@
+import torch
 from vllm import LLM, SamplingParams
 from transformers import AutoTokenizer
 from typing import List, Tuple, Optional
@@ -20,6 +21,7 @@ class vLLM(GenerativeLLM):
             model=model_name_or_path,
             max_seq_len_to_capture=max_tokens,
             download_dir="./data/models",
+            tensor_parallel_size=torch.cuda.device_count(),
         )
         self.sampling_params = SamplingParams(
             max_tokens=max_new_tokens,
