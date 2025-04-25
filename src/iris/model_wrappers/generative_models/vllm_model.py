@@ -47,6 +47,7 @@ class vLLM(GenerativeLLM):
         outputs = self.llm.generate(
             prompt,
             sampling_params=self.sampling_params,
+            use_tqdm=False,
         )
         answer = outputs[0].outputs[0].text
         logprobs = [[(v.decoded_token, v.logprob, None) for k, v in logprob.items()] for logprob in outputs[0].outputs[0].logprobs]
