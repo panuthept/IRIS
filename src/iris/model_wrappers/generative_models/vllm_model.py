@@ -31,7 +31,7 @@ class vLLM(LLM):
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Generate the response
         outputs = self.llm.generate(
-            prompt=prompt,
+            prompt,
             sampling_params=self.sampling_params,
         )
         return outputs
