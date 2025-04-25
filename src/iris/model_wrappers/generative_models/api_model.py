@@ -63,7 +63,7 @@ class APIGenerativeLLM(GenerativeLLM):
             n=1,
         )
         answer = outputs.choices[0].text
-        logprobs = [[(k, v) for k, v in logprob.items()] for logprob in outputs.choices[0].top_logprobs]
+        logprobs = [[(k, v) for k, v in logprob.items()] for logprob in outputs.choices[0].logprobs.top_logprobs]
         return answer, logprobs
 
         # outputs = self.llm.generate(
