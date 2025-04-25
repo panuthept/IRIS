@@ -52,18 +52,23 @@ class APIGenerativeLLM(GenerativeLLM):
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Generate the response
-        outputs = self.client.completions.create(
-            model=self.model_name,
-            prompt=prompt,
-            max_tokens=self.max_new_tokens,
-            temperature=self.temperature,
-            logprobs=self.top_logprobs,
-            stream=False,
-            echo=False,
-            n=1,
-        )
-        answer = outputs.choices[0].text
-        logprobs = [[(k, v, None) for k, v in logprob.items()] for logprob in outputs.choices[0].logprobs.top_logprobs]
+        try:
+            outputs = self.client.completions.create(
+                model=self.model_name,
+                prompt=prompt,
+                max_tokens=self.max_new_tokens,
+                temperature=self.temperature,
+                logprobs=self.top_logprobs,
+                stream=False,
+                echo=False,
+                n=1,
+            )
+            answer = outputs.choices[0].text
+            logprobs = [[(k, v, None) for k, v in logprob.items()] for logprob in outputs.choices[0].logprobs.top_logprobs]
+        except Exception as e:
+            print(f"Error generating response: {e}")
+            answer = ""
+            logprobs = None
         return answer, logprobs
 
 
