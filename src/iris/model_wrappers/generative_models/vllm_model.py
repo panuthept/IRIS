@@ -16,6 +16,7 @@ class vLLM(LLM):
         self.llm = LLM(
             model=model_name_or_path,
             max_seq_len_to_capture=max_tokens,
+            download_dir="./data/models",
         )
         self.sampling_params = SamplingParams(
             max_tokens=max_new_tokens,
