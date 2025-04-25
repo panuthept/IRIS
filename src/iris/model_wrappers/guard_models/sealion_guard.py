@@ -2,7 +2,7 @@ from typing import Optional
 from iris.cache import CacheMode
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
-from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
+from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM, vLLM
 
 
 class SealionGuard(GuardLLM):
@@ -45,7 +45,7 @@ class SealionGuard(GuardLLM):
                 cache_path=cache_path,
                 cache_mode=cache_mode,
             )
-        else:
+        elif checkpoint_path:
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path,
                 checkpoint_path=checkpoint_path,
@@ -62,6 +62,14 @@ class SealionGuard(GuardLLM):
                 max_logitlens_cache_size=max_logitlens_cache_size,
             )
             self.device = self.model.llm.device
+        else:
+            self.model = vLLM(
+                model_name_or_path,
+                max_tokens=max_tokens,
+                max_new_tokens=1,
+                temperature=temperature,
+                top_logprobs=top_logprobs,
+            )
 
     def get_model_name(self) -> str:
         return self.model_name

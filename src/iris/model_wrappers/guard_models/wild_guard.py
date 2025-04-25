@@ -6,7 +6,7 @@ from iris.cache import CacheMode
 from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
 from typing import Optional, List, Dict, Any, Tuple, Union
-from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
+from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM, vLLM
 from iris.data_types import Sample, IRISConfig, IRISL2Config, IRISCLConfig, IRISDiffTripletConfig, SafeGuardInput, SafeGuardResponse
 
 
@@ -76,7 +76,7 @@ class WildGuard(GuardLLM):
                 cache_mode=cache_mode,
             )
             self.response_template_ids = None
-        else:
+        elif checkpoint_path:
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path,
                 checkpoint_path=checkpoint_path,
@@ -93,7 +93,14 @@ class WildGuard(GuardLLM):
                 max_logitlens_cache_size=max_logitlens_cache_size,
             )
             self.device = self.model.llm.device
-            # self.response_template_ids = self._get_response_template_ids()
+        else:
+            self.model = vLLM(
+                model_name_or_path,
+                max_tokens=max_tokens,
+                max_new_tokens=1,
+                temperature=temperature,
+                top_logprobs=top_logprobs,
+            )
 
     def get_model_name(self) -> str:
         return self.model_name
