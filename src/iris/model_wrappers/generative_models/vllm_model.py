@@ -29,6 +29,8 @@ class vLLM(GenerativeLLM):
         self.tokenizer = self.llm.get_tokenizer()
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
+        super().__init__(**kwargs)
+
     def _complete(
         self, 
         prompt: str,
