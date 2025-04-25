@@ -32,11 +32,9 @@ class SealionGuard(GuardLLM):
         self.device = None
         if api_key:
             self.model = APIGenerativeLLM(
-                llm=OpenAILike(
-                    model=model_name_or_path,
-                    api_key=api_key,
-                    api_base=api_base,
-                ),
+                model_name_or_path=model_name_or_path,
+                api_key=api_key,
+                api_base=api_base,
                 max_new_tokens=1,
                 temperature=temperature,
                 logprobs=True,
@@ -139,7 +137,11 @@ class GemmaSealionGuard(SealionGuard):
     
 
 if __name__ == "__main__":
-    model = GemmaSealionGuard("aisingapore/Gemma-SEA-LION-Guard")
+    model = GemmaSealionGuard(
+        "aisingapore/Gemma-SEA-LION-Guard",
+        api_key="EMPTY",
+        api_base="http://localhost:8000/v1",
+    )
     prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
     response = model.predict(prompt=prompt)
     print(response)
