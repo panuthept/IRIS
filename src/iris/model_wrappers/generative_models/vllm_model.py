@@ -1,9 +1,10 @@
 from vllm import LLM, SamplingParams
-from typing import List, Callable, Union, Tuple, Optional
+from transformers import AutoTokenizer
+from typing import List, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 
 
-class vLLM(LLM):
+class vLLM(GenerativeLLM):
     def __init__(
         self, 
         model_name_or_path: str,  
@@ -13,6 +14,7 @@ class vLLM(LLM):
         top_logprobs: int = 10,
         **kwargs,
     ):
+        # Load model
         self.llm = LLM(
             model=model_name_or_path,
             max_seq_len_to_capture=max_tokens,
@@ -23,6 +25,20 @@ class vLLM(LLM):
             temperature=temperature,
             logprobs=top_logprobs,
         )
+        # Load tokenizer
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                model_name_or_path,
+                cache_dir="./data/models",
+                local_files_only=True,
+            )
+        except:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                model_name_or_path,
+                cache_dir="./data/models",
+                local_files_only=False,
+            )
+        self.tokenizer.pad_token = self.tokenizer.eos_token
 
     def _complete(
         self, 
