@@ -66,52 +66,6 @@ class APIGenerativeLLM(GenerativeLLM):
         logprobs = [[(k, v, None) for k, v in logprob.items()] for logprob in outputs.choices[0].logprobs.top_logprobs]
         return answer, logprobs
 
-        # outputs = self.llm.generate(
-        #     prompt,
-        #     sampling_params=self.sampling_params,
-        #     use_tqdm=False,
-        # )
-        # answer = outputs[0].outputs[0].text
-        # logprobs = [[(v.decoded_token, v.logprob, None) for k, v in logprob.items()] for logprob in outputs[0].outputs[0].logprobs]
-        # return answer, logprobs
-
-    # def _complete(
-    #     self, 
-    #     prompt: str, 
-    #     ref_prompt: Optional[str] = None, 
-    #     suffix_prompt: Optional[str] = None, 
-    #     apply_chat_template: bool = True, 
-    #     add_special_tokens: bool = False,
-    #     mask_first_n_tokens: Optional[int] = None,
-    #     mask_last_n_tokens: Optional[int] = None,
-    #     invert_mask: bool = False,
-    #     **kwargs
-    # ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
-    #     if ref_prompt:
-    #         print("[WARNING] ref_prompt is not supported with APIGenerativeLLM. Ignoring the ref_prompt.")
-    #     if apply_chat_template:
-    #         if suffix_prompt:
-    #             print("[WARNING] suffix_prompt is not supported with apply_chat_template=True. Ignoring the suffix_prompt.")
-    #         if self.system_prompt:
-    #             messages = [
-    #                 ChatMessage(role="system", content=self.system_prompt),
-    #                 ChatMessage(role="user", content=prompt),
-    #             ]
-    #         else:
-    #             messages = [ChatMessage(role="user", content=prompt)]
-    #         response = self.llm.chat(messages, **kwargs)
-    #         answer = response.message.content
-    #     else:
-    #         if self.system_prompt:
-    #             prompt = f"{self.system_prompt}\n\n{prompt}"
-    #         if suffix_prompt:
-    #             prompt = f"{prompt}{suffix_prompt}"
-    #         response = self.llm.complete(prompt, **kwargs)
-    #         answer = response.text
-    #     # Get logprobs
-    #     logprobs = [[(cand_logprob.token, cand_logprob.logprob) for cand_logprob in token_logprob] for token_logprob in response.logprobs] if response.logprobs else None
-    #     return answer, logprobs
-    
 
 if __name__ == "__main__":
     # Example usage
