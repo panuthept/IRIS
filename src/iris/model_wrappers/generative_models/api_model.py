@@ -58,9 +58,8 @@ class APIGenerativeLLM(GenerativeLLM):
             max_tokens=self.max_new_tokens,
             temperature=self.temperature,
             logprobs=self.top_logprobs,
-            add_special_tokens=False,
             stream=False,
-            echo=True,
+            echo=False,
             n=1,
         )
         print(completion)
