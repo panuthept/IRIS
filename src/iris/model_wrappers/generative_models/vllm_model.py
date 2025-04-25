@@ -34,7 +34,9 @@ class vLLM(LLM):
             prompt,
             sampling_params=self.sampling_params,
         )
-        return outputs
+        answer = outputs[0].outputs[0].text
+        logprobs = [[(v.decoded_token, v.logprob, None) for k, v in logprob.items()] for logprob in outputs[0].outputs[0].logprobs]
+        return answer, logprobs
 
         # completed_ids, logprobs, logits = self._generate(
         #     input_ids=encoded_texts["input_ids"],
