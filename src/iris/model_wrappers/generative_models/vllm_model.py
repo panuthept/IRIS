@@ -15,6 +15,7 @@ class vLLM(GenerativeLLM):
         **kwargs,
     ):
         # Load model
+        self.model_name = model_name_or_path
         self.llm = LLM(
             model=model_name_or_path,
             max_seq_len_to_capture=max_tokens,
@@ -30,6 +31,10 @@ class vLLM(GenerativeLLM):
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
         super().__init__(**kwargs)
+
+    def get_model_name(self) -> str:
+        # TODO: Add a better way to get the model name. the current way is not reliable as the model_name_or_path can be a path
+        return self.model_name
 
     def _complete(
         self, 
