@@ -31,6 +31,8 @@ if __name__ == "__main__":
     parser.add_argument("--safeguard_name", type=str, default="LlamaGuard", choices=list(AVAILABLE_GUARDS.keys()))
     parser.add_argument("--model_name", type=str, default="meta-llama/Llama-Guard-3-8B")
     parser.add_argument("--checkpoint_path", type=str, default=None)
+    parser.add_argument("--api_key", type=str, default=None)
+    parser.add_argument("--api_base", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="SEASafeguardDataset", choices=list(AVAILABLE_DATASETS.keys()))
     parser.add_argument("--mixed_tasks_sample", action="store_true")
     parser.add_argument("--language", type=str, default="en")
@@ -93,6 +95,8 @@ if __name__ == "__main__":
         safeguard_name=args.safeguard_name,
         model_name=args.model_name,
         checkpoint_path=args.checkpoint_path,
+        api_key=args.api_key,
+        api_base=args.api_base,
         disable_logitlens=args.disable_logitlens,
         top_logprobs=args.top_logprobs,
         max_tokens=args.max_tokens,
