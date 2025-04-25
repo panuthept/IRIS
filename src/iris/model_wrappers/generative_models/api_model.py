@@ -62,6 +62,7 @@ class APIGenerativeLLM(GenerativeLLM):
             echo=True,
             n=1,
         )
+        print(completion)
         return completion
 
         # outputs = self.llm.generate(
