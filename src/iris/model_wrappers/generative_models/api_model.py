@@ -52,7 +52,7 @@ class APIGenerativeLLM(GenerativeLLM):
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Generate the response
-        completion = self.client.completions.create(
+        outputs = self.client.completions.create(
             model=self.model_name,
             prompt=prompt,
             max_tokens=self.max_new_tokens,
@@ -62,8 +62,9 @@ class APIGenerativeLLM(GenerativeLLM):
             echo=False,
             n=1,
         )
-        print(completion)
-        return completion
+        answer = outputs.choices[0].text
+        logprobs = [[(k, v) for k, v in logprob.items()] for logprob in outputs.choices[0].top_logprobs]
+        return answer, logprobs
 
         # outputs = self.llm.generate(
         #     prompt,
