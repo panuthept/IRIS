@@ -26,18 +26,7 @@ class vLLM(GenerativeLLM):
             logprobs=top_logprobs,
         )
         # Load tokenizer
-        try:
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                model_name_or_path,
-                cache_dir="./data/models",
-                local_files_only=True,
-            )
-        except:
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                model_name_or_path,
-                cache_dir="./data/models",
-                local_files_only=False,
-            )
+        self.tokenizer = self.llm.get_tokenizer()
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
     def _complete(
