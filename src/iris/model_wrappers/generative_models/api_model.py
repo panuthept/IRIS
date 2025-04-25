@@ -114,7 +114,7 @@ class APIGenerativeLLM(GenerativeLLM):
 if __name__ == "__main__":
     # Example usage
     model = APIGenerativeLLM(
-        model_name_or_path="google/shieldgemma-9b",
+        model_name_or_path="aisingapore/Gemma-SEA-LION-Guard",
         api_key="EMPTY",
         api_base="http://localhost:8000/v1",
     )
