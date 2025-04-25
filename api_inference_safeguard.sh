@@ -11,11 +11,10 @@
 safeguard_name=$1
 model_name=$2
 output_name=$3
-gpu_nums=$4
 
 
-echo "Starting VLLM server..."
-vllm serve $model_name --download_dir ./data/models --tensor_parallel_size $gpu_nums
+# echo "Starting VLLM server..."
+# vllm serve $model_name --download_dir ./data/models --tensor_parallel_size $gpu_nums
 
 
 echo "Evaluating Cultural Safety..."
