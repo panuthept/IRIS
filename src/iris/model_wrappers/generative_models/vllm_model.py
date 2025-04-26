@@ -27,6 +27,7 @@ class vLLM(GenerativeLLM):
             max_tokens=max_new_tokens,
             temperature=temperature,
             logprobs=min(top_logprobs, 20),
+            truncate_prompt_tokens=max_tokens,
         )
         # Load tokenizer
         self.tokenizer = self.llm.get_tokenizer()
