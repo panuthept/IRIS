@@ -92,7 +92,7 @@ class SealionGuard(GuardLLM):
                 add_generation_prompt=False,
             )
         instruction = instruction + "<|start_header_id|>model<|end_header_id|>\n\n"
-        # instruction = instruction + "<start_of_turn>model\n"
+        instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
         return instruction
     
     def _complete(self, instruction: str, **kwargs) -> str:
@@ -134,7 +134,6 @@ class GemmaSealionGuard(SealionGuard):
             )
         instruction = instruction + "<start_of_turn>model\n"
         instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
-        print(instruction)
         return instruction
     
 
