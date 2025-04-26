@@ -113,6 +113,7 @@ class WildGuard(GuardLLM):
             # Apply response classification template
             instruction = self.template.format(prompt=prompt, response=response)
         instruction = instruction + "\nHarmful request:"
+        instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
         return instruction
 
     def _complete(self, instruction: str, **kwargs) -> str:

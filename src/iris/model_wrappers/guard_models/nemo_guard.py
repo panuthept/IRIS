@@ -151,6 +151,7 @@ class NemoGuard(GuardLLM):
             # Apply response classification template
             instruction = self.response_clf_template.format(prompt=prompt, response=response)
         instruction = instruction + '{"User Safety": "'
+        instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
         return instruction
 
     def _complete(self, instruction: str, **kwargs) -> str:
