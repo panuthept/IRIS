@@ -11,6 +11,7 @@
 safeguard_name=$1
 model_name=$2
 output_name=$3
+port=$4
 
 
 # echo "Starting VLLM server..."
@@ -25,7 +26,7 @@ do
     --safeguard_name $safeguard_name \
     --model_name $model_name \
     --api_key EMPTY \
-    --api_base http://localhost:8000/v1 \
+    --api_base http://localhost:${port}/v1 \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language en \
@@ -42,7 +43,7 @@ do
     --safeguard_name $safeguard_name \
     --model_name $model_name \
     --api_key EMPTY \
-    --api_base http://localhost:8000/v1 \
+    --api_base http://localhost:${port}/v1 \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language $lang \
@@ -64,7 +65,7 @@ do
     --safeguard_name $safeguard_name \
     --model_name $model_name \
     --api_key EMPTY \
-    --api_base http://localhost:8000/v1 \
+    --api_base http://localhost:${port}/v1 \
     --dataset_name SEASafeguardDataset \
     --dataset_split test \
     --language $lang \
