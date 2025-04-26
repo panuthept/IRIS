@@ -1,13 +1,9 @@
-import numpy as np
 from trl import SFTConfig
-from peft import LoraConfig
-from datasets import Dataset
 from iris.cache import CacheMode
-from llama_index.llms.openai_like import OpenAILike
+from typing import Optional, List, Dict, Tuple
 from iris.model_wrappers.guard_models import GuardLLM
-from typing import Optional, List, Dict, Any, Tuple, Union
+from iris.data_types import IRISConfig, SafeGuardInput, SafeGuardResponse
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM, vLLM
-from iris.data_types import Sample, IRISConfig, IRISL2Config, IRISCLConfig, IRISDiffTripletConfig, SafeGuardInput, SafeGuardResponse
 
 
 class WildGuard(GuardLLM):
@@ -62,11 +58,9 @@ class WildGuard(GuardLLM):
         self.device = None
         if api_key:
             self.model = APIGenerativeLLM(
-                llm=OpenAILike(
-                    model=model_name_or_path,
-                    api_key=api_key,
-                    api_base=api_base,
-                ),
+                model_name_or_path=model_name_or_path,
+                api_key=api_key,
+                api_base=api_base,
                 max_new_tokens=1,
                 temperature=temperature,
                 logprobs=True,

@@ -1,7 +1,5 @@
-import numpy as np
 from typing import Optional
 from iris.cache import CacheMode
-from llama_index.llms.openai_like import OpenAILike
 from iris.model_wrappers.guard_models import GuardLLM
 from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM, vLLM
 
@@ -32,11 +30,9 @@ class LlamaGuard(GuardLLM):
         self.device = None
         if api_key:
             self.model = APIGenerativeLLM(
-                llm=OpenAILike(
-                    model=model_name_or_path,
-                    api_key=api_key,
-                    api_base=api_base,
-                ),
+                model_name_or_path=model_name_or_path,
+                api_key=api_key,
+                api_base=api_base,
                 max_new_tokens=1,
                 temperature=temperature,
                 logprobs=True,

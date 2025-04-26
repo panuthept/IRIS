@@ -1,13 +1,8 @@
-import numpy as np
-from trl import SFTConfig
-from peft import LoraConfig
-from datasets import Dataset
 from iris.cache import CacheMode
-from llama_index.llms.openai_like import OpenAILike
+from typing import Optional, List, Dict, Tuple
 from iris.model_wrappers.guard_models import GuardLLM
-from typing import Optional, List, Dict, Any, Tuple, Union
-from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM
-from iris.data_types import Sample, IRISConfig, IRISL2Config, IRISCLConfig, IRISDiffTripletConfig, SafeGuardInput, SafeGuardResponse
+from iris.data_types import SafeGuardInput, SafeGuardResponse
+from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM, vLLM
 
 
 class PolyGuard(GuardLLM):
@@ -65,11 +60,9 @@ class PolyGuard(GuardLLM):
         self.device = None
         if api_key:
             self.model = APIGenerativeLLM(
-                llm=OpenAILike(
-                    model=model_name_or_path,
-                    api_key=api_key,
-                    api_base=api_base,
-                ),
+                model_name_or_path=model_name_or_path,
+                api_key=api_key,
+                api_base=api_base,
                 max_new_tokens=1,
                 temperature=temperature,
                 logprobs=True,
@@ -79,7 +72,7 @@ class PolyGuard(GuardLLM):
                 cache_mode=cache_mode,
             )
             self.response_template_ids = None
-        else:
+        elif checkpoint_path:
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path,
                 checkpoint_path=checkpoint_path,
@@ -96,7 +89,14 @@ class PolyGuard(GuardLLM):
                 max_logitlens_cache_size=max_logitlens_cache_size,
             )
             self.device = self.model.llm.device
-            # self.response_template_ids = self._get_response_template_ids()
+        else:
+            self.model = vLLM(
+                model_name_or_path,
+                max_tokens=max_tokens,
+                max_new_tokens=1,
+                temperature=temperature,
+                top_logprobs=top_logprobs,
+            )
 
     def get_model_name(self) -> str:
         return self.model_name
