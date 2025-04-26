@@ -134,6 +134,8 @@ class GemmaSealionGuard(SealionGuard):
             )
         instruction = instruction + "<start_of_turn>model\n"
         print(instruction)
+        print(self.model.tokenizer.bos_token)
+        print(instruction.startswith(self.model.tokenizer.bos_token))
         return instruction
     
 
