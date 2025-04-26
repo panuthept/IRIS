@@ -72,6 +72,7 @@ class APIGenerativeLLM(GenerativeLLM):
                 if "Error code: 400" in str(e):
                     answer = ""
                     logprobs = None
+                    break
         return answer, logprobs
 
 
