@@ -52,7 +52,8 @@ class APIGenerativeLLM(GenerativeLLM):
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Generate the response
-        while True:
+        try_count = 0
+        while try_count < 10:
             try:
                 outputs = self.client.completions.create(
                     model=self.model_name,
@@ -73,6 +74,7 @@ class APIGenerativeLLM(GenerativeLLM):
                     answer = ""
                     logprobs = None
                     break
+                try_count += 1
         return answer, logprobs
 
 
