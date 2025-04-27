@@ -128,9 +128,6 @@ class PolyGuard(GuardLLM):
         return instruction
 
     def _complete(self, instruction: str, **kwargs) -> str:
-        print("INSTRUCTION:")
-        print(instruction)
-        print("-" * 100)
         response, outputs = self.model.complete(
             instruction, 
             apply_chat_template=False, 
@@ -138,9 +135,6 @@ class PolyGuard(GuardLLM):
             return_logprobs=True,
             **kwargs
         )
-        print("RESPONSE:")
-        print(response)
-        print("-" * 100)
         return outputs, response
     
     def predict(
@@ -170,12 +164,6 @@ class PolyGuard(GuardLLM):
         response_labels = None
         if response is not None:
             response_clf: Dict[str, List[Tuple[str, float, float]]] = self._response_classify(prompt, response, **kwargs)
-            # instruction: str = self._apply_safeguard_template(prompt=prompt, response=response)
-            # instruction = instruction + metadata["prompt_response"].split("\n")[0]
-            # instruction = instruction + prompt_clf["pred_tokens"][0][0] + "\nResponse refusal:"
-            # refusal_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
-            # instruction = instruction + refusal_clf["pred_tokens"][0][0] + "\nHarmful response:"
-            # response_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
             response_labels = response_clf["pred_labels"][2]
             metadata["response_tokens"] = response_clf["pred_tokens"][2]
             metadata["response_instruction"] = response_clf["instruction"]
@@ -190,9 +178,6 @@ class PolyGuard(GuardLLM):
             response_labels=response_labels,
             metadata=metadata,
         )
-        print("OUTPUT:")
-        print(output)
-        print("-" * 100)
         return output
     
 
