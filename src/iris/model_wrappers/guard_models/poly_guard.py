@@ -46,7 +46,7 @@ class PolyGuard(GuardLLM):
             checkpoint_path: str = None,
             api_key: str = None,
             api_base: str = None,
-            top_logprobs: int = 10,
+            top_logprobs: int = 2,
             max_tokens: int = 3000,
             temperature: float = 0,
             use_cache: bool = False,
