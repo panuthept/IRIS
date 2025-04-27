@@ -66,7 +66,7 @@ class APIGenerativeLLM(GenerativeLLM):
                     n=1,
                 )
                 answer = outputs.choices[0].text
-                logprobs = [[(k, v, None) for k, v in logprob.items()] for logprob in outputs.choices[0].logprobs.top_logprobs]
+                logprobs = [[(k, v, None) for k, v in logprob.items()][:self.top_logprobs] for logprob in outputs.choices[0].logprobs.top_logprobs]
                 break
             except Exception as e:
                 print(f"Error generating response: {e}")
