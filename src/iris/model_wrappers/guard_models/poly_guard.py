@@ -128,6 +128,9 @@ class PolyGuard(GuardLLM):
         return instruction
 
     def _complete(self, instruction: str, **kwargs) -> str:
+        print("INSTRUCTION:")
+        print(instruction)
+        print("-" * 100)
         response, outputs = self.model.complete(
             instruction, 
             apply_chat_template=False, 
