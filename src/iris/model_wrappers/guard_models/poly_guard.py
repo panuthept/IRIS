@@ -110,7 +110,7 @@ class PolyGuard(GuardLLM):
                     {"role": "user", "content": self.template.format(prompt=prompt, response="")},
                 ],
                 tokenize=False,
-                add_generation_prompt=True,
+                add_generation_prompt=False,
             )
         else:
             # Apply response classification template
@@ -120,7 +120,7 @@ class PolyGuard(GuardLLM):
                     {"role": "user", "content": self.template.format(prompt=prompt, response=response)},
                 ],
                 tokenize=False,
-                add_generation_prompt=True,
+                add_generation_prompt=False,
             )
         instruction = instruction + "\nHarmful request:"
         print("INSTRUCTION: ")
