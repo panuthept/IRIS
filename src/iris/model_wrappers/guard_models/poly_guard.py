@@ -25,7 +25,7 @@ class PolyGuard(GuardLLM):
         "S12: Sexual Content.\n"
         "S13: Elections.\n"
         "S14: Code Interpreter Abuse.\n"
-        "<END UNSAFE CONTENT CATEGORIES>\n"
+        "<END UNSAFE CONTENT CATEGORIES>"
     )
     template = (
         "Human user:\n"
@@ -123,10 +123,10 @@ class PolyGuard(GuardLLM):
                 add_generation_prompt=False,
             )
         instruction = instruction + "\nHarmful request:"
-        print("INSTRUCTION: ")
+        print("INSTRUCTION:")
         print(instruction)
         print("-" * 100)
-        instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
+        # instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
         return instruction
 
     def _complete(self, instruction: str, **kwargs) -> str:
@@ -137,6 +137,10 @@ class PolyGuard(GuardLLM):
             return_logprobs=True,
             **kwargs
         )
+        print("RESPONSE:")
+        print(response)
+        print(outputs)
+        print("-" * 100)
         return outputs, response
     
     def predict(
