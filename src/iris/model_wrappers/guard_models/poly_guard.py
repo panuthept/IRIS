@@ -122,7 +122,7 @@ class PolyGuard(GuardLLM):
                 tokenize=False,
                 add_generation_prompt=False,
             )
-        instruction = instruction + "\nHarmful request:"
+        # instruction = instruction + "\nHarmful request:"
         print("INSTRUCTION:")
         print(instruction)
         print("-" * 100)
