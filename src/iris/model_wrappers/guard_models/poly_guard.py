@@ -135,6 +135,9 @@ class PolyGuard(GuardLLM):
             return_logprobs=True,
             **kwargs
         )
+        print("RESPONSE:")
+        print(response)
+        print("-" * 100)
         return outputs, response
     
     def predict(
