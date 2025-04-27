@@ -160,7 +160,7 @@ class PolyGuard(GuardLLM):
         # Prompt classification
         prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, **kwargs)
         prompt_labels = prompt_clf["pred_labels"][0]
-        metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
+        metadata["prompt_tokens"] = prompt_clf["pred_tokens"][0]
         metadata["prompt_instruction"] = prompt_clf["instruction"]
         metadata["prompt_response"] = prompt_clf["response"]
         # Response classification
@@ -168,11 +168,12 @@ class PolyGuard(GuardLLM):
         if response is not None:
             # response_clf: Dict[str, List[Tuple[str, float, float]]] = self._response_classify(prompt, response, **kwargs)
             instruction: str = self._apply_safeguard_template(prompt=prompt, response=response)
-            instruction = instruction + prompt_clf["pred_tokens"][0][0]
+            instruction = instruction + metadata["prompt_tokens"][0][0]
             # instruction = instruction + prompt_clf["pred_tokens"][0][0] + "\nResponse refusal:"
             # refusal_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
             # instruction = instruction + refusal_clf["pred_tokens"][0][0] + "\nHarmful response:"
             response_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
+            print(response_clf)
             response_labels = response_clf["pred_labels"][2]
             metadata["response_tokens"] = response_clf["pred_tokens"]
             metadata["response_instruction"] = response_clf["instruction"]
