@@ -45,12 +45,12 @@ class GuardLLM(LLM):
             labels_logits = [logit for _, _, logit in output]
             labels_probs = np.exp(labels_logprobs) / np.sum(np.exp(labels_logprobs))
             # Append to lists
-            lst_labels.extend(labels)
-            lst_labels_probs.extend(labels_probs)
-            lst_labels_logits.extend(labels_logits)
-            lst_tokens.extend(tokens)
-            lst_tokens_probs.extend(tokens_probs)
-            lst_tokens_logits.extend(tokens_logits)
+            lst_labels.append(labels)
+            lst_labels_probs.append(labels_probs)
+            lst_labels_logits.append(labels_logits)
+            lst_tokens.append(tokens)
+            lst_tokens_probs.append(tokens_probs)
+            lst_tokens_logits.append(tokens_logits)
         return {
             "pred_labels": [list(zip(labels, labels_probs, labels_logits)) for labels, labels_probs, labels_logits in zip(lst_labels, lst_labels_probs, lst_labels_logits)],
             "pred_tokens": [list(zip(tokens, tokens_probs, tokens_logits)) for tokens, tokens_probs, tokens_logits in zip(lst_tokens, lst_tokens_probs, lst_tokens_logits)],
