@@ -24,22 +24,36 @@ class GuardLLM(LLM):
         outputs, response = self._complete(instruction, **kwargs)
         if outputs is None:
             outputs = [[(valid_token, 0.0, 0.0) for valid_token in self.valid_tokens.keys()]]
-        output = outputs[0]
-        # Get all token outputs
-        tokens = [token for token, _, _ in output]
-        tokens_logprobs = [logprob for _, logprob, _ in output]
-        tokens_logits = [logit for _, _, logit in output]
-        tokens_probs = np.exp(tokens_logprobs) / np.sum(np.exp(tokens_logprobs))
-        # Filter out invalid tokens
-        output = [(self.valid_tokens[token], logprob, logit) for token, logprob, logit in output if token in self.valid_tokens]
-        # Convert logprobs to probabilities
-        labels = [label for label, _, _ in output]
-        labels_logprobs = [logprob for _, logprob, _ in output]
-        labels_logits = [logit for _, _, logit in output]
-        labels_probs = np.exp(labels_logprobs) / np.sum(np.exp(labels_logprobs))
+        # output = outputs[0]
+        lst_labels = []
+        lst_labels_probs = []
+        lst_labels_logits = []
+        lst_tokens = []
+        lst_tokens_probs = []
+        lst_tokens_logits = []
+        for output in outputs:
+            # Get all token outputs
+            tokens = [token for token, _, _ in output]
+            tokens_logprobs = [logprob for _, logprob, _ in output]
+            tokens_logits = [logit for _, _, logit in output]
+            tokens_probs = np.exp(tokens_logprobs) / np.sum(np.exp(tokens_logprobs))
+            # Filter out invalid tokens
+            output = [(self.valid_tokens[token], logprob, logit) for token, logprob, logit in output if token in self.valid_tokens]
+            # Convert logprobs to probabilities
+            labels = [label for label, _, _ in output]
+            labels_logprobs = [logprob for _, logprob, _ in output]
+            labels_logits = [logit for _, _, logit in output]
+            labels_probs = np.exp(labels_logprobs) / np.sum(np.exp(labels_logprobs))
+            # Append to lists
+            lst_labels.extend(labels)
+            lst_labels_probs.extend(labels_probs)
+            lst_labels_logits.extend(labels_logits)
+            lst_tokens.extend(tokens)
+            lst_tokens_probs.extend(tokens_probs)
+            lst_tokens_logits.extend(tokens_logits)
         return {
-            "pred_labels": list(zip(labels, labels_probs, labels_logits)),
-            "pred_tokens": list(zip(tokens, tokens_probs, tokens_logits)),
+            "pred_labels": [list(zip(labels, labels_probs, labels_logits)) for labels, labels_probs, labels_logits in zip(lst_labels, lst_labels_probs, lst_labels_logits)],
+            "pred_tokens": [list(zip(tokens, tokens_probs, tokens_logits)) for tokens, tokens_probs, tokens_logits in zip(lst_tokens, lst_tokens_probs, lst_tokens_logits)],
             "instruction": instruction,
             "response": response,
         }
