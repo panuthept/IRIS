@@ -122,11 +122,10 @@ class PolyGuard(GuardLLM):
                 tokenize=False,
                 add_generation_prompt=False,
             )
-        # instruction = instruction + "\nHarmful request:"
+        instruction = instruction + "Harmful request:"
         print("INSTRUCTION:")
         print(instruction)
         print("-" * 100)
-        # instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
         return instruction
 
     def _complete(self, instruction: str, **kwargs) -> str:
@@ -137,10 +136,10 @@ class PolyGuard(GuardLLM):
             return_logprobs=True,
             **kwargs
         )
-        print("RESPONSE:")
-        print(response)
-        print(outputs)
-        print("-" * 100)
+        # print("RESPONSE:")
+        # print(response)
+        # print(outputs)
+        # print("-" * 100)
         return outputs, response
     
     def predict(
@@ -188,6 +187,9 @@ class PolyGuard(GuardLLM):
             response_labels=response_labels,
             metadata=metadata,
         )
+        print("RESPONSE:")
+        print(output)
+        print("-" * 100)
         return output
     
 
