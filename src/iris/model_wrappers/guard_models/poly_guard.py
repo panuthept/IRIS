@@ -122,7 +122,7 @@ class PolyGuard(GuardLLM):
                 tokenize=False,
                 add_generation_prompt=False,
             )
-        # instruction = instruction + "Harmful request:"
+        instruction = instruction + "Harmful request:"
         if self.model.tokenizer.bos_token is not None:
             instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
         return instruction
@@ -160,7 +160,7 @@ class PolyGuard(GuardLLM):
         # Prompt classification
         prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, **kwargs)
         prompt_labels = prompt_clf["pred_labels"][0]
-        metadata["prompt_tokens"] = prompt_clf["pred_tokens"][0]
+        metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
         metadata["prompt_instruction"] = prompt_clf["instruction"]
         metadata["prompt_response"] = prompt_clf["response"]
         # Response classification
@@ -173,7 +173,7 @@ class PolyGuard(GuardLLM):
             # instruction = instruction + refusal_clf["pred_tokens"][0][0] + "\nHarmful response:"
             # response_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
             response_labels = response_clf["pred_labels"][2]
-            metadata["response_tokens"] = response_clf["pred_tokens"][2]
+            metadata["response_tokens"] = response_clf["pred_tokens"]
             metadata["response_instruction"] = response_clf["instruction"]
             metadata["response_response"] = response_clf["response"]
         # Output formatting
