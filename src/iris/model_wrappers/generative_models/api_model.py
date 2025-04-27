@@ -13,7 +13,7 @@ class APIGenerativeLLM(GenerativeLLM):
         max_tokens: int = 8192,
         max_new_tokens: int = 1024,
         temperature: float = 0,
-        top_logprobs: int = 10,
+        top_logprobs: int = 2,
         **kwargs,
     ):
         # Load model
