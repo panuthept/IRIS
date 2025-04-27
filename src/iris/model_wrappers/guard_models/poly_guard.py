@@ -36,8 +36,8 @@ class PolyGuard(GuardLLM):
     )
 
     valid_tokens = {
-        " no": "Safe",
-        " yes": "Harmful",
+        "Ġno": "Safe",
+        "Ġyes": "Harmful",
     }
 
     def __init__(
