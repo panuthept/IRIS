@@ -123,9 +123,6 @@ class PolyGuard(GuardLLM):
                 add_generation_prompt=False,
             )
         instruction = instruction + "Harmful request:"
-        print("INSTRUCTION:")
-        print(instruction)
-        print("-" * 100)
         return instruction
 
     def _complete(self, instruction: str, **kwargs) -> str:
@@ -136,10 +133,6 @@ class PolyGuard(GuardLLM):
             return_logprobs=True,
             **kwargs
         )
-        # print("RESPONSE:")
-        # print(response)
-        # print(outputs)
-        # print("-" * 100)
         return outputs, response
     
     def predict(
@@ -187,9 +180,6 @@ class PolyGuard(GuardLLM):
             response_labels=response_labels,
             metadata=metadata,
         )
-        print("RESPONSE:")
-        print(output)
-        print("-" * 100)
         return output
     
 
