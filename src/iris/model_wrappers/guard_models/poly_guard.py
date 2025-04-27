@@ -173,9 +173,8 @@ class PolyGuard(GuardLLM):
             # refusal_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
             # instruction = instruction + refusal_clf["pred_tokens"][0][0] + "\nHarmful response:"
             response_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
-            print(response_clf)
-            response_labels = response_clf["pred_labels"][2]
-            metadata["response_tokens"] = response_clf["pred_tokens"]
+            response_labels = response_clf["pred_labels"][1]
+            metadata["response_tokens"] = response_clf["pred_tokens"][1]
             metadata["response_instruction"] = response_clf["instruction"]
             metadata["response_response"] = response_clf["response"]
         # Output formatting
