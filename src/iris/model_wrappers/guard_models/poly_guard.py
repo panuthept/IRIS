@@ -123,6 +123,7 @@ class PolyGuard(GuardLLM):
                 add_generation_prompt=False,
             )
         instruction = instruction + "Harmful request:"
+        instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
         return instruction
 
     def _complete(self, instruction: str, **kwargs) -> str:
