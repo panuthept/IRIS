@@ -109,6 +109,7 @@ class PolyGuard(GuardLLM):
             # Apply response classification template
             instruction = self.template.format(prompt=prompt, response=response)
         instruction = instruction + "\nHarmful request:"
+        print(instruction)
         instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
         return instruction
 
