@@ -172,7 +172,6 @@ class PolyGuard(GuardLLM):
             metadata["response_instruction"] = response_clf["instruction"]
             metadata["response_response"] = response_clf["response"]
         # Output formatting
-        print(output)
         output = SafeGuardResponse(
             prompt=prompt, 
             response=response,
@@ -182,6 +181,7 @@ class PolyGuard(GuardLLM):
             response_labels=response_labels,
             metadata=metadata,
         )
+        print(output)
         return output
     
 
