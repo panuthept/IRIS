@@ -53,7 +53,7 @@ class GuardLLM(LLM):
             lst_tokens_probs.append(tokens_probs)
             lst_tokens_logits.append(tokens_logits)
         return {
-            "pred_labels": [list(zip(labels, labels_probs, labels_logits)) for labels, labels_probs, labels_logits in zip(lst_labels, lst_labels_probs, lst_labels_logits)],
+            "pred_labels": [list(zip(labels, labels_probs, labels_logits)) for labels, labels_probs, labels_logits in zip(lst_labels, lst_labels_probs, lst_labels_logits) if len(labels) > 0],
             "pred_tokens": [list(zip(tokens, tokens_probs, tokens_logits)) for tokens, tokens_probs, tokens_logits in zip(lst_tokens, lst_tokens_probs, lst_tokens_logits)],
             "instruction": instruction,
             "response": response,
