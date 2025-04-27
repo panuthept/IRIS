@@ -159,21 +159,21 @@ class PolyGuard(GuardLLM):
         metadata = {}
         # Prompt classification
         prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, **kwargs)
-        print(prompt_clf)
-        prompt_labels = prompt_clf["pred_labels"]
-        metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
+        prompt_labels = prompt_clf["pred_labels"][0]
+        metadata["prompt_tokens"] = prompt_clf["pred_tokens"][0]
         metadata["prompt_instruction"] = prompt_clf["instruction"]
         metadata["prompt_response"] = prompt_clf["response"]
         # Response classification
         response_labels = None
         if response is not None:
-            instruction: str = self._apply_safeguard_template(prompt=prompt, response=response)
-            instruction = instruction + prompt_clf["pred_tokens"][0][0] + "\nResponse refusal:"
-            refusal_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
-            instruction = instruction + refusal_clf["pred_tokens"][0][0] + "\nHarmful response:"
-            response_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
-            response_labels = response_clf["pred_labels"]
-            metadata["response_tokens"] = response_clf["pred_tokens"]
+            response_clf: Dict[str, List[Tuple[str, float, float]]] = self._response_classify(prompt, response, **kwargs)
+            # instruction: str = self._apply_safeguard_template(prompt=prompt, response=response)
+            # instruction = instruction + prompt_clf["pred_tokens"][0][0] + "\nResponse refusal:"
+            # refusal_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
+            # instruction = instruction + refusal_clf["pred_tokens"][0][0] + "\nHarmful response:"
+            # response_clf: Dict[str, List[Tuple[str, float, float]]] = self.complete(instruction, **kwargs)
+            response_labels = response_clf["pred_labels"][2]
+            metadata["response_tokens"] = response_clf["pred_tokens"][2]
             metadata["response_instruction"] = response_clf["instruction"]
             metadata["response_response"] = response_clf["response"]
         # Output formatting
@@ -186,6 +186,9 @@ class PolyGuard(GuardLLM):
             response_labels=response_labels,
             metadata=metadata,
         )
+        print("OUTPUT:")
+        print(output)
+        print("-" * 100)
         return output
     
 
