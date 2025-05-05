@@ -112,11 +112,12 @@ class LlamaGuard4(GuardLLM):
             self, 
             model_name_or_path: str = "meta-llama/Llama-Guard-4-12B", 
     ):
-        self.processor = AutoProcessor.from_pretrained(model_name_or_path)
+        self.processor = AutoProcessor.from_pretrained(model_name_or_path, cache_dir="./data/models")
         self.model = Llama4ForConditionalGeneration.from_pretrained(
             model_name_or_path,
             device_map="cuda",
             torch_dtype=torch.bfloat16,
+            cache_dir="./data/models",
         )
         self.model_name = model_name_or_path
 
