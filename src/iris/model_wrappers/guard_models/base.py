@@ -33,7 +33,7 @@ class GuardLLM(LLM):
         lst_tokens_probs = []
         lst_tokens_logits = []
         for output in outputs:
-            # output = output[:len(self.valid_tokens)]
+            output = output[:len(self.valid_tokens)]
             # Get all token outputs
             tokens = [token for token, _, _ in output]
             tokens_logprobs = [logprob for _, logprob, _ in output]
