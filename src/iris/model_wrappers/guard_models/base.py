@@ -24,7 +24,8 @@ class GuardLLM(LLM):
         outputs, response = self._complete(instruction, **kwargs)
         if outputs is None:
             outputs = [[(valid_token, 0.0, 0.0) for valid_token in self.valid_tokens.keys()]]
-        # output = outputs[0]
+        outputs = outputs[0]
+
         lst_labels = []
         lst_labels_probs = []
         lst_labels_logits = []
