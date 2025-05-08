@@ -57,6 +57,8 @@ class APIGenerativeLLM(GenerativeLLM):
         while try_count < 10:
             # try:
             if message is not None:
+                print(f"Message: {message}")
+                print(f"model_name: {self.model_name}")
                 outputs = self.client.chat.completions.create(
                     model=self.model_name,
                     messages=message,
