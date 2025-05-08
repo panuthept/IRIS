@@ -64,7 +64,7 @@ class APIGenerativeLLM(GenerativeLLM):
                     temperature=self.temperature,
                     logprobs=self.top_logprobs,
                     stream=False,
-                    echo=False,
+                    # echo=False,
                     n=1,
                 )
                 print(outputs)
