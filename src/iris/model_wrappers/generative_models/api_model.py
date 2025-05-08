@@ -55,50 +55,42 @@ class APIGenerativeLLM(GenerativeLLM):
         # Generate the response
         try_count = 0
         while try_count < 10:
-            # try:
-            if message is not None:
-                print("*" * 100)
-                print(f"Message: {message}")
-                print(f"model_name: {self.model_name}")
-                print("*" * 100)
-                outputs = self.client.chat.completions.create(
-                    model=self.model_name,
-                    messages=message,
-                    max_tokens=self.max_new_tokens,
-                    temperature=self.temperature,
-                    logprobs=self.top_logprobs > 0,
-                    top_logprobs=self.top_logprobs,
-                    stream=False,
-                    # echo=False,
-                    n=1,
-                )
-                print(outputs)
-                answer = outputs.choices[0].message.content
-                print(outputs.choices[0].logprobs)
-                print(outputs.choices[0].logprobs.content)
-                logprobs = [[(top_logprob.token, top_logprob.logprob, None) for top_logprob in content.top_logprobs] for content in outputs.choices[0].logprobs.content]
-                print(answer)
-            else:
-                outputs = self.client.completions.create(
-                    model=self.model_name,
-                    prompt=prompt,
-                    max_tokens=self.max_new_tokens,
-                    temperature=self.temperature,
-                    logprobs=self.top_logprobs,
-                    stream=False,
-                    echo=False,
-                    n=1,
-                )
-                answer = outputs.choices[0].text
-                logprobs = [[(k, v, None) for k, v in logprob.items()][:self.top_logprobs] for logprob in outputs.choices[0].logprobs.top_logprobs]
-            break
-            # except Exception as e:
-            #     print(f"Error generating response: {e}")
-            #     if "Error code: 400" in str(e):
-            #         answer = ""
-            #         logprobs = None
-            #         break
-            #     try_count += 1
+            try:
+                if message is not None:
+                    outputs = self.client.chat.completions.create(
+                        model=self.model_name,
+                        messages=message,
+                        max_tokens=self.max_new_tokens,
+                        temperature=self.temperature,
+                        logprobs=self.top_logprobs > 0,
+                        top_logprobs=self.top_logprobs,
+                        stream=False,
+                        # echo=False,
+                        n=1,
+                    )
+                    answer = outputs.choices[0].message.content
+                    logprobs = [[(top_logprob.token, top_logprob.logprob, None) for top_logprob in content.top_logprobs] for content in outputs.choices[0].logprobs.content]
+                else:
+                    outputs = self.client.completions.create(
+                        model=self.model_name,
+                        prompt=prompt,
+                        max_tokens=self.max_new_tokens,
+                        temperature=self.temperature,
+                        logprobs=self.top_logprobs,
+                        stream=False,
+                        echo=False,
+                        n=1,
+                    )
+                    answer = outputs.choices[0].text
+                    logprobs = [[(k, v, None) for k, v in logprob.items()][:self.top_logprobs] for logprob in outputs.choices[0].logprobs.top_logprobs]
+                break
+            except Exception as e:
+                print(f"Error generating response: {e}")
+                if "Error code: 400" in str(e):
+                    answer = ""
+                    logprobs = None
+                    break
+                try_count += 1
         return answer, logprobs
 
 
