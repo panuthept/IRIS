@@ -129,7 +129,9 @@ if __name__ == "__main__":
     with open(args.output_path, "w") as f:
         for sample in tqdm(samples):
             safeguard_response: SafeGuardResponse = safeguard.predict(input=sample)
+            print(safeguard_response.prompt_labels)
             if sample.response is not None:
+                print(safeguard_response.response_labels)
                 # Get response classification results
                 response_harmful_score = [score for label, score, logit in safeguard_response.response_labels if label == "Harmful" or (args.sensitive_as_harmful and label == "Sensitive")]
                 if len(response_harmful_score) == 0:

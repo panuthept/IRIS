@@ -25,7 +25,6 @@ class GuardLLM(LLM):
         if outputs is None:
             outputs = [[(valid_token, 0.0, 0.0) for valid_token in self.valid_tokens.keys()]]
         # outputs = outputs[0]
-        print(outputs)
 
         lst_labels = []
         lst_labels_probs = []
@@ -34,7 +33,7 @@ class GuardLLM(LLM):
         lst_tokens_probs = []
         lst_tokens_logits = []
         for output in outputs:
-            output = output[:len(self.valid_tokens)]
+            # output = output[:len(self.valid_tokens)]
             # Get all token outputs
             tokens = [token for token, _, _ in output]
             tokens_logprobs = [logprob for _, logprob, _ in output]
