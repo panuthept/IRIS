@@ -67,6 +67,7 @@ class APIGenerativeLLM(GenerativeLLM):
                     max_tokens=self.max_new_tokens,
                     temperature=self.temperature,
                     logprobs=self.top_logprobs > 0,
+                    top_logprobs=self.top_logprobs,
                     stream=False,
                     # echo=False,
                     n=1,
