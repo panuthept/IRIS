@@ -1,6 +1,6 @@
 from openai import OpenAI
 from transformers import AutoTokenizer
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Dict, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 
 
@@ -48,24 +48,40 @@ class APIGenerativeLLM(GenerativeLLM):
     
     def _complete(
         self, 
-        prompt: str,
+        prompt: str = None,
+        message: List[Dict[str, str]] = None,
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Generate the response
         try_count = 0
         while try_count < 10:
             try:
-                outputs = self.client.completions.create(
-                    model=self.model_name,
-                    prompt=prompt,
-                    max_tokens=self.max_new_tokens,
-                    temperature=self.temperature,
-                    logprobs=self.top_logprobs,
-                    stream=False,
-                    echo=False,
-                    n=1,
-                )
-                answer = outputs.choices[0].text
+                if message is not None:
+                    outputs = self.client.chat.completions.create(
+                        model=self.model_name,
+                        messages=message,
+                        max_tokens=self.max_new_tokens,
+                        temperature=self.temperature,
+                        logprobs=self.top_logprobs,
+                        stream=False,
+                        echo=False,
+                        n=1,
+                    )
+                    print(outputs)
+                    answer = outputs.choices[0].message.content
+                    print(answer)
+                else:
+                    outputs = self.client.completions.create(
+                        model=self.model_name,
+                        prompt=prompt,
+                        max_tokens=self.max_new_tokens,
+                        temperature=self.temperature,
+                        logprobs=self.top_logprobs,
+                        stream=False,
+                        echo=False,
+                        n=1,
+                    )
+                    answer = outputs.choices[0].text
                 logprobs = [[(k, v, None) for k, v in logprob.items()][:self.top_logprobs] for logprob in outputs.choices[0].logprobs.top_logprobs]
                 break
             except Exception as e:

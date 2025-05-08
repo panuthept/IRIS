@@ -103,38 +103,52 @@ class PolyGuard(GuardLLM):
     
     def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
         if response is None:
-            # Apply prompt classification template
-            instruction = self.model.tokenizer.apply_chat_template(
-                [
-                    {'role': 'system', 'content': self.system_prompt},
-                    {"role": "user", "content": self.template.format(prompt=prompt, response="")},
-                ],
-                tokenize=False,
-                add_generation_prompt=False,
-            )
-        else:
-            # Apply response classification template
-            instruction = self.model.tokenizer.apply_chat_template(
-                [
-                    {'role': 'system', 'content': self.system_prompt},
-                    {"role": "user", "content": self.template.format(prompt=prompt, response=response)},
-                ],
-                tokenize=False,
-                add_generation_prompt=False,
-            )
-        instruction = instruction + "Harmful request:"
-        if self.model.tokenizer.bos_token is not None:
-            instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
-        return instruction
+            response = ""
+            # # Apply prompt classification template
+            # instruction = self.model.tokenizer.apply_chat_template(
+            #     [
+            #         {'role': 'system', 'content': self.system_prompt},
+            #         {"role": "user", "content": self.template.format(prompt=prompt, response="")},
+            #     ],
+            #     tokenize=False,
+            #     add_generation_prompt=False,
+            # )
+        # else:
+        #     # Apply response classification template
+        #     instruction = self.model.tokenizer.apply_chat_template(
+        #         [
+        #             {'role': 'system', 'content': self.system_prompt},
+        #             {"role": "user", "content": self.template.format(prompt=prompt, response=response)},
+        #         ],
+        #         tokenize=False,
+        #         add_generation_prompt=False,
+        #     )
+        # instruction = instruction + "Harmful request:"
+        # if self.model.tokenizer.bos_token is not None:
+        #     instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
+        message = [
+            {'role': 'system', 'content': self.system_prompt},
+            {"role": "user", "content": self.template.format(prompt=prompt, response=response)},
+        ]
+        return message
 
     def _complete(self, instruction: str, **kwargs) -> str:
-        response, outputs = self.model.complete(
-            instruction, 
-            apply_chat_template=False, 
-            add_special_tokens=False,
-            return_logprobs=True,
-            **kwargs
-        )
+        if isinstance(instruction, str):
+            response, outputs = self.model.complete(
+                prompt=instruction, 
+                apply_chat_template=False, 
+                add_special_tokens=False,
+                return_logprobs=True,
+                **kwargs
+            )
+        elif isinstance(instruction, list):
+            response, outputs = self.model.complete(
+                message=instruction, 
+                apply_chat_template=False, 
+                add_special_tokens=False,
+                return_logprobs=True,
+                **kwargs
+            )
         return outputs, response
     
     def predict(
