@@ -74,6 +74,9 @@ class APIGenerativeLLM(GenerativeLLM):
                 )
                 print(outputs)
                 answer = outputs.choices[0].message.content
+                print(outputs.choices[0].logprobs)
+                print(outputs.choices[0].logprobs.content)
+                logprobs = [[(top_logprob.token, top_logprob.logprob, None) for top_logprob in content.top_logprobs] for content in outputs.choices[0].logprobs.content]
                 print(answer)
             else:
                 outputs = self.client.completions.create(
@@ -87,7 +90,7 @@ class APIGenerativeLLM(GenerativeLLM):
                     n=1,
                 )
                 answer = outputs.choices[0].text
-            logprobs = [[(k, v, None) for k, v in logprob.items()][:self.top_logprobs] for logprob in outputs.choices[0].logprobs.top_logprobs]
+                logprobs = [[(k, v, None) for k, v in logprob.items()][:self.top_logprobs] for logprob in outputs.choices[0].logprobs.top_logprobs]
             break
             # except Exception as e:
             #     print(f"Error generating response: {e}")
