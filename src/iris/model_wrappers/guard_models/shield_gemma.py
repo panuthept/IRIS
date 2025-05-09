@@ -76,35 +76,18 @@ class ShieldGemma(GuardLLM):
     def get_model_name(self) -> str:
         return self.model_name
     
-    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
-        if response is None:
-            # Apply prompt classification template
-            instruction = self.model.tokenizer.apply_chat_template(
-                [
-                    {"role": "system", "content": self.unsafe_categories},
-                    {"role": "user", "content": prompt},
-                ],
-                tokenize=False,
-            )
-        else:
-            # Apply response classification template
-            instruction = self.model.tokenizer.apply_chat_template(
-                [
-                    {"role": "system", "content": self.unsafe_categories},
-                    {"role": "user", "content": prompt},
-                    {"role": "assistant", "content": response},
-                ],
-                tokenize=False,
-            )
-        instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
-        return instruction
+    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> list:
+        messages = [
+            {"role": "system", "content": self.unsafe_categories},
+            {"role": "user", "content": prompt},
+        ]
+        if response is not None:
+            messages.append({"role": "assistant", "content": response})
+        return messages
     
-    def _complete(self, instruction: str, **kwargs) -> str:
-        response, outputs = self.model.complete(
-            instruction, 
-            apply_chat_template=False, 
-            add_special_tokens=True,
-            return_logprobs=True,
+    def _complete(self, messages: list, **kwargs) -> str:
+        response, outputs = self.model._complete(
+            messages=messages, 
             **kwargs
         )
         return outputs, response
