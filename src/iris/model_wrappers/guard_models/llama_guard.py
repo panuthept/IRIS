@@ -109,39 +109,44 @@ class LlamaGuard4(GuardLLM):
     def get_model_name(self) -> str:
         return self.model_name
     
-    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> dict:
-        if response is None:
-            # Apply prompt classification template
-            inputs = self.processor.apply_chat_template(
-                [
-                    {"role": "user", "content": [{"type": "text", "text": prompt}]}
-                ],
-                tokenize=True,
-                add_generation_prompt=True,
-                return_tensors="pt",
-                return_dict=True,
-            )
-        else:
-            # Apply response classification template
-            inputs = self.processor.apply_chat_template(
-                [
-                    {"role": "user", "content": [{"type": "text", "text": prompt}]},
-                    {"role": "assistant", "content": [{"type": "text", "text": response}]},
-                ],
-                tokenize=True,
-                add_generation_prompt=True,
-                return_tensors="pt",
-                return_dict=True,
-            )
-        return inputs
+    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> list:
+        # if response is None:
+        #     # Apply prompt classification template
+        #     inputs = self.processor.apply_chat_template(
+        #         [
+        #             {"role": "user", "content": [{"type": "text", "text": prompt}]}
+        #         ],
+        #         tokenize=True,
+        #         add_generation_prompt=True,
+        #         return_tensors="pt",
+        #         return_dict=True,
+        #     )
+        # else:
+        #     # Apply response classification template
+        #     inputs = self.processor.apply_chat_template(
+        #         [
+        #             {"role": "user", "content": [{"type": "text", "text": prompt}]},
+        #             {"role": "assistant", "content": [{"type": "text", "text": response}]},
+        #         ],
+        #         tokenize=True,
+        #         add_generation_prompt=True,
+        #         return_tensors="pt",
+        #         return_dict=True,
+        #     )
+        # return inputs
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": prompt}]}
+        ]
+        if response is not None:
+            messages.append({"role": "assistant", "content": [{"type": "text", "text": response}]})
+        return messages
     
-    def _complete(self, inputs: dict, **kwargs) -> tuple:
-        outputs = self.model.generate(
-            **inputs,
-            max_new_tokens=10,
-            do_sample=False,
+    def _complete(self, messages: list, **kwargs) -> str:
+        response, outputs = self.model._complete(
+            messages=messages, 
+            **kwargs
         )
-        response = self.processor.batch_decode(outputs[:, inputs["input_ids"].shape[-1]:], skip_special_tokens=True)[0]
+        # response = self.processor.batch_decode(outputs[:, inputs["input_ids"].shape[-1]:], skip_special_tokens=True)[0]
         print(outputs)
         print(response)
         return outputs, response
