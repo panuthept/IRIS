@@ -65,7 +65,6 @@ class APIGenerativeLLM(GenerativeLLM):
                         logprobs=self.top_logprobs > 0,
                         top_logprobs=self.top_logprobs,
                         stream=False,
-                        # echo=False,
                         n=1,
                     )
                     answer = outputs.choices[0].message.content
