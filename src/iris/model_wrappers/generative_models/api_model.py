@@ -48,7 +48,7 @@ class APIGenerativeLLM(GenerativeLLM):
     
     def _complete(
         self, 
-        message: List[Dict[str, str]],
+        messages: List[Dict[str, str]],
         # prompt: str = None,
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
@@ -59,7 +59,7 @@ class APIGenerativeLLM(GenerativeLLM):
                 # if message is not None:
                 outputs = self.client.chat.completions.create(
                     model=self.model_name,
-                    messages=message,
+                    messages=messages,
                     max_tokens=self.max_new_tokens,
                     temperature=self.temperature,
                     logprobs=self.top_logprobs > 0,

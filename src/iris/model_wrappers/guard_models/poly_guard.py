@@ -121,7 +121,7 @@ class PolyGuard(GuardLLM):
             )
         elif isinstance(instruction, list):
             response, outputs = self.model.complete(
-                message=instruction, 
+                messages=instruction, 
                 apply_chat_template=False, 
                 add_special_tokens=False,
                 return_logprobs=True,
