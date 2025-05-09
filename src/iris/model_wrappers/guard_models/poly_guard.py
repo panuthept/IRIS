@@ -104,28 +104,6 @@ class PolyGuard(GuardLLM):
     def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
         if response is None:
             response = ""
-            # # Apply prompt classification template
-            # instruction = self.model.tokenizer.apply_chat_template(
-            #     [
-            #         {'role': 'system', 'content': self.system_prompt},
-            #         {"role": "user", "content": self.template.format(prompt=prompt, response="")},
-            #     ],
-            #     tokenize=False,
-            #     add_generation_prompt=False,
-            # )
-        # else:
-        #     # Apply response classification template
-        #     instruction = self.model.tokenizer.apply_chat_template(
-        #         [
-        #             {'role': 'system', 'content': self.system_prompt},
-        #             {"role": "user", "content": self.template.format(prompt=prompt, response=response)},
-        #         ],
-        #         tokenize=False,
-        #         add_generation_prompt=False,
-        #     )
-        # instruction = instruction + "Harmful request:"
-        # if self.model.tokenizer.bos_token is not None:
-        #     instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
         message = [
             {'role': 'system', 'content': self.system_prompt},
             {"role": "user", "content": self.template.format(prompt=prompt, response=response)},
