@@ -101,7 +101,7 @@ class PolyGuard(GuardLLM):
     def get_model_name(self) -> str:
         return self.model_name
     
-    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
+    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> list:
         if response is None:
             response = ""
         message = [
@@ -110,23 +110,11 @@ class PolyGuard(GuardLLM):
         ]
         return message
 
-    def _complete(self, instruction: str, **kwargs) -> str:
-        if isinstance(instruction, str):
-            response, outputs = self.model.complete(
-                prompt=instruction, 
-                apply_chat_template=False, 
-                add_special_tokens=False,
-                return_logprobs=True,
-                **kwargs
-            )
-        elif isinstance(instruction, list):
-            response, outputs = self.model.complete(
-                messages=instruction, 
-                apply_chat_template=False, 
-                add_special_tokens=False,
-                return_logprobs=True,
-                **kwargs
-            )
+    def _complete(self, messages: list, **kwargs) -> str:
+        response, outputs = self.model._complete(
+            messages=messages, 
+            **kwargs
+        )
         return outputs, response
     
     def predict(
