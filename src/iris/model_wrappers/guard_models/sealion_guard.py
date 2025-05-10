@@ -72,49 +72,70 @@ class SealionGuard(GuardLLM):
         return self.model_name
 
     def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
+        # if response is None:
+        #     messages = [{"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the human user's request is safe or unsafe.\nHuman user:{prompt}"}]
+        # else:
+        #     messages = [{"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the AI assistant's response is safe or unsafe.\nHuman user:{prompt}\nAI assistant:{response}"}]
+        # return messages
         if response is None:
-            messages = [{"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the human user's request is safe or unsafe.\nHuman user:{prompt}"}]
+            # Apply prompt classification template
+            instruction = self.model.tokenizer.apply_chat_template(
+                [
+                    {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the human user's request is safe or unsafe.\nHuman user:{prompt}"}
+                ],
+                tokenize=False,
+                add_generation_prompt=False,
+            )
         else:
-            messages = [{"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the AI assistant's response is safe or unsafe.\nHuman user:{prompt}\nAI assistant:{response}"}]
-        return messages
+            # Apply response classification template
+            instruction = self.model.tokenizer.apply_chat_template(
+                [
+                    {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the AI assistant's response is safe or unsafe.\nHuman user:{prompt}\nAI assistant:{response}"},
+                ],
+                tokenize=False,
+                add_generation_prompt=False,
+            )
+        instruction = instruction + "<|start_header_id|>model<|end_header_id|>\n\n"
+        instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
+        return instruction
     
-    def _complete(self, messages: list, **kwargs) -> str:
+    def _complete(self, prompt: str, **kwargs) -> str:
         response, outputs = self.model._complete(
-            messages=messages, 
+            prompt=prompt, 
             **kwargs
         )
         return outputs, response
     
-# class GemmaSealionGuard(SealionGuard):
-#     def __init__(
-#             self, 
-#             model_name_or_path: str = "aisingapore/Gemma-SEA-LION-Guard", 
-#             **kwargs,
-#     ):
-#         super().__init__(model_name_or_path=model_name_or_path, **kwargs)
+class GemmaSealionGuard(SealionGuard):
+    def __init__(
+            self, 
+            model_name_or_path: str = "aisingapore/Gemma-SEA-LION-Guard", 
+            **kwargs,
+    ):
+        super().__init__(model_name_or_path=model_name_or_path, **kwargs)
         
-#     def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
-#         if response is None:
-#             # Apply prompt classification template
-#             instruction = self.model.tokenizer.apply_chat_template(
-#                 [
-#                     {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the human user's request is safe or unsafe.\nHuman user:{prompt}"}
-#                 ],
-#                 tokenize=False,
-#                 add_generation_prompt=False,
-#             )
-#         else:
-#             # Apply response classification template
-#             instruction = self.model.tokenizer.apply_chat_template(
-#                 [
-#                     {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the AI assistant's response is safe or unsafe.\nHuman user:{prompt}\nAI assistant:{response}"},
-#                 ],
-#                 tokenize=False,
-#                 add_generation_prompt=False,
-#             )
-#         instruction = instruction + "<start_of_turn>model\n"
-#         instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
-#         return instruction
+    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
+        if response is None:
+            # Apply prompt classification template
+            instruction = self.model.tokenizer.apply_chat_template(
+                [
+                    {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the human user's request is safe or unsafe.\nHuman user:{prompt}"}
+                ],
+                tokenize=False,
+                add_generation_prompt=False,
+            )
+        else:
+            # Apply response classification template
+            instruction = self.model.tokenizer.apply_chat_template(
+                [
+                    {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the AI assistant's response is safe or unsafe.\nHuman user:{prompt}\nAI assistant:{response}"},
+                ],
+                tokenize=False,
+                add_generation_prompt=False,
+            )
+        instruction = instruction + "<start_of_turn>model\n"
+        instruction = instruction[len(self.model.tokenizer.bos_token):] if instruction.startswith(self.model.tokenizer.bos_token) else instruction
+        return instruction
     
 
 if __name__ == "__main__":

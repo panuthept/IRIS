@@ -48,7 +48,8 @@ class APIGenerativeLLM(GenerativeLLM):
     
     def _complete(
         self, 
-        messages: List[Dict[str, str]],
+        prompt: str = None,
+        messages: List[Dict[str, str]] = None,
         # prompt: str = None,
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
@@ -56,32 +57,32 @@ class APIGenerativeLLM(GenerativeLLM):
         try_count = 0
         while try_count < 10:
             try:
-                # if message is not None:
-                outputs = self.client.chat.completions.create(
-                    model=self.model_name,
-                    messages=messages,
-                    max_tokens=self.max_new_tokens,
-                    temperature=self.temperature,
-                    logprobs=self.top_logprobs > 0,
-                    top_logprobs=self.top_logprobs,
-                    stream=False,
-                    n=1,
-                )
-                answer = outputs.choices[0].message.content
-                logprobs = [[(top_logprob.token, top_logprob.logprob, None) for top_logprob in content.top_logprobs] for content in outputs.choices[0].logprobs.content]
-                # else:
-                #     outputs = self.client.completions.create(
-                #         model=self.model_name,
-                #         prompt=prompt,
-                #         max_tokens=self.max_new_tokens,
-                #         temperature=self.temperature,
-                #         logprobs=self.top_logprobs,
-                #         stream=False,
-                #         echo=False,
-                #         n=1,
-                #     )
-                #     answer = outputs.choices[0].text
-                #     logprobs = [[(k, v, None) for k, v in logprob.items()][:self.top_logprobs] for logprob in outputs.choices[0].logprobs.top_logprobs]
+                if messages is not None:
+                    outputs = self.client.chat.completions.create(
+                        model=self.model_name,
+                        messages=messages,
+                        max_tokens=self.max_new_tokens,
+                        temperature=self.temperature,
+                        logprobs=self.top_logprobs > 0,
+                        top_logprobs=self.top_logprobs,
+                        stream=False,
+                        n=1,
+                    )
+                    answer = outputs.choices[0].message.content
+                    logprobs = [[(top_logprob.token, top_logprob.logprob, None) for top_logprob in content.top_logprobs] for content in outputs.choices[0].logprobs.content]
+                else:
+                    outputs = self.client.completions.create(
+                        model=self.model_name,
+                        prompt=prompt,
+                        max_tokens=self.max_new_tokens,
+                        temperature=self.temperature,
+                        logprobs=self.top_logprobs,
+                        stream=False,
+                        echo=False,
+                        n=1,
+                    )
+                    answer = outputs.choices[0].text
+                    logprobs = [[(k, v, None) for k, v in logprob.items()][:self.top_logprobs] for logprob in outputs.choices[0].logprobs.top_logprobs]
                 break
             except Exception as e:
                 print(f"Error generating response: {e}")
