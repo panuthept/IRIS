@@ -2,7 +2,7 @@ from iris.cache import CacheMode
 from typing import Optional, List, Dict, Tuple
 from iris.model_wrappers.guard_models import GuardLLM
 from iris.data_types import SafeGuardInput, SafeGuardResponse
-from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM, APIGenerativeLLM, vLLM
+from iris.model_wrappers.generative_models import APIGenerativeLLM, vLLM
 
 
 class PolyGuard(GuardLLM):
@@ -72,23 +72,23 @@ class PolyGuard(GuardLLM):
                 cache_mode=cache_mode,
             )
             self.response_template_ids = None
-        elif checkpoint_path:
-            self.model = HuggfaceGenerativeLLM(
-                model_name_or_path,
-                checkpoint_path=checkpoint_path,
-                max_tokens=max_tokens,
-                max_new_tokens=1,
-                temperature=temperature,
-                logprobs=True,
-                top_logprobs=top_logprobs,
-                use_cache=use_cache,
-                cache_path=cache_path,
-                cache_mode=cache_mode,
-                disable_logitlens=disable_logitlens,
-                enable_logitlens_cache=enable_logitlens_cache,
-                max_logitlens_cache_size=max_logitlens_cache_size,
-            )
-            self.device = self.model.llm.device
+        # elif checkpoint_path:
+        #     self.model = HuggfaceGenerativeLLM(
+        #         model_name_or_path,
+        #         checkpoint_path=checkpoint_path,
+        #         max_tokens=max_tokens,
+        #         max_new_tokens=1,
+        #         temperature=temperature,
+        #         logprobs=True,
+        #         top_logprobs=top_logprobs,
+        #         use_cache=use_cache,
+        #         cache_path=cache_path,
+        #         cache_mode=cache_mode,
+        #         disable_logitlens=disable_logitlens,
+        #         enable_logitlens_cache=enable_logitlens_cache,
+        #         max_logitlens_cache_size=max_logitlens_cache_size,
+        #     )
+        #     self.device = self.model.llm.device
         else:
             self.model = vLLM(
                 model_name_or_path,
