@@ -1,7 +1,7 @@
 import numpy as np
 from abc import ABC
 from tqdm import tqdm
-from deprecated import deprecated
+# from deprecated import deprecated
 from collections import defaultdict
 from typing import List, Dict, Tuple
 from iris.data_types import Sample, ModelResponse, EvaluationResult, SummarizedResult
@@ -93,10 +93,10 @@ class Metric(ABC):
         summarized_result = SummarizedResult.from_results(all_results)
         return all_results, summarized_result
 
-    @deprecated
-    def eval(self, response: ModelResponse, **kwargs) -> EvaluationResult:
-        return self.eval_answers(response)
+    # @deprecated
+    # def eval(self, response: ModelResponse, **kwargs) -> EvaluationResult:
+    #     return self.eval_answers(response)
     
-    @deprecated
-    def eval_batch(self, responses: List[ModelResponse], verbose: bool = True, **kwargs) -> Tuple[List[EvaluationResult], SummarizedResult]:
-        return self.eval_answers_batch(responses, verbose=verbose, **kwargs)
+    # @deprecated
+    # def eval_batch(self, responses: List[ModelResponse], verbose: bool = True, **kwargs) -> Tuple[List[EvaluationResult], SummarizedResult]:
+    #     return self.eval_answers_batch(responses, verbose=verbose, **kwargs)
