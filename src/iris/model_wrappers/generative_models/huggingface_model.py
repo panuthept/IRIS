@@ -5,7 +5,7 @@ import transformer_lens.utils as utils
 
 from tqdm import tqdm
 from typing import Dict
-from peft import LoraConfig
+# from peft import LoraConfig
 from torch import nn, Tensor
 from datasets import Dataset
 from jaxtyping import Int, Float
@@ -18,441 +18,441 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from iris.data_types import IRISConfig, IRISL2Config, IRISDiffTripletConfig, IRISCLConfig
 
 
-class IRISTrainer(SFTTrainer):
-    """
-    Example of intermediate_labels:
-    intermediate_labels = {
-        "model.layers.18": {label_id: token_id},
-        "model.layers.19": {label_id: token_id},
-        ...
-    }
-    """
-    def __init__(
-        self, 
-        logitlens: LogitLens, 
-        iris_config: IRISConfig,
-        **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.logitlens = logitlens
-        self.iris_config = iris_config
+# class IRISTrainer(SFTTrainer):
+#     """
+#     Example of intermediate_labels:
+#     intermediate_labels = {
+#         "model.layers.18": {label_id: token_id},
+#         "model.layers.19": {label_id: token_id},
+#         ...
+#     }
+#     """
+#     def __init__(
+#         self, 
+#         logitlens: LogitLens, 
+#         iris_config: IRISConfig,
+#         **kwargs
+#     ):
+#         super().__init__(**kwargs)
+#         self.logitlens = logitlens
+#         self.iris_config = iris_config
 
-        self.mode = self.iris_config.mode
-        self.alpha = self.iris_config.alpha
-        self.wait_steps = self.iris_config.wait_steps
-        self.ema_alpha = self.iris_config.ema_alpha
-        self.sma_window_size = self.iris_config.sma_window_size
-        self.intermediate_labels = self.iris_config.layer_labels
-        self.intermediate_weights = self.iris_config.layer_weights
-        self.label_smoothing = self.iris_config.label_smoothing
+#         self.mode = self.iris_config.mode
+#         self.alpha = self.iris_config.alpha
+#         self.wait_steps = self.iris_config.wait_steps
+#         self.ema_alpha = self.iris_config.ema_alpha
+#         self.sma_window_size = self.iris_config.sma_window_size
+#         self.intermediate_labels = self.iris_config.layer_labels
+#         self.intermediate_weights = self.iris_config.layer_weights
+#         self.label_smoothing = self.iris_config.label_smoothing
 
-        self.current_step = 0
-        self.sma_logits: Dict[str, Dict[int, Tensor]] = {}
-        self.ema_logits: Dict[str, Dict[int, Tensor]] = {}
-        self.prev_logits: Dict[str, Dict[int, List[Tensor]]] = {}
+#         self.current_step = 0
+#         self.sma_logits: Dict[str, Dict[int, Tensor]] = {}
+#         self.ema_logits: Dict[str, Dict[int, Tensor]] = {}
+#         self.prev_logits: Dict[str, Dict[int, List[Tensor]]] = {}
 
-        if self.mode == "fixed":
-            self.loss_fn = nn.CrossEntropyLoss(
-                reduction="none",
-                label_smoothing=self.label_smoothing,
-            )
-        else:
-            if self.label_smoothing > 0.0:
-                print("[WARNING] Label smoothing is not supported with KLDivLoss. Setting label_smoothing to 0.0.")
-            self.loss_fn = nn.KLDivLoss(
-                reduction="none",
-                log_target=True,
-            )
+#         if self.mode == "fixed":
+#             self.loss_fn = nn.CrossEntropyLoss(
+#                 reduction="none",
+#                 label_smoothing=self.label_smoothing,
+#             )
+#         else:
+#             if self.label_smoothing > 0.0:
+#                 print("[WARNING] Label smoothing is not supported with KLDivLoss. Setting label_smoothing to 0.0.")
+#             self.loss_fn = nn.KLDivLoss(
+#                 reduction="none",
+#                 log_target=True,
+#             )
 
-    def _update_prev_logits(
-        self, 
-        intermediate_logit: Float[Tensor, "vocab"],
-        module_name: str, 
-        final_label: int,
-    ):
-        # Do not update prev_logits if the mode is fixed
-        if self.mode == "fixed":
-            return
-        # Detach intermediate_logit
-        intermediate_logit = intermediate_logit.cpu().detach()
-        # Update prev_logits
-        if module_name not in self.prev_logits:
-            self.prev_logits = {module_name: {}}
-        if final_label not in self.prev_logits[module_name]:
-            self.prev_logits[module_name][final_label] = []
-        self.prev_logits[module_name][final_label].append(intermediate_logit)
-        self.prev_logits[module_name][final_label] = self.prev_logits[module_name][final_label][-self.sma_window_size:]
-        # Update sma_logits
-        if module_name not in self.sma_logits:
-            self.sma_logits[module_name] = {}
-        self.sma_logits[module_name][final_label] = torch.stack(self.prev_logits[module_name][final_label], dim=0).mean(dim=0)
-        # Update ema_logits
-        if module_name not in self.ema_logits:
-            self.ema_logits[module_name] = {}
-        if final_label not in self.ema_logits[module_name]:
-            self.ema_logits[module_name][final_label] = intermediate_logit
-        else:
-            self.ema_logits[module_name][final_label] = intermediate_logit * self.ema_alpha + self.ema_logits[module_name][final_label] * (1 - self.ema_alpha)
+#     def _update_prev_logits(
+#         self, 
+#         intermediate_logit: Float[Tensor, "vocab"],
+#         module_name: str, 
+#         final_label: int,
+#     ):
+#         # Do not update prev_logits if the mode is fixed
+#         if self.mode == "fixed":
+#             return
+#         # Detach intermediate_logit
+#         intermediate_logit = intermediate_logit.cpu().detach()
+#         # Update prev_logits
+#         if module_name not in self.prev_logits:
+#             self.prev_logits = {module_name: {}}
+#         if final_label not in self.prev_logits[module_name]:
+#             self.prev_logits[module_name][final_label] = []
+#         self.prev_logits[module_name][final_label].append(intermediate_logit)
+#         self.prev_logits[module_name][final_label] = self.prev_logits[module_name][final_label][-self.sma_window_size:]
+#         # Update sma_logits
+#         if module_name not in self.sma_logits:
+#             self.sma_logits[module_name] = {}
+#         self.sma_logits[module_name][final_label] = torch.stack(self.prev_logits[module_name][final_label], dim=0).mean(dim=0)
+#         # Update ema_logits
+#         if module_name not in self.ema_logits:
+#             self.ema_logits[module_name] = {}
+#         if final_label not in self.ema_logits[module_name]:
+#             self.ema_logits[module_name][final_label] = intermediate_logit
+#         else:
+#             self.ema_logits[module_name][final_label] = intermediate_logit * self.ema_alpha + self.ema_logits[module_name][final_label] * (1 - self.ema_alpha)
 
-    def _get_intermediate_label(
-        self, 
-        module_name: str, 
-        final_label: int,
-    ) -> Optional[Union[int, Int[Tensor, "vocab"]]]:
-        if self.mode == "fixed":
-            return self.intermediate_labels[module_name].get(final_label, None) if module_name in self.intermediate_labels else None
-        elif self.mode == "sma":
-            return self.sma_logits[module_name].get(final_label, None) if module_name in self.sma_logits else None
-        elif self.mode == "ema":
-            return self.ema_logits[module_name].get(final_label, None) if module_name in self.ema_logits else None
-        else:
-            raise ValueError(f"Invalid mode: {self.mode}")
+#     def _get_intermediate_label(
+#         self, 
+#         module_name: str, 
+#         final_label: int,
+#     ) -> Optional[Union[int, Int[Tensor, "vocab"]]]:
+#         if self.mode == "fixed":
+#             return self.intermediate_labels[module_name].get(final_label, None) if module_name in self.intermediate_labels else None
+#         elif self.mode == "sma":
+#             return self.sma_logits[module_name].get(final_label, None) if module_name in self.sma_logits else None
+#         elif self.mode == "ema":
+#             return self.ema_logits[module_name].get(final_label, None) if module_name in self.ema_logits else None
+#         else:
+#             raise ValueError(f"Invalid mode: {self.mode}")
 
-    def _compute_intermediate_loss(
-        self, 
-        intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]], 
-        final_labels: Int[Tensor, "batch"],
-    ):
-        flatten_weights: Float[Tensor, "layer*batch"] = []
-        flatten_logits: Float[Tensor, "layer*batch vocab"] = []
-        flatten_labels: Union[Int[Tensor, "layer*batch"], Int[Tensor, "layer*batch vocab"]] = []
-        for module_name in self.intermediate_weights:
-            for batch_idx in range(intermediate_logits[module_name].size(0)):
-                # Get final prediction label
-                final_label = final_labels[batch_idx].item()
-                # Get intermediate logit
-                intermediate_logit = intermediate_logits[module_name][batch_idx]
-                # Get intermediate prediction label and weight
-                intermediate_label = self._get_intermediate_label(module_name, final_label)
-                intermediate_weight = self.intermediate_weights[module_name].get(final_label, 0.0)
-                if intermediate_label is not None:
-                    flatten_labels.append(intermediate_label)
-                    flatten_weights.append(intermediate_weight)
-                    flatten_logits.append(intermediate_logit)
-                # Update prev_logits to be used in the next iteration
-                self._update_prev_logits(intermediate_logit, module_name, final_label)
-        if len(flatten_logits) == 0 or self.current_step < self.wait_steps:
-            return torch.tensor(0.0, device=final_labels.device)
-        # Convert to tensors
-        flatten_logits = torch.stack(flatten_logits, dim=0)
-        flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)
-        if self.mode == "fixed":
-            flatten_labels = torch.tensor(flatten_labels, device=final_labels.device)   # shape: (layer*batch)
-        else:
-            flatten_labels = torch.stack(flatten_labels, dim=0)                         # shape: (layer*batch, vocab)
-            flatten_labels = nn.functional.log_softmax(flatten_labels, dim=1)
-            flatten_labels = flatten_labels.to(flatten_logits.device)
-            flatten_logits = nn.functional.log_softmax(flatten_logits, dim=1)
-        # Compute intermediate loss
-        intermediate_loss = self.loss_fn(flatten_logits, flatten_labels)
-        if len(intermediate_loss.size()) == 2:
-            intermediate_loss = intermediate_loss.sum(dim=1)
-        intermediate_loss = (intermediate_loss * flatten_weights).mean()
-        return intermediate_loss
+#     def _compute_intermediate_loss(
+#         self, 
+#         intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]], 
+#         final_labels: Int[Tensor, "batch"],
+#     ):
+#         flatten_weights: Float[Tensor, "layer*batch"] = []
+#         flatten_logits: Float[Tensor, "layer*batch vocab"] = []
+#         flatten_labels: Union[Int[Tensor, "layer*batch"], Int[Tensor, "layer*batch vocab"]] = []
+#         for module_name in self.intermediate_weights:
+#             for batch_idx in range(intermediate_logits[module_name].size(0)):
+#                 # Get final prediction label
+#                 final_label = final_labels[batch_idx].item()
+#                 # Get intermediate logit
+#                 intermediate_logit = intermediate_logits[module_name][batch_idx]
+#                 # Get intermediate prediction label and weight
+#                 intermediate_label = self._get_intermediate_label(module_name, final_label)
+#                 intermediate_weight = self.intermediate_weights[module_name].get(final_label, 0.0)
+#                 if intermediate_label is not None:
+#                     flatten_labels.append(intermediate_label)
+#                     flatten_weights.append(intermediate_weight)
+#                     flatten_logits.append(intermediate_logit)
+#                 # Update prev_logits to be used in the next iteration
+#                 self._update_prev_logits(intermediate_logit, module_name, final_label)
+#         if len(flatten_logits) == 0 or self.current_step < self.wait_steps:
+#             return torch.tensor(0.0, device=final_labels.device)
+#         # Convert to tensors
+#         flatten_logits = torch.stack(flatten_logits, dim=0)
+#         flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)
+#         if self.mode == "fixed":
+#             flatten_labels = torch.tensor(flatten_labels, device=final_labels.device)   # shape: (layer*batch)
+#         else:
+#             flatten_labels = torch.stack(flatten_labels, dim=0)                         # shape: (layer*batch, vocab)
+#             flatten_labels = nn.functional.log_softmax(flatten_labels, dim=1)
+#             flatten_labels = flatten_labels.to(flatten_logits.device)
+#             flatten_logits = nn.functional.log_softmax(flatten_logits, dim=1)
+#         # Compute intermediate loss
+#         intermediate_loss = self.loss_fn(flatten_logits, flatten_labels)
+#         if len(intermediate_loss.size()) == 2:
+#             intermediate_loss = intermediate_loss.sum(dim=1)
+#         intermediate_loss = (intermediate_loss * flatten_weights).mean()
+#         return intermediate_loss
 
-    def compute_loss(self, model, inputs, return_outputs=False):
-        if return_outputs:
-            (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
-        else:
-            loss = super().compute_loss(model, inputs, return_outputs)
-        # Compute intermediate loss
-        labels = inputs.pop("labels") if "labels" in inputs else None
-        if labels is not None:
-            intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
-            intermediate_loss = self._compute_intermediate_loss(intermediate_logits, labels[:, -1])
-            loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
-        # Update current_step
-        self.current_step += 1
-        return (loss, outputs) if return_outputs else loss
+#     def compute_loss(self, model, inputs, return_outputs=False):
+#         if return_outputs:
+#             (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
+#         else:
+#             loss = super().compute_loss(model, inputs, return_outputs)
+#         # Compute intermediate loss
+#         labels = inputs.pop("labels") if "labels" in inputs else None
+#         if labels is not None:
+#             intermediate_logits: Dict[str, Float[Tensor, "batch vocab"]] = self.logitlens.fetch_intermediate_logits()
+#             intermediate_loss = self._compute_intermediate_loss(intermediate_logits, labels[:, -1])
+#             loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
+#         # Update current_step
+#         self.current_step += 1
+#         return (loss, outputs) if return_outputs else loss
     
 
-class IRISL2Trainer(SFTTrainer):
-    def __init__(
-        self, 
-        logitlens: LogitLens, 
-        iris_config: IRISL2Config,
-        **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.logitlens = logitlens
-        self.iris_config = iris_config
+# class IRISL2Trainer(SFTTrainer):
+#     def __init__(
+#         self, 
+#         logitlens: LogitLens, 
+#         iris_config: IRISL2Config,
+#         **kwargs
+#     ):
+#         super().__init__(**kwargs)
+#         self.logitlens = logitlens
+#         self.iris_config = iris_config
 
-        self.alpha = self.iris_config.alpha
-        self.intermediate_labels = self.iris_config.layer_labels
-        self.intermediate_weights = self.iris_config.layer_weights
+#         self.alpha = self.iris_config.alpha
+#         self.intermediate_labels = self.iris_config.layer_labels
+#         self.intermediate_weights = self.iris_config.layer_weights
 
-    @staticmethod
-    def loss_fn(inputs, targets):
-        return (targets - inputs).norm(dim=-1, p=2)
+#     @staticmethod
+#     def loss_fn(inputs, targets):
+#         return (targets - inputs).norm(dim=-1, p=2)
 
-    def _compute_intermediate_loss(
-        self, 
-        intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]], 
-        final_labels: Int[Tensor, "batch"],
-    ):
-        flatten_weights: Float[Tensor, "layer*batch"] = []
-        flatten_activations: Float[Tensor, "layer*batch embedding_dim"] = []
-        flatten_labels: Float[Tensor, "layer*batch embedding_dim"] = []
-        for module_name in self.intermediate_weights:
-            for batch_idx in range(intermediate_activations[module_name].size(0)):
-                # Get final prediction label
-                final_label = final_labels[batch_idx].item()
-                # Get intermediate activation
-                intermediate_activation = intermediate_activations[module_name][batch_idx]
-                # Get intermediate prediction label and weight
-                intermediate_label = self.intermediate_labels[module_name].get(final_label, None)
-                intermediate_weight = self.intermediate_weights[module_name].get(final_label, 0.0)
-                if intermediate_label is not None:
-                    flatten_labels.append(torch.from_numpy(intermediate_label).squeeze())
-                    flatten_weights.append(intermediate_weight)
-                    flatten_activations.append(intermediate_activation)
-        # Return 0.0 if there are no flatten_activations
-        if len(flatten_activations) == 0:
-            print("[Warning] No intermediate activations found.")
-            return torch.tensor(0.0, device=final_labels.device)
-        # Convert to tensors
-        flatten_activations = torch.stack(flatten_activations, dim=0)
-        flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)
-        flatten_labels = torch.stack(flatten_labels, dim=0)                         # shape: (layer*batch, embedding_dim)
-        # Ensure that the flatten_labels are on the same device and has the same type as flatten_activations
-        flatten_labels = flatten_labels.to(device=flatten_activations.device, dtype=flatten_activations.dtype)
-        # Compute intermediate loss
-        intermediate_loss = self.loss_fn(flatten_activations, flatten_labels)
-        intermediate_loss = (intermediate_loss * flatten_weights).mean()
-        return intermediate_loss
+#     def _compute_intermediate_loss(
+#         self, 
+#         intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]], 
+#         final_labels: Int[Tensor, "batch"],
+#     ):
+#         flatten_weights: Float[Tensor, "layer*batch"] = []
+#         flatten_activations: Float[Tensor, "layer*batch embedding_dim"] = []
+#         flatten_labels: Float[Tensor, "layer*batch embedding_dim"] = []
+#         for module_name in self.intermediate_weights:
+#             for batch_idx in range(intermediate_activations[module_name].size(0)):
+#                 # Get final prediction label
+#                 final_label = final_labels[batch_idx].item()
+#                 # Get intermediate activation
+#                 intermediate_activation = intermediate_activations[module_name][batch_idx]
+#                 # Get intermediate prediction label and weight
+#                 intermediate_label = self.intermediate_labels[module_name].get(final_label, None)
+#                 intermediate_weight = self.intermediate_weights[module_name].get(final_label, 0.0)
+#                 if intermediate_label is not None:
+#                     flatten_labels.append(torch.from_numpy(intermediate_label).squeeze())
+#                     flatten_weights.append(intermediate_weight)
+#                     flatten_activations.append(intermediate_activation)
+#         # Return 0.0 if there are no flatten_activations
+#         if len(flatten_activations) == 0:
+#             print("[Warning] No intermediate activations found.")
+#             return torch.tensor(0.0, device=final_labels.device)
+#         # Convert to tensors
+#         flatten_activations = torch.stack(flatten_activations, dim=0)
+#         flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)
+#         flatten_labels = torch.stack(flatten_labels, dim=0)                         # shape: (layer*batch, embedding_dim)
+#         # Ensure that the flatten_labels are on the same device and has the same type as flatten_activations
+#         flatten_labels = flatten_labels.to(device=flatten_activations.device, dtype=flatten_activations.dtype)
+#         # Compute intermediate loss
+#         intermediate_loss = self.loss_fn(flatten_activations, flatten_labels)
+#         intermediate_loss = (intermediate_loss * flatten_weights).mean()
+#         return intermediate_loss
 
-    def compute_loss(self, model, inputs, return_outputs=False):
-        # Compute final-prediction loss
-        if return_outputs:
-            (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
-        else:
-            loss = super().compute_loss(model, inputs, return_outputs)
-        # Compute intermediate loss
-        labels = inputs.pop("labels") if "labels" in inputs else None
-        if labels is not None:
-            intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]] = self.logitlens.fetch_intermediate_activations()
-            intermediate_loss = self._compute_intermediate_loss(intermediate_activations, labels[:, -1])
-            loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
-        return (loss, outputs) if return_outputs else loss
+#     def compute_loss(self, model, inputs, return_outputs=False):
+#         # Compute final-prediction loss
+#         if return_outputs:
+#             (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
+#         else:
+#             loss = super().compute_loss(model, inputs, return_outputs)
+#         # Compute intermediate loss
+#         labels = inputs.pop("labels") if "labels" in inputs else None
+#         if labels is not None:
+#             intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]] = self.logitlens.fetch_intermediate_activations()
+#             intermediate_loss = self._compute_intermediate_loss(intermediate_activations, labels[:, -1])
+#             loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
+#         return (loss, outputs) if return_outputs else loss
 
 
-class IRISDiffTripletTrainer(SFTTrainer):
-    def __init__(
-        self, 
-        logitlens: LogitLens, 
-        iris_config: IRISDiffTripletConfig,
-        **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.logitlens = logitlens
-        self.iris_config = iris_config
+# class IRISDiffTripletTrainer(SFTTrainer):
+#     def __init__(
+#         self, 
+#         logitlens: LogitLens, 
+#         iris_config: IRISDiffTripletConfig,
+#         **kwargs
+#     ):
+#         super().__init__(**kwargs)
+#         self.logitlens = logitlens
+#         self.iris_config = iris_config
 
-        self.alpha = self.iris_config.alpha
-        self.labels = self.iris_config.layer_labels
-        self.weights = self.iris_config.layer_weights
-        self.margin_coeff = self.iris_config.margin_coeff
+#         self.alpha = self.iris_config.alpha
+#         self.labels = self.iris_config.layer_labels
+#         self.weights = self.iris_config.layer_weights
+#         self.margin_coeff = self.iris_config.margin_coeff
 
-    @staticmethod
-    def loss_fn(inputs, pos_targets, neg_targets, margin_coeff: float = 0.5):
-        """
-        inputs: shape (layer*batch, embedding_dim)
-        pos_targets: shape (layer*batch, embedding_dim)
-        neg_targets: shape (layer*batch, embedding_dim)
-        """
-        pos_distance = (pos_targets - inputs).norm(dim=-1, p=2)         # shape: (layer*batch, )
-        neg_distance = (neg_targets - inputs).norm(dim=-1, p=2)         # shape: (layer*batch, )
-        base_distance = (pos_targets - neg_targets).norm(dim=-1, p=2)   # shape: (layer*batch, )
-        margins = base_distance * margin_coeff                          # shape: (layer*batch, )
-        loss = torch.max(pos_distance - neg_distance + margins, torch.tensor(0.0, device=inputs.device))
-        return loss
+#     @staticmethod
+#     def loss_fn(inputs, pos_targets, neg_targets, margin_coeff: float = 0.5):
+#         """
+#         inputs: shape (layer*batch, embedding_dim)
+#         pos_targets: shape (layer*batch, embedding_dim)
+#         neg_targets: shape (layer*batch, embedding_dim)
+#         """
+#         pos_distance = (pos_targets - inputs).norm(dim=-1, p=2)         # shape: (layer*batch, )
+#         neg_distance = (neg_targets - inputs).norm(dim=-1, p=2)         # shape: (layer*batch, )
+#         base_distance = (pos_targets - neg_targets).norm(dim=-1, p=2)   # shape: (layer*batch, )
+#         margins = base_distance * margin_coeff                          # shape: (layer*batch, )
+#         loss = torch.max(pos_distance - neg_distance + margins, torch.tensor(0.0, device=inputs.device))
+#         return loss
 
-    def _compute_intermediate_loss(
-        self, 
-        intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]], 
-        final_labels: Int[Tensor, "batch"],
-    ):
-        batch_size = final_labels.size(0)
+#     def _compute_intermediate_loss(
+#         self, 
+#         intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]], 
+#         final_labels: Int[Tensor, "batch"],
+#     ):
+#         batch_size = final_labels.size(0)
 
-        flatten_weights: Float[Tensor, "layer*batch"] = []
-        flatten_diffs: Float[Tensor, "layer*batch embedding_dim"] = []
-        flatten_pos_labels: Float[Tensor, "layer*batch embedding_dim"] = []
-        flatten_neg_labels: Float[Tensor, "layer*batch embedding_dim"] = []
-        for module_name in self.weights:
-            for batch_idx in range(intermediate_activations[module_name].size(0)):
-                prev_module_name = f"model.layers.{int(module_name.split('.')[-1]) - 1}"
-                # Get final prediction label
-                final_label = final_labels[batch_idx].item()
-                # Get intermediate activation
-                intermediate_activation = intermediate_activations[module_name][batch_idx]
-                prev_intermediate_activation = intermediate_activations[prev_module_name][batch_idx]
-                # Get activation different
-                diff = intermediate_activation - prev_intermediate_activation
-                # Get intermediate prediction label and weight
-                pos_label = self.labels[module_name].get(final_label, None)
-                weight = self.weights[module_name].get(final_label, 0.0)
-                if pos_label is not None:
-                    neg_label = [value for key, value in self.labels[module_name].items() if key != final_label][0]
-                    flatten_pos_labels.append(torch.from_numpy(pos_label).squeeze())
-                    flatten_neg_labels.append(torch.from_numpy(neg_label).squeeze())
-                    flatten_weights.append(weight)
-                    flatten_diffs.append(diff)
-        # Return 0.0 if there are no flatten_diffs
-        if len(flatten_diffs) == 0:
-            print("[Warning] No intermediate activations found.")
-            return torch.tensor(0.0, device=final_labels.device)
-        # Convert to tensors
-        flatten_diffs = torch.stack(flatten_diffs, dim=0)
-        flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)
-        flatten_pos_labels = torch.stack(flatten_pos_labels, dim=0) # shape: (layer*batch, embedding_dim)
-        flatten_neg_labels = torch.stack(flatten_neg_labels, dim=0) # shape: (layer*batch, embedding_dim)
-        # Ensure that the flatten_pos_labels are on the same device and has the same type as flatten_diffs
-        flatten_pos_labels = flatten_pos_labels.to(device=flatten_diffs.device, dtype=flatten_diffs.dtype)
-        flatten_neg_labels = flatten_neg_labels.to(device=flatten_diffs.device, dtype=flatten_diffs.dtype)
-        # Compute intermediate loss
-        intermediate_loss = self.loss_fn(flatten_diffs, flatten_pos_labels, flatten_neg_labels, self.margin_coeff)
-        intermediate_loss = (intermediate_loss * flatten_weights).view(batch_size, -1).sum(dim=-1).mean()
-        return intermediate_loss
+#         flatten_weights: Float[Tensor, "layer*batch"] = []
+#         flatten_diffs: Float[Tensor, "layer*batch embedding_dim"] = []
+#         flatten_pos_labels: Float[Tensor, "layer*batch embedding_dim"] = []
+#         flatten_neg_labels: Float[Tensor, "layer*batch embedding_dim"] = []
+#         for module_name in self.weights:
+#             for batch_idx in range(intermediate_activations[module_name].size(0)):
+#                 prev_module_name = f"model.layers.{int(module_name.split('.')[-1]) - 1}"
+#                 # Get final prediction label
+#                 final_label = final_labels[batch_idx].item()
+#                 # Get intermediate activation
+#                 intermediate_activation = intermediate_activations[module_name][batch_idx]
+#                 prev_intermediate_activation = intermediate_activations[prev_module_name][batch_idx]
+#                 # Get activation different
+#                 diff = intermediate_activation - prev_intermediate_activation
+#                 # Get intermediate prediction label and weight
+#                 pos_label = self.labels[module_name].get(final_label, None)
+#                 weight = self.weights[module_name].get(final_label, 0.0)
+#                 if pos_label is not None:
+#                     neg_label = [value for key, value in self.labels[module_name].items() if key != final_label][0]
+#                     flatten_pos_labels.append(torch.from_numpy(pos_label).squeeze())
+#                     flatten_neg_labels.append(torch.from_numpy(neg_label).squeeze())
+#                     flatten_weights.append(weight)
+#                     flatten_diffs.append(diff)
+#         # Return 0.0 if there are no flatten_diffs
+#         if len(flatten_diffs) == 0:
+#             print("[Warning] No intermediate activations found.")
+#             return torch.tensor(0.0, device=final_labels.device)
+#         # Convert to tensors
+#         flatten_diffs = torch.stack(flatten_diffs, dim=0)
+#         flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)
+#         flatten_pos_labels = torch.stack(flatten_pos_labels, dim=0) # shape: (layer*batch, embedding_dim)
+#         flatten_neg_labels = torch.stack(flatten_neg_labels, dim=0) # shape: (layer*batch, embedding_dim)
+#         # Ensure that the flatten_pos_labels are on the same device and has the same type as flatten_diffs
+#         flatten_pos_labels = flatten_pos_labels.to(device=flatten_diffs.device, dtype=flatten_diffs.dtype)
+#         flatten_neg_labels = flatten_neg_labels.to(device=flatten_diffs.device, dtype=flatten_diffs.dtype)
+#         # Compute intermediate loss
+#         intermediate_loss = self.loss_fn(flatten_diffs, flatten_pos_labels, flatten_neg_labels, self.margin_coeff)
+#         intermediate_loss = (intermediate_loss * flatten_weights).view(batch_size, -1).sum(dim=-1).mean()
+#         return intermediate_loss
     
-    def compute_loss(self, model, inputs, return_outputs=False):
-        # Compute final-prediction loss
-        if return_outputs:
-            (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
-        else:
-            loss = super().compute_loss(model, inputs, return_outputs)
-        # Compute intermediate loss
-        labels = inputs.pop("labels") if "labels" in inputs else None
-        if labels is not None:
-            intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]] = self.logitlens.fetch_intermediate_activations()
-            intermediate_loss = self._compute_intermediate_loss(intermediate_activations, labels[:, -1])
-            loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
-        return (loss, outputs) if return_outputs else loss
+#     def compute_loss(self, model, inputs, return_outputs=False):
+#         # Compute final-prediction loss
+#         if return_outputs:
+#             (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
+#         else:
+#             loss = super().compute_loss(model, inputs, return_outputs)
+#         # Compute intermediate loss
+#         labels = inputs.pop("labels") if "labels" in inputs else None
+#         if labels is not None:
+#             intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]] = self.logitlens.fetch_intermediate_activations()
+#             intermediate_loss = self._compute_intermediate_loss(intermediate_activations, labels[:, -1])
+#             loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
+#         return (loss, outputs) if return_outputs else loss
     
 
-class IRISCLTrainer(SFTTrainer):
-    def __init__(
-        self, 
-        logitlens: LogitLens, 
-        iris_config: IRISCLConfig,
-        **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.logitlens = logitlens
-        self.iris_config = iris_config
+# class IRISCLTrainer(SFTTrainer):
+#     def __init__(
+#         self, 
+#         logitlens: LogitLens, 
+#         iris_config: IRISCLConfig,
+#         **kwargs
+#     ):
+#         super().__init__(**kwargs)
+#         self.logitlens = logitlens
+#         self.iris_config = iris_config
 
-        self.alpha = self.iris_config.alpha
-        self.intermediate_labels = self.iris_config.layer_labels
-        self.intermediate_weights = self.iris_config.layer_weights
+#         self.alpha = self.iris_config.alpha
+#         self.intermediate_labels = self.iris_config.layer_labels
+#         self.intermediate_weights = self.iris_config.layer_weights
 
-        self.loss_fn = nn.CrossEntropyLoss(
-            reduction="none",
-        )
+#         self.loss_fn = nn.CrossEntropyLoss(
+#             reduction="none",
+#         )
 
-    def _compute_intermediate_loss(
-        self, 
-        intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]], 
-        final_labels: Int[Tensor, "batch"],
-    ):
-        flatten_labels: Int[Tensor, "layer*batch"] = []
-        flatten_weights: Float[Tensor, "layer*batch"] = []
-        flatten_activations: Float[Tensor, "layer*batch embedding_dim"] = []
-        flatten_label_activations: Float[Tensor, "layer*batch class_num embedding_dim"] = []
-        for module_name in self.intermediate_weights:
-            for batch_idx in range(intermediate_activations[module_name].size(0)):
-                # Get final prediction label
-                final_label = final_labels[batch_idx].item()
-                # Get intermediate activation
-                intermediate_activation = intermediate_activations[module_name][batch_idx]
-                # Get intermediate prediction label and weight
-                intermediate_label_activations = np.concatenate([activation for activation in self.intermediate_labels[module_name].values()], axis=0)
-                intermediate_label = [idx for idx, label in enumerate(self.intermediate_labels[module_name].keys()) if label == final_label]
-                intermediate_weight = self.intermediate_weights[module_name].get(final_label, 0.0)
-                if len(intermediate_label) > 0:
-                    flatten_labels.append(intermediate_label[0])
-                    flatten_weights.append(intermediate_weight)
-                    flatten_activations.append(intermediate_activation)
-                    flatten_label_activations.append(torch.from_numpy(intermediate_label_activations).squeeze())
-        # Return 0.0 if there are no flatten_activations
-        if len(flatten_activations) == 0:
-            print("[Warning] No intermediate activations found.")
-            return torch.tensor(0.0, device=final_labels.device)
-        # Convert to tensors
-        flatten_activations = torch.stack(flatten_activations, dim=0).unsqueeze(1)      # shape: (layer*batch, 1, embedding_dim)
-        flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)     # shape: (layer*batch, )
-        flatten_labels = torch.tensor(flatten_labels, device=final_labels.device)       # shape: (layer*batch, )
-        flatten_label_activations = torch.stack(flatten_label_activations, dim=0)       # shape: (layer*batch, class_num, embedding_dim)
-        # Ensure that the flatten_label_activations are on the same device and has the same type as flatten_activations
-        flatten_label_activations = flatten_label_activations.to(device=flatten_activations.device, dtype=flatten_activations.dtype)
-        # Compute activation diff (layer*batch, class_num)
-        flatten_activation_diffs = -(flatten_label_activations - flatten_activations).norm(dim=-1, p=2)
-        # Compute intermediate loss
-        intermediate_loss = self.loss_fn(flatten_activation_diffs, flatten_labels)     # shape: (layer*batch, )
-        intermediate_loss = (intermediate_loss * flatten_weights).mean()
-        return intermediate_loss
+#     def _compute_intermediate_loss(
+#         self, 
+#         intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]], 
+#         final_labels: Int[Tensor, "batch"],
+#     ):
+#         flatten_labels: Int[Tensor, "layer*batch"] = []
+#         flatten_weights: Float[Tensor, "layer*batch"] = []
+#         flatten_activations: Float[Tensor, "layer*batch embedding_dim"] = []
+#         flatten_label_activations: Float[Tensor, "layer*batch class_num embedding_dim"] = []
+#         for module_name in self.intermediate_weights:
+#             for batch_idx in range(intermediate_activations[module_name].size(0)):
+#                 # Get final prediction label
+#                 final_label = final_labels[batch_idx].item()
+#                 # Get intermediate activation
+#                 intermediate_activation = intermediate_activations[module_name][batch_idx]
+#                 # Get intermediate prediction label and weight
+#                 intermediate_label_activations = np.concatenate([activation for activation in self.intermediate_labels[module_name].values()], axis=0)
+#                 intermediate_label = [idx for idx, label in enumerate(self.intermediate_labels[module_name].keys()) if label == final_label]
+#                 intermediate_weight = self.intermediate_weights[module_name].get(final_label, 0.0)
+#                 if len(intermediate_label) > 0:
+#                     flatten_labels.append(intermediate_label[0])
+#                     flatten_weights.append(intermediate_weight)
+#                     flatten_activations.append(intermediate_activation)
+#                     flatten_label_activations.append(torch.from_numpy(intermediate_label_activations).squeeze())
+#         # Return 0.0 if there are no flatten_activations
+#         if len(flatten_activations) == 0:
+#             print("[Warning] No intermediate activations found.")
+#             return torch.tensor(0.0, device=final_labels.device)
+#         # Convert to tensors
+#         flatten_activations = torch.stack(flatten_activations, dim=0).unsqueeze(1)      # shape: (layer*batch, 1, embedding_dim)
+#         flatten_weights = torch.tensor(flatten_weights, device=final_labels.device)     # shape: (layer*batch, )
+#         flatten_labels = torch.tensor(flatten_labels, device=final_labels.device)       # shape: (layer*batch, )
+#         flatten_label_activations = torch.stack(flatten_label_activations, dim=0)       # shape: (layer*batch, class_num, embedding_dim)
+#         # Ensure that the flatten_label_activations are on the same device and has the same type as flatten_activations
+#         flatten_label_activations = flatten_label_activations.to(device=flatten_activations.device, dtype=flatten_activations.dtype)
+#         # Compute activation diff (layer*batch, class_num)
+#         flatten_activation_diffs = -(flatten_label_activations - flatten_activations).norm(dim=-1, p=2)
+#         # Compute intermediate loss
+#         intermediate_loss = self.loss_fn(flatten_activation_diffs, flatten_labels)     # shape: (layer*batch, )
+#         intermediate_loss = (intermediate_loss * flatten_weights).mean()
+#         return intermediate_loss
 
-    def compute_loss(self, model, inputs, return_outputs=False):
-        if return_outputs:
-            (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
-        else:
-            loss = super().compute_loss(model, inputs, return_outputs)
-        # Compute intermediate loss
-        labels = inputs.pop("labels") if "labels" in inputs else None
-        if labels is not None:
-            intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]] = self.logitlens.fetch_intermediate_activations()
-            intermediate_loss = self._compute_intermediate_loss(intermediate_activations, labels[:, -1])
-            loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
-        return (loss, outputs) if return_outputs else loss
+#     def compute_loss(self, model, inputs, return_outputs=False):
+#         if return_outputs:
+#             (loss, outputs) = super().compute_loss(model, inputs, return_outputs)
+#         else:
+#             loss = super().compute_loss(model, inputs, return_outputs)
+#         # Compute intermediate loss
+#         labels = inputs.pop("labels") if "labels" in inputs else None
+#         if labels is not None:
+#             intermediate_activations: Dict[str, Float[Tensor, "batch embedding_dim"]] = self.logitlens.fetch_intermediate_activations()
+#             intermediate_loss = self._compute_intermediate_loss(intermediate_activations, labels[:, -1])
+#             loss = (1 - self.alpha) * loss + self.alpha * intermediate_loss
+#         return (loss, outputs) if return_outputs else loss
 
 
-class HuggfacePipelineGenerativeLLM(GenerativeLLM):
-    """ NOTE: Old version of HuggfaceGenerativeLLM. This is kept for reference. """
-    def __init__(
-        self, 
-        model_name_or_path: str,  
-        pipeline_kwargs: dict = None,
-        **kwargs,
-    ):
-        # TODO: transformers.pipeline does not allow batch generation. We need to find a way to generate multiple responses at once
-        self.llm = pipeline(
-            "text-generation", 
-            model=model_name_or_path,
-            device_map="auto",
-            **pipeline_kwargs
-        )
-        self.model_name = model_name_or_path
-        super().__init__(**kwargs)
+# class HuggfacePipelineGenerativeLLM(GenerativeLLM):
+#     """ NOTE: Old version of HuggfaceGenerativeLLM. This is kept for reference. """
+#     def __init__(
+#         self, 
+#         model_name_or_path: str,  
+#         pipeline_kwargs: dict = None,
+#         **kwargs,
+#     ):
+#         # TODO: transformers.pipeline does not allow batch generation. We need to find a way to generate multiple responses at once
+#         self.llm = pipeline(
+#             "text-generation", 
+#             model=model_name_or_path,
+#             device_map="auto",
+#             **pipeline_kwargs
+#         )
+#         self.model_name = model_name_or_path
+#         super().__init__(**kwargs)
 
-    def get_model_name(self) -> str:
-        # TODO: Add a better way to get the model name. the current way is not reliable as the model_name_or_path can be a path
-        return self.model_name
+#     def get_model_name(self) -> str:
+#         # TODO: Add a better way to get the model name. the current way is not reliable as the model_name_or_path can be a path
+#         return self.model_name
 
-    def _complete(
-        self, 
-        prompt: str, 
-        ref_prompt: Optional[str] = None, 
-        suffix_prompt: Optional[str] = None, 
-        apply_chat_template: bool = True, 
-        **kwargs
-    ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
-        if ref_prompt:
-            print("[WARNING] ref_prompt is not supported with HuggfacePipelineGenerativeLLM. Ignoring the ref_prompt.")
-        if apply_chat_template:
-            if suffix_prompt:
-                print("[WARNING] suffix_prompt is not supported with apply_chat_template=True. Ignoring the suffix_prompt.")
-            if self.system_prompt:
-                messages = [
-                    {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": prompt},
-                ]
-            else:
-                messages = [{"role": "user", "content": prompt}]
-            answer = self.llm(messages, max_new_tokens=self.max_new_tokens, **kwargs)[0]["generated_text"][-1]["content"]
-        else:
-            if self.system_prompt:
-                prompt = f"{self.system_prompt}\n\n{prompt}"
-            if suffix_prompt:
-                prompt = f"{prompt}{suffix_prompt}"
-            answer = self.llm(prompt, max_new_tokens=self.max_new_tokens, return_full_text=False, **kwargs)[0]["generated_text"]
-        return answer, None
+#     def _complete(
+#         self, 
+#         prompt: str, 
+#         ref_prompt: Optional[str] = None, 
+#         suffix_prompt: Optional[str] = None, 
+#         apply_chat_template: bool = True, 
+#         **kwargs
+#     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
+#         if ref_prompt:
+#             print("[WARNING] ref_prompt is not supported with HuggfacePipelineGenerativeLLM. Ignoring the ref_prompt.")
+#         if apply_chat_template:
+#             if suffix_prompt:
+#                 print("[WARNING] suffix_prompt is not supported with apply_chat_template=True. Ignoring the suffix_prompt.")
+#             if self.system_prompt:
+#                 messages = [
+#                     {"role": "system", "content": self.system_prompt},
+#                     {"role": "user", "content": prompt},
+#                 ]
+#             else:
+#                 messages = [{"role": "user", "content": prompt}]
+#             answer = self.llm(messages, max_new_tokens=self.max_new_tokens, **kwargs)[0]["generated_text"][-1]["content"]
+#         else:
+#             if self.system_prompt:
+#                 prompt = f"{self.system_prompt}\n\n{prompt}"
+#             if suffix_prompt:
+#                 prompt = f"{prompt}{suffix_prompt}"
+#             answer = self.llm(prompt, max_new_tokens=self.max_new_tokens, return_full_text=False, **kwargs)[0]["generated_text"]
+#         return answer, None
     
 
 class HuggfaceGenerativeLLM(GenerativeLLM):
@@ -794,202 +794,202 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
         logprobs = [[(self.id_to_token(token_id), logprob.item(), logit.item()) for token_id, logprob, logit in zip(top_indices, top_logprobs, top_logits)] for top_indices, top_logprobs, top_logits in zip(sorted_indices, sorted_logprobs, sorted_logits)]
         return answer, logprobs
     
-    def train_sft(
-        self,
-        train_dataset: Dataset,
-        response_template: str,
-        formatting_prompts_func: Callable,
-        sft_config: SFTConfig = None,
-        peft_config: LoraConfig = None,
-        eval_dataset: Dataset = None,
-    ):  
-        self.tokenizer.padding_side = "right"
-        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
-        if peft_config is None:
-            print("Starting FFT SFT training...")
-        else:
-            print("Starting PEFT SFT training...")
-        trainer = SFTTrainer(
-            model=self.llm,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            args=sft_config,
-            tokenizer=self.tokenizer,
-            formatting_func=formatting_prompts_func,
-            data_collator=collator,
-            peft_config=peft_config,
-        )
-        self.report_trainable_params()
-        trainer.train()
+    # def train_sft(
+    #     self,
+    #     train_dataset: Dataset,
+    #     response_template: str,
+    #     formatting_prompts_func: Callable,
+    #     sft_config: SFTConfig = None,
+    #     peft_config: LoraConfig = None,
+    #     eval_dataset: Dataset = None,
+    # ):  
+    #     self.tokenizer.padding_side = "right"
+    #     collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+    #     if peft_config is None:
+    #         print("Starting FFT SFT training...")
+    #     else:
+    #         print("Starting PEFT SFT training...")
+    #     trainer = SFTTrainer(
+    #         model=self.llm,
+    #         train_dataset=train_dataset,
+    #         eval_dataset=eval_dataset,
+    #         args=sft_config,
+    #         tokenizer=self.tokenizer,
+    #         formatting_func=formatting_prompts_func,
+    #         data_collator=collator,
+    #         peft_config=peft_config,
+    #     )
+    #     self.report_trainable_params()
+    #     trainer.train()
 
-    def train_iris(
-        self,
-        iris_config: IRISConfig,
-        train_dataset: Dataset,
-        response_template: str,
-        formatting_prompts_func: Callable,
-        sft_config: SFTConfig = None,
-        peft_config: LoraConfig = None,
-        eval_dataset: Dataset = None,
-    ):
-        """
-        Example of intermediate_labels:
-        intermediate_labels = {
-            "model.layers.18": {label_id: (token_id, weight)},
-            "model.layers.19": {label_id: (token_id, weight)},
-            ...
-        }
-        """
-        self.tokenizer.padding_side = "right"
-        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
-        if peft_config is None:
-            print("Starting FFT SFT training...")
-        else:
-            print("Starting PEFT SFT training...")
-        trainer = IRISTrainer(
-            logitlens=self.logitlens,
-            iris_config=iris_config,
-            model=self.llm,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            args=sft_config,
-            tokenizer=self.tokenizer,
-            formatting_func=formatting_prompts_func,
-            data_collator=collator,
-            peft_config=peft_config,
-        )
-        # Freeze layers
-        if iris_config.freeze_layers is not None:
-            for name, param in self.llm.named_parameters():
-                for module_name in iris_config.freeze_layers:
-                    if module_name in name:
-                        param.requires_grad_(False)
-                        break
-        self.report_trainable_params()
-        trainer.train()
+    # def train_iris(
+    #     self,
+    #     iris_config: IRISConfig,
+    #     train_dataset: Dataset,
+    #     response_template: str,
+    #     formatting_prompts_func: Callable,
+    #     sft_config: SFTConfig = None,
+    #     peft_config: LoraConfig = None,
+    #     eval_dataset: Dataset = None,
+    # ):
+    #     """
+    #     Example of intermediate_labels:
+    #     intermediate_labels = {
+    #         "model.layers.18": {label_id: (token_id, weight)},
+    #         "model.layers.19": {label_id: (token_id, weight)},
+    #         ...
+    #     }
+    #     """
+    #     self.tokenizer.padding_side = "right"
+    #     collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+    #     if peft_config is None:
+    #         print("Starting FFT SFT training...")
+    #     else:
+    #         print("Starting PEFT SFT training...")
+    #     trainer = IRISTrainer(
+    #         logitlens=self.logitlens,
+    #         iris_config=iris_config,
+    #         model=self.llm,
+    #         train_dataset=train_dataset,
+    #         eval_dataset=eval_dataset,
+    #         args=sft_config,
+    #         tokenizer=self.tokenizer,
+    #         formatting_func=formatting_prompts_func,
+    #         data_collator=collator,
+    #         peft_config=peft_config,
+    #     )
+    #     # Freeze layers
+    #     if iris_config.freeze_layers is not None:
+    #         for name, param in self.llm.named_parameters():
+    #             for module_name in iris_config.freeze_layers:
+    #                 if module_name in name:
+    #                     param.requires_grad_(False)
+    #                     break
+    #     self.report_trainable_params()
+    #     trainer.train()
 
-    def train_iris_l2(
-        self,
-        iris_config: IRISL2Config,
-        train_dataset: Dataset,
-        response_template: str,
-        formatting_prompts_func: Callable,
-        sft_config: SFTConfig = None,
-        peft_config: LoraConfig = None,
-        eval_dataset: Dataset = None,
-    ):
-        self.tokenizer.padding_side = "right"
-        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
-        if peft_config is None:
-            print("Starting FFT SFT training...")
-        else:
-            print("Starting PEFT SFT training...")
-        trainer = IRISL2Trainer(
-            logitlens=self.logitlens,
-            iris_config=iris_config,
-            model=self.llm,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            args=sft_config,
-            tokenizer=self.tokenizer,
-            formatting_func=formatting_prompts_func,
-            data_collator=collator,
-            peft_config=peft_config,
-        )
-        # Freeze layers
-        if iris_config.freeze_layers is not None:
-            for name, param in self.llm.named_parameters():
-                for module_name in iris_config.freeze_layers:
-                    if module_name in name:
-                        param.requires_grad_(False)
-                        break
-        self.report_trainable_params()
-        trainer.train()
+    # def train_iris_l2(
+    #     self,
+    #     iris_config: IRISL2Config,
+    #     train_dataset: Dataset,
+    #     response_template: str,
+    #     formatting_prompts_func: Callable,
+    #     sft_config: SFTConfig = None,
+    #     peft_config: LoraConfig = None,
+    #     eval_dataset: Dataset = None,
+    # ):
+    #     self.tokenizer.padding_side = "right"
+    #     collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+    #     if peft_config is None:
+    #         print("Starting FFT SFT training...")
+    #     else:
+    #         print("Starting PEFT SFT training...")
+    #     trainer = IRISL2Trainer(
+    #         logitlens=self.logitlens,
+    #         iris_config=iris_config,
+    #         model=self.llm,
+    #         train_dataset=train_dataset,
+    #         eval_dataset=eval_dataset,
+    #         args=sft_config,
+    #         tokenizer=self.tokenizer,
+    #         formatting_func=formatting_prompts_func,
+    #         data_collator=collator,
+    #         peft_config=peft_config,
+    #     )
+    #     # Freeze layers
+    #     if iris_config.freeze_layers is not None:
+    #         for name, param in self.llm.named_parameters():
+    #             for module_name in iris_config.freeze_layers:
+    #                 if module_name in name:
+    #                     param.requires_grad_(False)
+    #                     break
+    #     self.report_trainable_params()
+    #     trainer.train()
 
-    def train_iris_cl(
-        self,
-        iris_config: IRISCLConfig,
-        train_dataset: Dataset,
-        response_template: str,
-        formatting_prompts_func: Callable,
-        sft_config: SFTConfig = None,
-        peft_config: LoraConfig = None,
-        eval_dataset: Dataset = None,
-    ):
-        self.tokenizer.padding_side = "right"
-        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
-        if peft_config is None:
-            print("Starting FFT SFT training...")
-        else:
-            print("Starting PEFT SFT training...")
-        trainer = IRISCLTrainer(
-            logitlens=self.logitlens,
-            iris_config=iris_config,
-            model=self.llm,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            args=sft_config,
-            tokenizer=self.tokenizer,
-            formatting_func=formatting_prompts_func,
-            data_collator=collator,
-            peft_config=peft_config,
-        )
-        # Freeze layers
-        if iris_config.freeze_layers is not None:
-            for name, param in self.llm.named_parameters():
-                for module_name in iris_config.freeze_layers:
-                    if module_name in name:
-                        param.requires_grad_(False)
-                        break
-        self.report_trainable_params()
-        trainer.train()
+    # def train_iris_cl(
+    #     self,
+    #     iris_config: IRISCLConfig,
+    #     train_dataset: Dataset,
+    #     response_template: str,
+    #     formatting_prompts_func: Callable,
+    #     sft_config: SFTConfig = None,
+    #     peft_config: LoraConfig = None,
+    #     eval_dataset: Dataset = None,
+    # ):
+    #     self.tokenizer.padding_side = "right"
+    #     collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+    #     if peft_config is None:
+    #         print("Starting FFT SFT training...")
+    #     else:
+    #         print("Starting PEFT SFT training...")
+    #     trainer = IRISCLTrainer(
+    #         logitlens=self.logitlens,
+    #         iris_config=iris_config,
+    #         model=self.llm,
+    #         train_dataset=train_dataset,
+    #         eval_dataset=eval_dataset,
+    #         args=sft_config,
+    #         tokenizer=self.tokenizer,
+    #         formatting_func=formatting_prompts_func,
+    #         data_collator=collator,
+    #         peft_config=peft_config,
+    #     )
+    #     # Freeze layers
+    #     if iris_config.freeze_layers is not None:
+    #         for name, param in self.llm.named_parameters():
+    #             for module_name in iris_config.freeze_layers:
+    #                 if module_name in name:
+    #                     param.requires_grad_(False)
+    #                     break
+    #     self.report_trainable_params()
+    #     trainer.train()
 
-    def train_iris_diff_triplet(
-        self,
-        iris_config: IRISDiffTripletConfig,
-        train_dataset: Dataset,
-        response_template: str,
-        formatting_prompts_func: Callable,
-        sft_config: SFTConfig = None,
-        peft_config: LoraConfig = None,
-        eval_dataset: Dataset = None,
-    ):
-        self.tokenizer.padding_side = "right"
-        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
-        if peft_config is None:
-            print("Starting FFT SFT training...")
-        else:
-            print("Starting PEFT SFT training...")
-        trainer = IRISDiffTripletTrainer(
-            logitlens=self.logitlens,
-            iris_config=iris_config,
-            model=self.llm,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            args=sft_config,
-            tokenizer=self.tokenizer,
-            formatting_func=formatting_prompts_func,
-            data_collator=collator,
-            peft_config=peft_config,
-        )
-        # Freeze layers
-        if iris_config.freeze_layers is not None:
-            for name, param in self.llm.named_parameters():
-                for module_name in iris_config.freeze_layers:
-                    if module_name in name:
-                        param.requires_grad_(False)
-                        break
-        self.report_trainable_params()
-        trainer.train()
+    # def train_iris_diff_triplet(
+    #     self,
+    #     iris_config: IRISDiffTripletConfig,
+    #     train_dataset: Dataset,
+    #     response_template: str,
+    #     formatting_prompts_func: Callable,
+    #     sft_config: SFTConfig = None,
+    #     peft_config: LoraConfig = None,
+    #     eval_dataset: Dataset = None,
+    # ):
+    #     self.tokenizer.padding_side = "right"
+    #     collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=self.tokenizer)
+    #     if peft_config is None:
+    #         print("Starting FFT SFT training...")
+    #     else:
+    #         print("Starting PEFT SFT training...")
+    #     trainer = IRISDiffTripletTrainer(
+    #         logitlens=self.logitlens,
+    #         iris_config=iris_config,
+    #         model=self.llm,
+    #         train_dataset=train_dataset,
+    #         eval_dataset=eval_dataset,
+    #         args=sft_config,
+    #         tokenizer=self.tokenizer,
+    #         formatting_func=formatting_prompts_func,
+    #         data_collator=collator,
+    #         peft_config=peft_config,
+    #     )
+    #     # Freeze layers
+    #     if iris_config.freeze_layers is not None:
+    #         for name, param in self.llm.named_parameters():
+    #             for module_name in iris_config.freeze_layers:
+    #                 if module_name in name:
+    #                     param.requires_grad_(False)
+    #                     break
+    #     self.report_trainable_params()
+    #     trainer.train()
 
-    def report_trainable_params(self):
-        trainable_params = []
-        for name, param in self.llm.named_parameters():
-            if param.requires_grad:
-                trainable_params.append(param.numel())
-                print(f"{name}: {param.numel()}")
-        trainable_params = sum(trainable_params)
-        print(f"Trainable parameters: {trainable_params}")
+    # def report_trainable_params(self):
+    #     trainable_params = []
+    #     for name, param in self.llm.named_parameters():
+    #         if param.requires_grad:
+    #             trainable_params.append(param.numel())
+    #             print(f"{name}: {param.numel()}")
+    #     trainable_params = sum(trainable_params)
+    #     print(f"Trainable parameters: {trainable_params}")
     
 
 if __name__ == "__main__":
