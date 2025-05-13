@@ -22,6 +22,7 @@ class SafeGuardMetric:
         self.recall = None
         self.precision = None
         self.f1 = None
+        self.fpr = None
 
     def update(self, gold_labels, pred_scores):
         """
@@ -31,6 +32,8 @@ class SafeGuardMetric:
         # Convert to NumpyArray
         gold_labels = np.array(gold_labels)
         pred_scores = np.array(pred_scores)
+        # Compute FPR
+        self.fpr = np.sum((pred_scores > 0.5) & (gold_labels == 0)) / np.sum(gold_labels == 0)
         # Compute Recall, Precision, F1
         self.precision, self.recall, self.f1, _ = precision_recall_fscore_support(gold_labels, pred_scores > 0.5, average='binary')
         # Compute ROC curve and ROC area
@@ -53,6 +56,7 @@ class SafeGuardMetric:
         if show_pr_curve:
             plt.subplot(1, 2, 1)
             plt.plot(self.recalls, self.precisions, color='darkorange', lw=1, label='AUC = %0.2f' % (self.pr_auc * 100))
+            # plt.plot(self.precisions, self.recalls, color='darkorange', lw=1, label='AUC = %0.2f' % (self.pr_auc * 100))
             plt.xlim([0.0, 1.0])
             plt.ylim([0.0, 1.05])
             plt.xlabel('Recall')
