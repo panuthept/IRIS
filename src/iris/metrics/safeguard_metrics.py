@@ -23,6 +23,9 @@ class SafeGuardMetric:
         self.precision = None
         self.f1 = None
         self.fpr = None
+        self.best_f1 = None
+        self.best_fpr = None
+        self.best_threshold = None
 
     def update(self, gold_labels, pred_scores):
         """
@@ -44,6 +47,19 @@ class SafeGuardMetric:
         self.pr_auc = auc(self.recalls, self.precisions)
         # Compute F1 score
         self.f1s = 2 * self.precisions * self.recalls / (self.precisions + self.recalls + 1e-7)
+        # max_index = np.argmax(self.f1s)
+        # best_threshold = round(self.pr_thresholds[max_index], 4)
+
+        self.best_threshold = 0.01
+        _, _, self.best_f1, _ = precision_recall_fscore_support(gold_labels, pred_scores > self.best_threshold, average='binary')
+        self.best_fpr = np.sum((pred_scores > self.best_threshold) & (gold_labels == 0)) / np.sum(gold_labels == 0)
+        for threshold in np.arange(0.02, 1.00, 0.01):
+            _, _, _f1, _ = precision_recall_fscore_support(gold_labels, pred_scores > threshold, average='binary')
+            _fpr = np.sum((pred_scores > threshold) & (gold_labels == 0)) / np.sum(gold_labels == 0)
+            if _f1 > self.best_f1:
+                self.best_f1 = _f1
+                self.best_fpr = _fpr
+                self.best_threshold = threshold
 
     def plot(
             self, 
