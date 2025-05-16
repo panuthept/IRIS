@@ -18,27 +18,50 @@ port=$4
 # vllm serve $model_name --download_dir ./data/models --tensor_parallel_size $gpu_nums
 
 
-# echo "Evaluating Cultural Safety..."
-# for lang in ta th tl ms in my vi
-# do
-#     echo "Cultural: $lang - Language: en"
-#     python scripts/inference_safeguard.py \
-#     --safeguard_name $safeguard_name \
-#     --model_name $model_name \
-#     --api_key EMPTY \
-#     --api_base http://localhost:${port}/v1 \
-#     --dataset_name SEASafeguardDataset \
-#     --dataset_split test \
-#     --language en \
-#     --cultural $lang \
-#     --subset cultural_specific \
-#     --mixed_tasks_sample \
-#     --max_tokens 8000 \
-#     --disable_logitlens \
-#     --sensitive_as_harmful \
-#     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
+echo "Evaluating Cultural Safety..."
+# for lang in en ta th tl ms in my vi
+for lang in en
+do
+    echo "Cultural: $lang - Language: en"
+    python scripts/inference_safeguard.py \
+    --safeguard_name $safeguard_name \
+    --model_name $model_name \
+    --api_key EMPTY \
+    --api_base http://localhost:${port}/v1 \
+    --dataset_name SEASafeguardDataset \
+    --dataset_split test \
+    --language en \
+    --cultural $lang \
+    --subset cultural_specific \
+    --mixed_tasks_sample \
+    --max_tokens 8000 \
+    --disable_logitlens \
+    --sensitive_as_harmful \
+    --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
 
-#     echo "Cultural: $lang - Language: $lang"
+    # echo "Cultural: $lang - Language: $lang"
+    # python scripts/inference_safeguard.py \
+    # --safeguard_name $safeguard_name \
+    # --model_name $model_name \
+    # --api_key EMPTY \
+    # --api_base http://localhost:${port}/v1 \
+    # --dataset_name SEASafeguardDataset \
+    # --dataset_split test \
+    # --language $lang \
+    # --cultural $lang \
+    # --subset cultural_specific \
+    # --mixed_tasks_sample \
+    # --max_tokens 8000 \
+    # --disable_logitlens \
+    # --sensitive_as_harmful \
+    # --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
+done
+
+
+# echo "Evaluating General Safety..."
+# for lang in en ta th tl ms in my vi
+# do
+#     echo "Language: $lang"
 #     python scripts/inference_safeguard.py \
 #     --safeguard_name $safeguard_name \
 #     --model_name $model_name \
@@ -47,32 +70,10 @@ port=$4
 #     --dataset_name SEASafeguardDataset \
 #     --dataset_split test \
 #     --language $lang \
-#     --cultural $lang \
-#     --subset cultural_specific \
+#     --subset general \
 #     --mixed_tasks_sample \
 #     --max_tokens 8000 \
 #     --disable_logitlens \
 #     --sensitive_as_harmful \
-#     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
+#     --output_path ./outputs/${output_name}/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
 # done
-
-
-echo "Evaluating General Safety..."
-for lang in en ta th tl ms in my vi
-do
-    echo "Language: $lang"
-    python scripts/inference_safeguard.py \
-    --safeguard_name $safeguard_name \
-    --model_name $model_name \
-    --api_key EMPTY \
-    --api_base http://localhost:${port}/v1 \
-    --dataset_name SEASafeguardDataset \
-    --dataset_split test \
-    --language $lang \
-    --subset general \
-    --mixed_tasks_sample \
-    --max_tokens 8000 \
-    --disable_logitlens \
-    --sensitive_as_harmful \
-    --output_path ./outputs/${output_name}/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
-done
