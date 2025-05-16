@@ -41,7 +41,7 @@ class SEASafeguardDataset(JailbreakDataset):
     
     @classmethod
     def cultural_available(cls) -> List[str]:
-        return ["ta", "th", "tl", "ms", "in", "my", "vi"]
+        return ["en", "ta", "th", "tl", "ms", "in", "my", "vi"]
     
     @classmethod
     def language_available(cls) -> List[str]:
@@ -105,7 +105,9 @@ class SEASafeguardDataset(JailbreakDataset):
 
 if __name__ == "__main__":
     dataset = SEASafeguardDataset(
-        language="th",
+        language="en",
+        cultural="en",
+        subset="cultural_specific",
     )
     samples = dataset.as_samples(split="test")
     print(len(samples))
@@ -123,10 +125,10 @@ if __name__ == "__main__":
     # print(samples[0].response_gold_label)
     # print("-" * 100)
 
-    samples = dataset.as_samples(split="train")
-    print(len(samples))
-    print(samples[0].prompt)
-    print(samples[0].prompt_gold_label)
-    print(samples[0].response)
-    print(samples[0].response_gold_label)
-    print("=" * 100)
+    # samples = dataset.as_samples(split="train")
+    # print(len(samples))
+    # print(samples[0].prompt)
+    # print(samples[0].prompt_gold_label)
+    # print(samples[0].response)
+    # print(samples[0].response_gold_label)
+    # print("=" * 100)
