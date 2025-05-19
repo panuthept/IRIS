@@ -201,6 +201,7 @@ if __name__ == "__main__":
             "s": "Sensitive",
             "unsafe": "Harmful",
         }
+        print(outputs.choices[0].logprobs)
         token_logprobs = [(token, logprob) for token, logprob in outputs.choices[0].logprobs.top_logprobs[0].items()][:128]
         # Filter out invalid tokens
         label_logprobs = [(valid_tokens[token], logprob) for token, logprob in token_logprobs if token in valid_tokens]
