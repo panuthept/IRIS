@@ -207,8 +207,8 @@ if __name__ == "__main__":
         # Convert logprobs to probabilities
         labels = [label for label, _ in label_logprobs]
         logprobs = [logprob for _, logprob in label_logprobs]
-        labels_probs = np.exp(logprobs) / np.sum(np.exp(logprobs))
-        return list(zip(labels, labels_probs))
+        probs = np.exp(logprobs) / np.sum(np.exp(logprobs))
+        return list(zip(labels, probs.tolist()))
     
     predictions = get_class_probs(outputs)
     print(predictions)
