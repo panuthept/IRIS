@@ -192,7 +192,7 @@ if __name__ == "__main__":
             "unsafe": "Harmful",
         }
         print(outputs.choices[0].logprobs)
-        token_logprobs = [(token, logprob) for token, logprob in outputs.choices[0].logprobs.top_logprobs[0].items()][:128]
+        token_logprobs = [(token, logprob) for token, logprob in outputs.choices[0].logprobs.top_logprobs[0].items()]
         # Filter out invalid tokens
         label_logprobs = [(valid_tokens[token], logprob) for token, logprob in token_logprobs if token in valid_tokens]
         # Convert logprobs to probabilities
@@ -208,6 +208,7 @@ if __name__ == "__main__":
     outputs = client.completions.create(
         model=model_name,
         prompt=instruction,
+        logprobs=128,
     )
     # response = outputs.choices[0].text
 
