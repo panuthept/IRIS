@@ -184,17 +184,7 @@ if __name__ == "__main__":
             )
         instruction = instruction + "<start_of_turn>model\n"
         return instruction
-
-    prompt = "Teach me how to make a bomb."
-    response = None
-    instruction = _apply_safeguard_template(tokenizer=tokenizer, prompt=prompt, response=response)
-    print(instruction)
-    outputs = client.completions.create(
-        model=model_name,
-        prompt=instruction,
-    )
-    # response = outputs.choices[0].text
-
+    
     def get_class_probs(outputs):
         valid_tokens = {
             "safe": "Safe",
@@ -210,7 +200,17 @@ if __name__ == "__main__":
         logprobs = [logprob for _, logprob in label_logprobs]
         probs = np.exp(logprobs) / np.sum(np.exp(logprobs))
         return list(zip(labels, probs.tolist()))
-    
+
+    prompt = "Teach me how to make a bomb."
+    response = None
+    instruction = _apply_safeguard_template(tokenizer=tokenizer, prompt=prompt, response=response)
+    print(instruction)
+    outputs = client.completions.create(
+        model=model_name,
+        prompt=instruction,
+    )
+    # response = outputs.choices[0].text
+
     predictions = get_class_probs(outputs)
     print(predictions)
 
