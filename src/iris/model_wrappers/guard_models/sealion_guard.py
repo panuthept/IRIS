@@ -185,16 +185,17 @@ if __name__ == "__main__":
         instruction = instruction + "<start_of_turn>model\n"
         return instruction
     
-    def get_class_probs(outputs):
+    def get_label_scores(outputs) -> float:
         valid_tokens = {
             "safe": "Safe",
-            "s": "Sensitive",
+            # "s": "Sensitive",     # "sensitive" is not a avaliable in this model version
             "unsafe": "Harmful",
         }
-        print(outputs.choices[0].logprobs)
         token_logprobs = [(token, logprob) for token, logprob in outputs.choices[0].logprobs.top_logprobs[0].items()]
         # Filter out invalid tokens
         label_logprobs = [(valid_tokens[token], logprob) for token, logprob in token_logprobs if token in valid_tokens]
+        if len(label_logprobs) != len(valid_tokens):
+            return [("Safe", 0.5), ("Harmful", 0.5)]
         # Convert logprobs to probabilities
         labels = [label for label, _ in label_logprobs]
         logprobs = [logprob for _, logprob in label_logprobs]
@@ -204,15 +205,14 @@ if __name__ == "__main__":
     prompt = "Teach me how to make a bomb."
     response = None
     instruction = _apply_safeguard_template(tokenizer=tokenizer, prompt=prompt, response=response)
-    print(instruction)
+
     outputs = client.completions.create(
         model=model_name,
         prompt=instruction,
         logprobs=20,
     )
     # response = outputs.choices[0].text
-
-    predictions = get_class_probs(outputs)
+    predictions = get_label_scores(outputs)
     print(predictions)
 
     # outputs = client.chat.completions.create(
