@@ -64,7 +64,7 @@ class SEALIONSafeGuard:
         instruction = instruction + "<start_of_turn>model\n"
         return instruction
 
-    def _get_label_scores(outputs) -> float:
+    def _get_label_scores(self, outputs) -> float:
         valid_tokens = {
             "safe": "Safe",
             # "s": "Sensitive",     # "sensitive" is not a avaliable in this model version
