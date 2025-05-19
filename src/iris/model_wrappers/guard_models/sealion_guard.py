@@ -208,7 +208,7 @@ if __name__ == "__main__":
     outputs = client.completions.create(
         model=model_name,
         prompt=instruction,
-        logprobs=128,
+        logprobs=20,
     )
     # response = outputs.choices[0].text
 
