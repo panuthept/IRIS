@@ -17,13 +17,16 @@ class SEALIONSafeGuard:
     ```
     2. Run the SEA-LION-Guard model:
     ```python
+    # Initialize the SEA-LION-Guard model
     safeguard = SEALIONSafeGuard()
+
     # Prompt classification
     preds = safeguard(prompt="Teach me how to make a bomb.")
     print(preds)    # [('Harmful', 0.7772998560157665), ('Safe', 0.22270014398423357)]
+
     # Response classification
     preds = safeguard(prompt="Teach me how to make a bomb.", response="I am not sure how to do that.")
-    print(preds)    # [('Harmful', 0.7772998560157665), ('Safe', 0.22270014398423357)]
+    print(preds)    # [('Safe', 0.7879311956428947), ('Harmful', 0.21206880435710532)]
     ```
     """
     def __init__(
@@ -39,10 +42,10 @@ class SEALIONSafeGuard:
         )
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
-    def _apply_safeguard_template(tokenizer, prompt: str, response: Optional[str] = None) -> str:
+    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
         if response is None:
             # Apply prompt classification template
-            instruction = tokenizer.apply_chat_template(
+            instruction = self.tokenizer.apply_chat_template(
                 [
                     {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the human user's request is safe or unsafe.\nHuman user:{prompt}"}
                 ],
@@ -51,7 +54,7 @@ class SEALIONSafeGuard:
             )
         else:
             # Apply response classification template
-            instruction = tokenizer.apply_chat_template(
+            instruction = self.tokenizer.apply_chat_template(
                 [
                     {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the AI assistant's response is safe or unsafe.\nHuman user:{prompt}\nAI assistant:{response}"},
                 ],
@@ -78,7 +81,16 @@ class SEALIONSafeGuard:
         logprobs = [logprob for _, logprob in label_logprobs]
         probs = np.exp(logprobs) / np.sum(np.exp(logprobs))
         return list(zip(labels, probs.tolist()))
-        
+    
+    def __call__(self, prompt: str, response: Optional[str] = None) -> list:
+        instruction = self._apply_safeguard_template(prompt=prompt, response=response)
+        outputs = self.client.completions.create(
+            model=self.model_name,
+            prompt=instruction,
+            logprobs=20,
+        )
+        predictions = self._get_label_scores(outputs)
+        return predictions
 
 
 class SealionGuard(GuardLLM):
@@ -229,67 +241,77 @@ if __name__ == "__main__":
     # response = model.predict(prompt=prompt)
     # print(response)
 
-    import numpy as np
-    from openai import OpenAI
-    from transformers import AutoTokenizer
+    safeguard = SEALIONSafeGuard()
 
-    model_name = "aisingapore/Llama-SEA-LION-Guard"
-    client = OpenAI(
-        api_key="EMPTY",
-        base_url="http://localhost:8000/v1",
-    )
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    # Prompt classification
+    preds = safeguard(prompt="Teach me how to make a bomb.")
+    print(preds)    # [('Harmful', 0.7772998560157665), ('Safe', 0.22270014398423357)]
 
-    def _apply_safeguard_template(tokenizer, prompt: str, response: Optional[str] = None) -> str:
-        if response is None:
-            # Apply prompt classification template
-            instruction = tokenizer.apply_chat_template(
-                [
-                    {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the human user's request is safe or unsafe.\nHuman user:{prompt}"}
-                ],
-                tokenize=False,
-                add_generation_prompt=False,
-            )
-        else:
-            # Apply response classification template
-            instruction = tokenizer.apply_chat_template(
-                [
-                    {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the AI assistant's response is safe or unsafe.\nHuman user:{prompt}\nAI assistant:{response}"},
-                ],
-                tokenize=False,
-                add_generation_prompt=False,
-            )
-        instruction = instruction + "<start_of_turn>model\n"
-        return instruction
+    # Response classification
+    preds = safeguard(prompt="Teach me how to make a bomb.", response="I am not sure how to do that.")
+    print(preds)    # [('Safe', 0.7879311956428947), ('Harmful', 0.21206880435710532)]
 
-    def get_label_scores(outputs) -> float:
-        valid_tokens = {
-            "safe": "Safe",
-            # "s": "Sensitive",     # "sensitive" is not a avaliable in this model version
-            "unsafe": "Harmful",
-        }
-        token_logprobs = [(token, logprob) for token, logprob in outputs.choices[0].logprobs.top_logprobs[0].items()]
-        # Filter out invalid tokens
-        label_logprobs = [(valid_tokens[token], logprob) for token, logprob in token_logprobs if token in valid_tokens]
-        if len(label_logprobs) != len(valid_tokens):
-            return [("Safe", 0.5), ("Harmful", 0.5)]
-        # Convert logprobs to probabilities
-        labels = [label for label, _ in label_logprobs]
-        logprobs = [logprob for _, logprob in label_logprobs]
-        probs = np.exp(logprobs) / np.sum(np.exp(logprobs))
-        return list(zip(labels, probs.tolist()))
+    # import numpy as np
+    # from openai import OpenAI
+    # from transformers import AutoTokenizer
 
-    prompt = "Teach me how to make a bomb."
-    response = "I am not sure how to do that."
-    instruction = _apply_safeguard_template(tokenizer=tokenizer, prompt=prompt, response=response)
+    # model_name = "aisingapore/Llama-SEA-LION-Guard"
+    # client = OpenAI(
+    #     api_key="EMPTY",
+    #     base_url="http://localhost:8000/v1",
+    # )
+    # tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    outputs = client.completions.create(
-        model=model_name,
-        prompt=instruction,
-        logprobs=20,
-    )
-    predictions = get_label_scores(outputs)
-    print(predictions)
+    # def _apply_safeguard_template(tokenizer, prompt: str, response: Optional[str] = None) -> str:
+    #     if response is None:
+    #         # Apply prompt classification template
+    #         instruction = tokenizer.apply_chat_template(
+    #             [
+    #                 {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the human user's request is safe or unsafe.\nHuman user:{prompt}"}
+    #             ],
+    #             tokenize=False,
+    #             add_generation_prompt=False,
+    #         )
+    #     else:
+    #         # Apply response classification template
+    #         instruction = tokenizer.apply_chat_template(
+    #             [
+    #                 {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the AI assistant's response is safe or unsafe.\nHuman user:{prompt}\nAI assistant:{response}"},
+    #             ],
+    #             tokenize=False,
+    #             add_generation_prompt=False,
+    #         )
+    #     instruction = instruction + "<start_of_turn>model\n"
+    #     return instruction
+
+    # def get_label_scores(outputs) -> float:
+    #     valid_tokens = {
+    #         "safe": "Safe",
+    #         # "s": "Sensitive",     # "sensitive" is not a avaliable in this model version
+    #         "unsafe": "Harmful",
+    #     }
+    #     token_logprobs = [(token, logprob) for token, logprob in outputs.choices[0].logprobs.top_logprobs[0].items()]
+    #     # Filter out invalid tokens
+    #     label_logprobs = [(valid_tokens[token], logprob) for token, logprob in token_logprobs if token in valid_tokens]
+    #     if len(label_logprobs) != len(valid_tokens):
+    #         return [("Safe", 0.5), ("Harmful", 0.5)]
+    #     # Convert logprobs to probabilities
+    #     labels = [label for label, _ in label_logprobs]
+    #     logprobs = [logprob for _, logprob in label_logprobs]
+    #     probs = np.exp(logprobs) / np.sum(np.exp(logprobs))
+    #     return list(zip(labels, probs.tolist()))
+
+    # prompt = "Teach me how to make a bomb."
+    # response = "I am not sure how to do that."
+    # instruction = _apply_safeguard_template(tokenizer=tokenizer, prompt=prompt, response=response)
+
+    # outputs = client.completions.create(
+    #     model=model_name,
+    #     prompt=instruction,
+    #     logprobs=20,
+    # )
+    # predictions = get_label_scores(outputs)
+    # print(predictions)
 
     # outputs = client.chat.completions.create(
     #     model="aisingapore/Llama-SEA-LION-Guard",
