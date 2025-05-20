@@ -8,7 +8,7 @@ import numpy as np
 from openai import OpenAI
 from transformers import AutoTokenizer
 
-class SEALIONSafeGuard:
+class SealionGuardAPI:
     """
     Running the SEA-LION-Guard model using vLLM.
     1. Start the vLLM server:
@@ -33,7 +33,7 @@ class SEALIONSafeGuard:
         self, 
         model_name: str = "aisingapore/Llama-SEA-LION-Guard",
         api_key: str = "EMPTY",
-        api_base: str = "http://localhost:8000/v1",
+        api_base: str = "https://dev.api.sea-lion-inference.com/v1",
     ):
         self.model_name = model_name
         self.client = OpenAI(
@@ -43,27 +43,10 @@ class SEALIONSafeGuard:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
     def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> str:
-        if response is None:
-            # Apply prompt classification template
-            instruction = self.tokenizer.apply_chat_template(
-                [
-                    {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the human user's request is safe or unsafe.\nHuman user:{prompt}"}
-                ],
-                tokenize=False,
-                add_generation_prompt=False,
-            )
-        else:
-            # Apply response classification template
-            instruction = self.tokenizer.apply_chat_template(
-                [
-                    {"role": "user", "content": f"You are a classifier for analyzing interactions between humans and LLMs. Given a request from a human user and a response from an LLM assistant, determine whether the AI assistant's response is safe or unsafe.\nHuman user:{prompt}\nAI assistant:{response}"},
-                ],
-                tokenize=False,
-                add_generation_prompt=False,
-            )
-        instruction = instruction + "<|start_header_id|>model<|end_header_id|>\n\n"     # For Llama-SEA-LION-Guard
-        # instruction = instruction + "<start_of_turn>model\n"  # For Gemma-SEA-LION-Guard
-        return instruction
+        messages = [{"role": "user", "content": prompt}]
+        if response is not None:
+            messages.append({"role": "assistant", "content": response})
+        return messages
 
     def _get_label_scores(self, outputs) -> float:
         valid_tokens = {
@@ -71,7 +54,9 @@ class SEALIONSafeGuard:
             # "s": "Sensitive",     # "sensitive" is not a avaliable in this model version
             "unsafe": "Harmful",
         }
-        token_logprobs = [(token, logprob) for token, logprob in outputs.choices[0].logprobs.top_logprobs[0].items()]
+        token_logprobs = [(top_logprob.token, top_logprob.logprob) for top_logprob in outputs.choices[0].logprobs.content[0].top_logprobs]
+        print(f"token_logprobs: {token_logprobs}")
+        # token_logprobs = [(token, logprob) for token, logprob in outputs.choices[0].logprobs.top_logprobs[0].items()]
         # Filter out invalid tokens
         label_logprobs = [(valid_tokens[token], logprob) for token, logprob in token_logprobs if token in valid_tokens]
         if len(label_logprobs) != len(valid_tokens):
@@ -84,12 +69,19 @@ class SEALIONSafeGuard:
         return list(zip(labels, probs.tolist()))
     
     def __call__(self, prompt: str, response: Optional[str] = None) -> list:
-        instruction = self._apply_safeguard_template(prompt=prompt, response=response)
-        outputs = self.client.completions.create(
+        messages = self._apply_safeguard_template(prompt=prompt, response=response)
+        outputs = self.client.chat.completions.create(
             model=self.model_name,
-            prompt=instruction,
-            logprobs=20,
+            messages=messages,
+            max_tokens=1,
+            logprobs=True,
+            top_logprobs=20,
+            stream=False,
+            n=1,
         )
+        print(outputs)
+        # answer = outputs.choices[0].message.content
+        # logprobs = [[(top_logprob.token, top_logprob.logprob, None) for top_logprob in content.top_logprobs] for content in outputs.choices[0].logprobs.content]
         predictions = self._get_label_scores(outputs)
         return predictions
 
@@ -242,7 +234,11 @@ if __name__ == "__main__":
     # response = model.predict(prompt=prompt)
     # print(response)
 
-    safeguard = SEALIONSafeGuard()
+    import os
+    # Get the API key from the environment variable
+    api_key = os.getenv("SEA_LION_API_KEY")
+    print(api_key)
+    safeguard = SealionGuardAPI(api_key=api_key)
 
     # Prompt classification
     preds = safeguard(prompt="Teach me how to make a bomb.")
