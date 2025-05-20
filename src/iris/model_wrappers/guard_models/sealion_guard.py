@@ -8,7 +8,7 @@ import numpy as np
 from openai import OpenAI
 from transformers import AutoTokenizer
 
-class SealionGuardAPI:
+class SealionGuardAPI(GuardLLM):
     """
     Running the SEA-LION-Guard model using vLLM.
     1. Start the vLLM server:
@@ -48,28 +48,27 @@ class SealionGuardAPI:
             messages.append({"role": "assistant", "content": response})
         return messages
 
-    def _get_label_scores(self, outputs) -> float:
-        valid_tokens = {
-            "safe": "Safe",
-            # "s": "Sensitive",     # "sensitive" is not a avaliable in this model version
-            "unsafe": "Harmful",
-        }
-        token_logprobs = [(top_logprob.token, top_logprob.logprob) for top_logprob in outputs.choices[0].logprobs.content[0].top_logprobs]
-        print(f"token_logprobs: {token_logprobs}")
-        # token_logprobs = [(token, logprob) for token, logprob in outputs.choices[0].logprobs.top_logprobs[0].items()]
-        # Filter out invalid tokens
-        label_logprobs = [(valid_tokens[token], logprob) for token, logprob in token_logprobs if token in valid_tokens]
-        if len(label_logprobs) != len(valid_tokens):
-            # Return equal probabilities if not all labels are present
-            return [(label, 1.0 / len(valid_tokens)) for label in valid_tokens.values()]
-        # Convert logprobs to probabilities
-        labels = [label for label, _ in label_logprobs]
-        logprobs = [logprob for _, logprob in label_logprobs]
-        probs = np.exp(logprobs) / np.sum(np.exp(logprobs))
-        return list(zip(labels, probs.tolist()))
+    # def _get_label_scores(self, outputs) -> float:
+    #     valid_tokens = {
+    #         "safe": "Safe",
+    #         # "s": "Sensitive",     # "sensitive" is not a avaliable in this model version
+    #         "unsafe": "Harmful",
+    #     }
+    #     token_logprobs = [(top_logprob.token, top_logprob.logprob) for top_logprob in outputs.choices[0].logprobs.content[0].top_logprobs]
+    #     print(f"token_logprobs: {token_logprobs}")
+    #     # token_logprobs = [(token, logprob) for token, logprob in outputs.choices[0].logprobs.top_logprobs[0].items()]
+    #     # Filter out invalid tokens
+    #     label_logprobs = [(valid_tokens[token], logprob) for token, logprob in token_logprobs if token in valid_tokens]
+    #     if len(label_logprobs) != len(valid_tokens):
+    #         # Return equal probabilities if not all labels are present
+    #         return [(label, 1.0 / len(valid_tokens)) for label in valid_tokens.values()]
+    #     # Convert logprobs to probabilities
+    #     labels = [label for label, _ in label_logprobs]
+    #     logprobs = [logprob for _, logprob in label_logprobs]
+    #     probs = np.exp(logprobs) / np.sum(np.exp(logprobs))
+    #     return list(zip(labels, probs.tolist()))
     
-    def __call__(self, prompt: str, response: Optional[str] = None) -> list:
-        messages = self._apply_safeguard_template(prompt=prompt, response=response)
+    def _complete(self, messages: str, **kwargs) -> str:
         outputs = self.client.chat.completions.create(
             model=self.model_name,
             messages=messages,
@@ -79,11 +78,25 @@ class SealionGuardAPI:
             stream=False,
             n=1,
         )
-        print(outputs)
-        # answer = outputs.choices[0].message.content
-        # logprobs = [[(top_logprob.token, top_logprob.logprob, None) for top_logprob in content.top_logprobs] for content in outputs.choices[0].logprobs.content]
-        predictions = self._get_label_scores(outputs)
-        return predictions
+        response = outputs.choices[0].message.content
+        logprobs = [[(top_logprob.token, top_logprob.logprob, None) for top_logprob in content.top_logprobs] for content in outputs.choices[0].logprobs.content]
+        return logprobs, response
+    
+    # def __call__(self, prompt: str, response: Optional[str] = None) -> list:
+    #     messages = self._apply_safeguard_template(prompt=prompt, response=response)
+    #     outputs = self.client.chat.completions.create(
+    #         model=self.model_name,
+    #         messages=messages,
+    #         max_tokens=1,
+    #         logprobs=True,
+    #         top_logprobs=20,
+    #         stream=False,
+    #         n=1,
+    #     )
+    #     # answer = outputs.choices[0].message.content
+    #     # logprobs = [[(top_logprob.token, top_logprob.logprob, None) for top_logprob in content.top_logprobs] for content in outputs.choices[0].logprobs.content]
+    #     predictions = self._get_label_scores(outputs)
+    #     return predictions
 
 
 class SealionGuard(GuardLLM):
@@ -241,11 +254,11 @@ if __name__ == "__main__":
     safeguard = SealionGuardAPI(api_key=api_key)
 
     # Prompt classification
-    preds = safeguard(prompt="Teach me how to make a bomb.")
+    preds = safeguard.predict(prompt="Teach me how to make a bomb.")
     print(preds)    # [('Harmful', 0.7772998560157665), ('Safe', 0.22270014398423357)]
 
     # Response classification
-    preds = safeguard(prompt="Teach me how to make a bomb.", response="I am not sure how to do that.")
+    preds = safeguard.predict(prompt="Teach me how to make a bomb.", response="I am not sure how to do that.")
     print(preds)    # [('Safe', 0.7879311956428947), ('Harmful', 0.21206880435710532)]
 
     # import numpy as np
