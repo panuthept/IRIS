@@ -52,26 +52,6 @@ class SealionGuardAPI(GuardLLM):
         if response is not None:
             messages.append({"role": "assistant", "content": response})
         return messages
-
-    # def _get_label_scores(self, outputs) -> float:
-    #     valid_tokens = {
-    #         "safe": "Safe",
-    #         # "s": "Sensitive",     # "sensitive" is not a avaliable in this model version
-    #         "unsafe": "Harmful",
-    #     }
-    #     token_logprobs = [(top_logprob.token, top_logprob.logprob) for top_logprob in outputs.choices[0].logprobs.content[0].top_logprobs]
-    #     print(f"token_logprobs: {token_logprobs}")
-    #     # token_logprobs = [(token, logprob) for token, logprob in outputs.choices[0].logprobs.top_logprobs[0].items()]
-    #     # Filter out invalid tokens
-    #     label_logprobs = [(valid_tokens[token], logprob) for token, logprob in token_logprobs if token in valid_tokens]
-    #     if len(label_logprobs) != len(valid_tokens):
-    #         # Return equal probabilities if not all labels are present
-    #         return [(label, 1.0 / len(valid_tokens)) for label in valid_tokens.values()]
-    #     # Convert logprobs to probabilities
-    #     labels = [label for label, _ in label_logprobs]
-    #     logprobs = [logprob for _, logprob in label_logprobs]
-    #     probs = np.exp(logprobs) / np.sum(np.exp(logprobs))
-    #     return list(zip(labels, probs.tolist()))
     
     def _complete(self, messages: str, **kwargs) -> str:
         outputs = self.client.chat.completions.create(
@@ -86,22 +66,6 @@ class SealionGuardAPI(GuardLLM):
         response = outputs.choices[0].message.content
         logprobs = [[(top_logprob.token, top_logprob.logprob, None) for top_logprob in content.top_logprobs] for content in outputs.choices[0].logprobs.content]
         return logprobs, response
-    
-    # def __call__(self, prompt: str, response: Optional[str] = None) -> list:
-    #     messages = self._apply_safeguard_template(prompt=prompt, response=response)
-    #     outputs = self.client.chat.completions.create(
-    #         model=self.model_name,
-    #         messages=messages,
-    #         max_tokens=1,
-    #         logprobs=True,
-    #         top_logprobs=20,
-    #         stream=False,
-    #         n=1,
-    #     )
-    #     # answer = outputs.choices[0].message.content
-    #     # logprobs = [[(top_logprob.token, top_logprob.logprob, None) for top_logprob in content.top_logprobs] for content in outputs.choices[0].logprobs.content]
-    #     predictions = self._get_label_scores(outputs)
-    #     return predictions
 
 
 class SealionGuard(GuardLLM):
