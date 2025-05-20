@@ -9,6 +9,11 @@ from openai import OpenAI
 from transformers import AutoTokenizer
 
 class SealionGuardAPI(GuardLLM):
+    valid_tokens = {
+        "safe": "Safe",
+        # "s": "Sensitive",
+        "unsafe": "Harmful",
+    }
     """
     Running the SEA-LION-Guard model using vLLM.
     1. Start the vLLM server:
