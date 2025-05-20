@@ -61,7 +61,8 @@ class SEALIONSafeGuard:
                 tokenize=False,
                 add_generation_prompt=False,
             )
-        instruction = instruction + "<start_of_turn>model\n"
+        instruction = instruction + "<|start_header_id|>model<|end_header_id|>\n\n"     # For Llama-SEA-LION-Guard
+        # instruction = instruction + "<start_of_turn>model\n"  # For Gemma-SEA-LION-Guard
         return instruction
 
     def _get_label_scores(self, outputs) -> float:
