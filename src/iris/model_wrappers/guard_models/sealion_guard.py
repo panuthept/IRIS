@@ -20,8 +20,9 @@ class SealionGuardAPI(GuardLLM):
         model_name_or_path: str = "aisingapore/Llama-SEA-LION-Guard",
         api_key: str = "EMPTY",
         api_base: str = "https://dev.api.sea-lion-inference.com/v1",
+        **kwargs,
     ):
-        self.model_name = model_name
+        self.model_name = model_name_or_path
         self.client = OpenAI(
             api_key=api_key,
             base_url=api_base,
