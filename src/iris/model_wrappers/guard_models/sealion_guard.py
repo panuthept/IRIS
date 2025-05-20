@@ -17,7 +17,7 @@ class SealionGuardAPI(GuardLLM):
 
     def __init__(
         self, 
-        model_name: str = "aisingapore/Llama-SEA-LION-Guard",
+        model_name_or_path: str = "aisingapore/Llama-SEA-LION-Guard",
         api_key: str = "EMPTY",
         api_base: str = "https://dev.api.sea-lion-inference.com/v1",
     ):
