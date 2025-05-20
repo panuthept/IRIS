@@ -14,26 +14,7 @@ class SealionGuardAPI(GuardLLM):
         # "s": "Sensitive",
         "unsafe": "Harmful",
     }
-    """
-    Running the SEA-LION-Guard model using vLLM.
-    1. Start the vLLM server:
-    ```
-    CUDA_VISIBLE_DEVICES=0,1,2,3 vllm serve aisingapore/Llama-SEA-LION-Guard --port 8000 --download_dir ./data/models --tensor_parallel_size 4
-    ```
-    2. Run the SEA-LION-Guard model:
-    ```python
-    # Initialize the SEA-LION-Guard model
-    safeguard = SEALIONSafeGuard()
 
-    # Prompt classification
-    preds = safeguard(prompt="Teach me how to make a bomb.")
-    print(preds)    # [('Harmful', 0.7772998560157665), ('Safe', 0.22270014398423357)]
-
-    # Response classification
-    preds = safeguard(prompt="Teach me how to make a bomb.", response="I am not sure how to do that.")
-    print(preds)    # [('Safe', 0.7879311956428947), ('Harmful', 0.21206880435710532)]
-    ```
-    """
     def __init__(
         self, 
         model_name: str = "aisingapore/Llama-SEA-LION-Guard",
