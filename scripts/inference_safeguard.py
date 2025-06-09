@@ -120,36 +120,36 @@ if __name__ == "__main__":
     # Create save directory
     os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
 
-    prompt_unknown = 0
-    prompt_harmful_scores = []
-    prompt_gold_labels = []
-    response_unknown = 0
-    response_harmful_scores = []
-    response_gold_labels = []
+    # prompt_unknown = 0
+    # prompt_harmful_scores = []
+    # prompt_gold_labels = []
+    # response_unknown = 0
+    # response_harmful_scores = []
+    # response_gold_labels = []
     with open(args.output_path, "w") as f:
         for sample in tqdm(samples):
             safeguard_response: SafeGuardResponse = safeguard.predict(input=sample)
-            if sample.response is not None:
-                # Get response classification results
-                response_harmful_score = [score for label, score, logit in safeguard_response.response_labels if label == "Harmful" or (args.sensitive_as_harmful and label == "Sensitive")]
-                if len(response_harmful_score) == 0:
-                    response_unknown += 1
-                    response_harmful_score = 0.0
-                else:
-                    response_harmful_score = response_harmful_score[0]
-                response_harmful_scores.append(response_harmful_score)
-                response_gold_labels.append(int(sample.response_gold_label == "Harmful" or (args.sensitive_as_harmful and sample.response_gold_label == "Sensitive")))
-                if not args.mixed_tasks_sample:
-                    continue
-            # Get prompt classification results
-            prompt_harmful_score = [score for label, score, logit in safeguard_response.prompt_labels if label == "Harmful" or (args.sensitive_as_harmful and label == "Sensitive")]
-            if len(prompt_harmful_score) == 0:
-                prompt_unknown += 1
-                prompt_harmful_score = 0.0
-            else:
-                prompt_harmful_score = prompt_harmful_score[0]
-            prompt_harmful_scores.append(prompt_harmful_score)
-            prompt_gold_labels.append(int(sample.prompt_gold_label == "Harmful" or (args.sensitive_as_harmful and sample.response_gold_label == "Sensitive")))
+            # if sample.response is not None:
+            #     # Get response classification results
+            #     response_harmful_score = [score for label, score, logit in safeguard_response.response_labels if label == "Harmful" or (args.sensitive_as_harmful and label == "Sensitive")]
+            #     if len(response_harmful_score) == 0:
+            #         response_unknown += 1
+            #         response_harmful_score = 0.0
+            #     else:
+            #         response_harmful_score = response_harmful_score[0]
+            #     response_harmful_scores.append(response_harmful_score)
+            #     response_gold_labels.append(int(sample.response_gold_label == "Harmful" or (args.sensitive_as_harmful and sample.response_gold_label == "Sensitive")))
+            #     if not args.mixed_tasks_sample:
+            #         continue
+            # # Get prompt classification results
+            # prompt_harmful_score = [score for label, score, logit in safeguard_response.prompt_labels if label == "Harmful" or (args.sensitive_as_harmful and label == "Sensitive")]
+            # if len(prompt_harmful_score) == 0:
+            #     prompt_unknown += 1
+            #     prompt_harmful_score = 0.0
+            # else:
+            #     prompt_harmful_score = prompt_harmful_score[0]
+            # prompt_harmful_scores.append(prompt_harmful_score)
+            # prompt_gold_labels.append(int(sample.prompt_gold_label == "Harmful" or (args.sensitive_as_harmful and sample.response_gold_label == "Sensitive")))
             # Save results
             f.write(json.dumps({
                 "prompt": sample.prompt,
@@ -161,23 +161,23 @@ if __name__ == "__main__":
                 "metadata": safeguard_response.metadata,
             }, ensure_ascii=False) + "\n")
 
-    # Report Prompt Classification Performance
-    assert len(prompt_gold_labels) > 0 and len(prompt_harmful_scores) > 0, "No prompt samples, make sure that the mixed_tasks_sample is set correctly."
-    metrics = SafeGuardMetric()
-    metrics.update(prompt_gold_labels, prompt_harmful_scores)
-    print("Prompt Classification Performance:")
-    print(f"Recall: {round(metrics.recall * 100, 1)}")
-    print(f"Precision: {round(metrics.precision * 100, 1)}")
-    print(f"F1: {round(metrics.f1 * 100, 1)}")
-    print(f"AUPRC: {round(metrics.pr_auc * 100, 1)}")
-    print(f"Unknown label prediction: {prompt_unknown}")
+    # # Report Prompt Classification Performance
+    # assert len(prompt_gold_labels) > 0 and len(prompt_harmful_scores) > 0, "No prompt samples, make sure that the mixed_tasks_sample is set correctly."
+    # metrics = SafeGuardMetric()
+    # metrics.update(prompt_gold_labels, prompt_harmful_scores)
+    # print("Prompt Classification Performance:")
+    # print(f"Recall: {round(metrics.recall * 100, 1)}")
+    # print(f"Precision: {round(metrics.precision * 100, 1)}")
+    # print(f"F1: {round(metrics.f1 * 100, 1)}")
+    # print(f"AUPRC: {round(metrics.pr_auc * 100, 1)}")
+    # print(f"Unknown label prediction: {prompt_unknown}")
 
-    # Report Response Classification Performance
-    metrics = SafeGuardMetric()
-    metrics.update(response_gold_labels, response_harmful_scores)
-    print("Response Classification Performance:")
-    print(f"Recall: {round(metrics.recall * 100, 1)}")
-    print(f"Precision: {round(metrics.precision * 100, 1)}")
-    print(f"F1: {round(metrics.f1 * 100, 1)}")
-    print(f"AUPRC: {round(metrics.pr_auc * 100, 1)}")
-    print(f"Unknown label prediction: {response_unknown}")
+    # # Report Response Classification Performance
+    # metrics = SafeGuardMetric()
+    # metrics.update(response_gold_labels, response_harmful_scores)
+    # print("Response Classification Performance:")
+    # print(f"Recall: {round(metrics.recall * 100, 1)}")
+    # print(f"Precision: {round(metrics.precision * 100, 1)}")
+    # print(f"F1: {round(metrics.f1 * 100, 1)}")
+    # print(f"AUPRC: {round(metrics.pr_auc * 100, 1)}")
+    # print(f"Unknown label prediction: {response_unknown}")
