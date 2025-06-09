@@ -12,3 +12,6 @@ llama-index
 llama-index-llms-openai
 llama-index-llms-together
 llama-index-llms-openai-like
+flashinfer-python==0.2.2
+transformer-lens==1.3.0
+vllm
