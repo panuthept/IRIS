@@ -20,7 +20,7 @@ api_base=$5
 
 
 echo "Evaluating Cultural Safety (Handwritten)..."
-for lang in en ta th tl ms in my vi
+for lang in ta th tl ms in my vi
 do
     echo "Cultural: $lang - Language: en"
     python scripts/inference_safeguard.py \
