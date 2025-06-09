@@ -37,7 +37,7 @@ class SEASafeguardDataset(JailbreakDataset):
     
     @classmethod
     def subset_available(cls) -> List[str]:
-        return ["general", "cultural_specific"]
+        return ["general", "cultural_specific", "cultural_specific_handwritten"]
     
     @classmethod
     def cultural_available(cls) -> List[str]:
@@ -85,7 +85,7 @@ class SEASafeguardDataset(JailbreakDataset):
             #         "prompt_gold_label": sample["prompt_label"] if isinstance(sample["prompt_label"], str) else None,
             #         "response_gold_label": sample["response_label"] if isinstance(sample["response_label"], str) else None,
             #     })
-        else:
+        elif self.subset == "cultural_specific":
             # Load test dataset
             test_dataset = load_dataset("aisingapore/SEASafeguardMix", f"{self.cultural}_cultural_specific", cache_dir=self.cache_dir)
             # Read test dataset
@@ -100,22 +100,52 @@ class SEASafeguardDataset(JailbreakDataset):
                     "prompt_gold_label": prompt_gold_label if isinstance(prompt, str) else None,
                     "response_gold_label": response_gold_label if isinstance(response, str) else None,
                 })
+        elif self.subset == "cultural_specific_handwritten":
+            # Load test dataset
+            test_dataset = load_dataset("aisingapore/SEASafeguardMix", f"{self.cultural}_cultural_specific_handwritten", cache_dir=self.cache_dir)
+            # Read test dataset
+            for sample in test_dataset[self.language]:
+                # Get safe prompt
+                data["test"].append({
+                    "prompt": sample["safe_prompt"],
+                    "prompt_gold_label": "Safe",
+                })
+                # Get harmful prompt
+                data["test"].append({
+                    "prompt": sample["unsafe_prompt"],
+                    "prompt_gold_label": "Harmful",
+                })
+        else:
+            raise ValueError(f"Invalid subset: {self.subset}")
         return data
 
 
 if __name__ == "__main__":
     dataset = SEASafeguardDataset(
         language="en",
-        cultural="en",
-        subset="cultural_specific",
+        cultural="th",
+        subset="cultural_specific_handwritten",
     )
     samples = dataset.as_samples(split="test")
     print(len(samples))
     print(samples[0].prompt)
     print(samples[0].prompt_gold_label)
-    print(samples[0].response)
-    print(samples[0].response_gold_label)
+    print(samples[1].prompt)
+    print(samples[1].prompt_gold_label)
     print("-" * 100)
+
+    # dataset = SEASafeguardDataset(
+    #     language="en",
+    #     cultural="en",
+    #     subset="cultural_specific",
+    # )
+    # samples = dataset.as_samples(split="test")
+    # print(len(samples))
+    # print(samples[0].prompt)
+    # print(samples[0].prompt_gold_label)
+    # print(samples[0].response)
+    # print(samples[0].response_gold_label)
+    # print("-" * 100)
 
     # samples = dataset.as_samples(split="dev")
     # print(len(samples))
