@@ -13,7 +13,7 @@ from accelerate import PartialState
 from iris.logitlens import LogitLens
 from typing import List, Callable, Union, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
-from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
+# from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from iris.data_types import IRISConfig, IRISL2Config, IRISDiffTripletConfig, IRISCLConfig
 
