@@ -51,6 +51,7 @@ class SafeGuardMetric:
         # best_threshold = round(self.pr_thresholds[max_index], 4)
 
         self.best_threshold = 0.01
+        # self.best_threshold = 0.5
         _, _, self.best_f1, _ = precision_recall_fscore_support(gold_labels, pred_scores > self.best_threshold, average='binary')
         self.best_fpr = np.sum((pred_scores > self.best_threshold) & (gold_labels == 0)) / np.sum(gold_labels == 0)
         for threshold in np.arange(0.02, 1.00, 0.01):

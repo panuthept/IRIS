@@ -7,7 +7,7 @@ from tqdm import tqdm
 from typing import List
 # from transformers import AutoTokenizer
 from iris.datasets import load_dataset, AVAILABLE_DATASETS
-from iris.metrics.safeguard_metrics import SafeGuardMetric
+# from iris.metrics.safeguard_metrics import SafeGuardMetric
 from iris.data_types import SafeGuardInput, SafeGuardResponse
 from iris.model_wrappers.guard_models import load_safeguard, AVAILABLE_GUARDS
 
