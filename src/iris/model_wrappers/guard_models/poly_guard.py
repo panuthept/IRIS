@@ -63,7 +63,7 @@ class PolyGuard(GuardLLM):
                 model_name_or_path=model_name_or_path,
                 api_key=api_key,
                 api_base=api_base,
-                max_new_tokens=1,
+                max_new_tokens=100,
                 temperature=temperature,
                 logprobs=True,
                 top_logprobs=top_logprobs,
@@ -75,7 +75,7 @@ class PolyGuard(GuardLLM):
         else:
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path=model_name_or_path,
-                max_new_tokens=10,
+                max_new_tokens=100,
                 top_logprobs=top_logprobs,
             )
             self.device = self.model.model.device
