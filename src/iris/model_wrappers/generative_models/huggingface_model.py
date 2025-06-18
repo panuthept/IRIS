@@ -508,6 +508,7 @@ class HuggfaceGenerativeLLM:
                     device_map="auto",
                     local_files_only=False,
                 )
+        model.eval()  # Set the model to evaluation mode
         return model
     
     def complete(
@@ -534,6 +535,10 @@ class HuggfaceGenerativeLLM:
                 return_dict=True, 
                 return_tensors="pt"
             )
+        # Move input tensors to the same device as the model
+        for key in model_input.keys():
+            if isinstance(model_input[key], Tensor):
+                model_input[key] = model_input[key].to(self.model.device)
         result = self.model.generate(
             **model_input, 
             max_new_tokens=self.max_new_tokens
