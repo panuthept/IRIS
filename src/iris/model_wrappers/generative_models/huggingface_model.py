@@ -546,8 +546,13 @@ class HuggfaceGenerativeLLM:
             return_dict_in_generate=True,
             output_logits=True,
         )
-        logits = result.logits[0]
-        print(logits.shape)
+        # Convert logits to logprobs
+        print(result)
+        logprobs = []
+        for logits in result.logits:
+            _logprobs = torch.nn.functional.log_softmax(logits, dim=-1)
+            print(_logprobs)        
+
         answer = self.tokenizer.decode(result.sequences[0][len(model_input['input_ids'][0]):], skip_special_tokens=True)
         print(answer)
         # return answer, logprobs
