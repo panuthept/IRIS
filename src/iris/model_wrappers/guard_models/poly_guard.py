@@ -43,7 +43,6 @@ class PolyGuard(GuardLLM):
     def __init__(
             self, 
             model_name_or_path: str = "ToxicityPrompts/PolyGuard-Qwen-Smol", 
-            checkpoint_path: str = None,
             api_key: str = None,
             api_base: str = None,
             top_logprobs: int = 2,
@@ -52,9 +51,6 @@ class PolyGuard(GuardLLM):
             use_cache: bool = False,
             cache_path: str = "./cache",
             cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
-            disable_logitlens: bool = False,
-            enable_logitlens_cache: bool = True,
-            max_logitlens_cache_size: int = 10,
     ):
         self.model_name = model_name_or_path
         self.device = None
@@ -79,31 +75,6 @@ class PolyGuard(GuardLLM):
                 top_logprobs=top_logprobs,
             )
             self.device = self.model.model.device
-        # elif checkpoint_path:
-        #     self.model = HuggfaceGenerativeLLM(
-        #         model_name_or_path,
-        #         checkpoint_path=checkpoint_path,
-        #         max_tokens=max_tokens,
-        #         max_new_tokens=1,
-        #         temperature=temperature,
-        #         logprobs=True,
-        #         top_logprobs=top_logprobs,
-        #         use_cache=use_cache,
-        #         cache_path=cache_path,
-        #         cache_mode=cache_mode,
-        #         disable_logitlens=disable_logitlens,
-        #         enable_logitlens_cache=enable_logitlens_cache,
-        #         max_logitlens_cache_size=max_logitlens_cache_size,
-        #     )
-        #     self.device = self.model.llm.device
-        # else:
-        #     self.model = vLLM(
-        #         model_name_or_path,
-        #         max_tokens=max_tokens,
-        #         max_new_tokens=1,
-        #         temperature=temperature,
-        #         top_logprobs=top_logprobs,
-        #     )
 
     def get_model_name(self) -> str:
         return self.model_name
@@ -117,10 +88,9 @@ class PolyGuard(GuardLLM):
         ]
         return message
 
-    def _complete(self, messages: list, output_prefix: str = None, **kwargs) -> str:
+    def _complete(self, messages: list, **kwargs) -> str:
         response, outputs = self.model.complete(
             messages=messages, 
-            output_prefix=output_prefix,
             **kwargs
         )
         return outputs, response
@@ -143,7 +113,7 @@ class PolyGuard(GuardLLM):
         # Initial metadata
         metadata = {}
         # Prompt classification
-        prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, output_prefix="Harmful request:", **kwargs)
+        prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, **kwargs)
         prompt_labels = prompt_clf["pred_labels"][0] if len(prompt_clf["pred_labels"]) > 0 else []
         metadata["prompt_tokens"] = prompt_clf["pred_tokens"][0] if len(prompt_clf["pred_tokens"]) > 0 else []
         metadata["prompt_instruction"] = prompt_clf["instruction"]

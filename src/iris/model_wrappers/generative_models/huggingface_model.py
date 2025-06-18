@@ -517,15 +517,12 @@ class HuggfaceGenerativeLLM:
         self, 
         prompt: str = None,
         messages: List[Dict[str, str]] = None,
-        output_prefix: str = None,
         # prompt: str = None,
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Generate the response
         if prompt is None and messages is not None:
             prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, return_dict=False)
-        if output_prefix is not None:
-            prompt += output_prefix
         model_input = self.tokenizer(
             prompt,  
             return_tensors="pt"

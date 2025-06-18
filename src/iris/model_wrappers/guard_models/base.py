@@ -20,8 +20,8 @@ class GuardLLM(LLM):
     def _complete(self, instruction: str, **kwargs) -> str:
         raise NotImplementedError
     
-    def complete(self, instruction: str, output_prefix: str = None, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
-        outputs, response = self._complete(instruction, output_prefix=output_prefix, **kwargs)
+    def complete(self, instruction: str, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
+        outputs, response = self._complete(instruction, **kwargs)
         if outputs is None:
             outputs = [[(valid_token, 0.0, 0.0) for valid_token in self.valid_tokens.keys()]]
         # outputs = [outputs[0]]
@@ -63,13 +63,13 @@ class GuardLLM(LLM):
             "response": response,
         }
     
-    def _prompt_classify(self, prompt: str, output_prefix: str = None, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
+    def _prompt_classify(self, prompt: str, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
         instruction: str = self._apply_safeguard_template(prompt=prompt)
-        return self.complete(instruction, output_prefix=output_prefix, **kwargs)
+        return self.complete(instruction, **kwargs)
     
-    def _response_classify(self, prompt: str, response: str, output_prefix: str = None, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
+    def _response_classify(self, prompt: str, response: str, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
         instruction: str = self._apply_safeguard_template(prompt=prompt, response=response)
-        return self.complete(instruction, output_prefix=output_prefix, **kwargs)
+        return self.complete(instruction, **kwargs)
     
     def predict(
         self,
