@@ -455,73 +455,41 @@ from iris.data_types import IRISConfig, IRISL2Config, IRISDiffTripletConfig, IRI
 #         return answer, None
     
 
-class HuggfaceGenerativeLLM(GenerativeLLM):
+class HuggfaceGenerativeLLM:
     def __init__(
         self, 
-        model_name_or_path: str,  
-        adapter_name_or_path: str = None,
-        checkpoint_path: str = None,
-        modules_to_cache: List[str] = None,
-        disable_logitlens: bool = False,
-        enable_logitlens_cache: bool = True,
-        max_logitlens_cache_size: int = 10,
-        **kwargs,
+        model_name_or_path: str,
+        max_new_tokens: int = 8192, 
+        **kwargs
     ):
-        """
-        params:
-            disable_logitlens: 
-                If True, the LogitLens will not be used.
-                Setting this to False will disable both fetch_intermediate_logits() and fetch_cache()
-            enable_logitlens_cache:
-                If True, the LogitLens will cache the activations and logits. 
-                Setting this to False will disable the fetch_cache(). But fetch_intermediate_logits() still works.
-            max_logitlens_cache_size: 
-                The maximum number of activations and logits to cache.
-        """
-        # Load model
-        if adapter_name_or_path:
-            self.llm = self.load_adapter_model(model_name_or_path, adapter_name_or_path)
-        elif checkpoint_path:
-            self.llm = self.load_finetuned_model(model_name_or_path, checkpoint_path)
-        else:
-            self.llm = self.load_pretrained_model(model_name_or_path)
-            
-        # Load tokenizer
+        self.model_name = model_name_or_path
+        self.max_new_tokens = max_new_tokens
+        self.tokenizer = self.load_tokenizer(self.model_name)
+        self.model = self.load_model(self.model_name)
+
+    def get_model_name(self) -> str:
+        return self.model_name
+
+    def load_tokenizer(self, model_name_or_path: str):
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained(
+            tokenizer = AutoTokenizer.from_pretrained(
                 model_name_or_path,
                 cache_dir="./data/models",
                 local_files_only=True,
             )
         except:
-            self.tokenizer = AutoTokenizer.from_pretrained(
+            tokenizer = AutoTokenizer.from_pretrained(
                 model_name_or_path,
                 cache_dir="./data/models",
                 local_files_only=False,
             )
-        self.tokenizer.pad_token = self.tokenizer.eos_token
-
-        # Add hooks to cache activations
-        modules_to_cache = model_name_or_path if modules_to_cache is None else modules_to_cache
-        self.logitlens = LogitLens(
-            lm_head=self.llm.lm_head, 
-            tokenizer=self.tokenizer,
-            module_names=modules_to_cache,
-            enable_cache=enable_logitlens_cache,
-            max_cache_size=max_logitlens_cache_size,
-        )
-        self.disable_logitlens = disable_logitlens
-        if not self.disable_logitlens:
-            self.logitlens.register_hooks(self.llm)
-        self.model_name = model_name_or_path
-        super().__init__(**kwargs)
-
-    def load_pretrained_model(self, model_name_or_path: str) -> AutoModelForCausalLM:
+        return tokenizer
+    
+    def load_model(self, model_name_or_path: str):
         try:
             model = AutoModelForCausalLM.from_pretrained(
                 model_name_or_path,
                 cache_dir="./data/models",
-                # device_map="auto",
                 tp_plan="auto",
                 local_files_only=True,
             )
@@ -530,7 +498,6 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                 model = AutoModelForCausalLM.from_pretrained(
                     model_name_or_path,
                     cache_dir="./data/models",
-                    # device_map="auto",
                     tp_plan="auto",
                     local_files_only=False,
                 )
@@ -542,257 +509,378 @@ class HuggfaceGenerativeLLM(GenerativeLLM):
                     local_files_only=False,
                 )
         return model
-
-    def load_adapter_model(self, model_name: str, adapter_name: str) -> AutoModelForCausalLM:
-        from adapters import AutoAdapterModel # Lazy import
-
-        model = AutoAdapterModel.from_pretrained(model_name)
-        adapter = model.load_adapter(adapter_name)
-        model.adapter = adapter
-        return model
-
-    def load_finetuned_model(self, model_name, checkpoint_path: str) -> AutoModelForCausalLM:
-        if os.path.exists(os.path.join(checkpoint_path, "adapter_model.safetensors")):
-            from peft import PeftModel # Lazy import
-            # Load base model
-            model = self.load_pretrained_model(model_name)
-            # Load PEFT model (finetuned)
-            peft_model = PeftModel.from_pretrained(model, checkpoint_path)
-            # Merge and unload the PEFT model
-            model = peft_model.merge_and_unload()
-            print(f"Loaded model from PEFT checkpoint: {checkpoint_path} successfully.")
-        elif os.path.exists(os.path.join(checkpoint_path, "model.safetensors")):
-            model = AutoModelForCausalLM.from_pretrained(
-                checkpoint_path,
-                # device_map="auto",
-                tp_plan="auto",
-                local_files_only=True,
-            )
-            print(f"Loaded model from full checkpoint: {checkpoint_path} successfully.")
-        else:
-            raise ValueError(f"Full and LoRA models not found at {checkpoint_path}")
-        return model
-
-    def get_model_name(self) -> str:
-        # TODO: Add a better way to get the model name. the current way is not reliable as the model_name_or_path can be a path
-        return self.model_name
     
-    def _generate(
+    def complete(
         self, 
-        input_ids: Int[Tensor, "batch pos"], 
-        attention_mask: Int[Tensor, "batch pos"],
-        max_new_tokens: int = 10,
-        stop_at_eos: bool = True,
-        eos_token_id: Optional[int] = None,
-        do_sample: bool = True,
-        top_k: Optional[int] = None,
-        top_p: Optional[float] = None,
-        temperature: float = 1.0,
-        freq_penalty: float = 0.0,
-        return_logprobs: bool = False,
-        verbose: bool = False,
-    ):
-        with torch.no_grad():
-            tokens = input_ids
-            assert isinstance(tokens, torch.Tensor)
-            batch_size, ctx_length = tokens.shape
-            tokens = tokens.to(self.llm.device)
-            attention_mask = attention_mask.to(self.llm.device)
-
-            stop_tokens: List[int] = []
-            eos_token_for_padding = 0
-            assert self.tokenizer is not None
-            if stop_at_eos:
-                tokenizer_has_eos_token = (
-                    self.tokenizer is not None and self.tokenizer.eos_token_id is not None
-                )
-                if eos_token_id is None:
-                    assert (
-                        tokenizer_has_eos_token
-                    ), "Must pass a eos_token_id if stop_at_eos is True and tokenizer is None or has no eos_token_id"
-
-                    eos_token_id = self.tokenizer.eos_token_id
-
-                if isinstance(eos_token_id, int):
-                    stop_tokens = [eos_token_id]
-                    eos_token_for_padding = eos_token_id
-                else:
-                    # eos_token_id is a Sequence (e.g. list or tuple)
-                    stop_tokens = eos_token_id
-                    eos_token_for_padding = (
-                        self.tokenizer.eos_token_id if tokenizer_has_eos_token else eos_token_id[0]
-                    )
-
-            # An array to track which sequences in the batch have finished.
-            finished_sequences = torch.zeros(batch_size, dtype=torch.bool, device=self.llm.device)
-
-            pred_logits = []
-            pred_tokens = []
-            for index in tqdm(range(max_new_tokens), disable=not verbose):
-                # Forward pass
-                outputs = self.llm(
-                    tokens, 
-                    attention_mask,
-                    output_attentions=True, 
-                    output_hidden_states=True,
-                )
-                final_logits = outputs.logits[:, -1, :]
-                if not self.disable_logitlens:
-                    self.logitlens.cache_logits(final_logits, "final_predictions")
-                    self.logitlens.cache_attentions(outputs.attentions, tokens)
-
-                if do_sample:
-                    sampled_tokens = utils.sample_logits(
-                        final_logits,
-                        top_k=top_k,
-                        top_p=top_p,
-                        temperature=temperature,
-                        freq_penalty=freq_penalty,
-                        tokens=tokens,
-                    ).to(self.llm.device)
-                else:
-                    sampled_tokens = final_logits.argmax(-1).to(
-                        self.llm.device
-                    )
-
-                if stop_at_eos:
-                    # For all unfinished sequences, add on the next token. If a sequence was
-                    # finished, throw away the generated token and add eos_token_for_padding
-                    # instead.
-                    sampled_tokens[finished_sequences] = eos_token_for_padding
-                    finished_sequences.logical_or_(
-                        torch.isin(
-                            sampled_tokens.to(self.llm.device),
-                            torch.tensor(stop_tokens).to(self.llm.device),
-                        )
-                    )
-
-                # Update the prediction logits
-                pred_logits.append(final_logits)
-                pred_tokens.append(sampled_tokens)
-
-                # Update the tokens and attention mask
-                tokens = torch.cat([tokens, sampled_tokens.unsqueeze(-1)], dim=-1)
-                attention_mask = torch.cat([attention_mask, torch.ones(batch_size, 1, device=self.llm.device)], dim=-1)
-                if stop_at_eos and finished_sequences.all():
-                    break
-            pred_logits = torch.stack(pred_logits, dim=1)
-            pred_tokens = torch.stack(pred_tokens, dim=1)
-            pred_logprobs = torch.log_softmax(pred_logits, dim=-1)
-
-            if return_logprobs:
-                return pred_tokens, pred_logprobs, pred_logits
-            else:
-                return pred_tokens, None, None
-
-    def tokenize(
-        self, 
-        texts: List[str] = None,
-        messages: List[List[Dict[str, str]]] = None,
-        suffix_prompt: Optional[str] = None,
-        apply_chat_template: bool = True,
-        add_special_tokens: bool = False,
-        special_tokenizer_kwargs: dict = {},
-    ) -> Int[Tensor, "batch pos"]:
-        if apply_chat_template:
-            if suffix_prompt:
-                print("[WARNING] suffix_prompt is not supported with apply_chat_template=True. Ignoring the suffix_prompt.")
-            messages = [
-                [
-                    {"role": "system", "content": self.system_prompt}, 
-                    {"role": "user", "content": text}
-                ] if self.system_prompt else [{"role": "user", "content": text}] 
-                for text in texts
-            ] if messages is None else messages
-            # Tokenize the messages
-            encoded_texts = self.tokenizer.apply_chat_template(
-                messages,
-                max_length=self.max_tokens,
-                truncation=True,
-                add_generation_prompt=True,
-                return_dict=True,
-                padding=True,
-                return_tensors="pt",
-                **special_tokenizer_kwargs,
-            )
-        else:
-            texts = [f"{self.system_prompt}\n\n{text}" if self.system_prompt else text for text in texts]
-            texts = [f"{text}{suffix_prompt}" if suffix_prompt else text for text in texts]
-            # Tokenize the prompt
-            encoded_texts = self.tokenizer(
-                texts,
-                max_length=self.max_tokens,
-                truncation=True,
-                add_special_tokens=add_special_tokens,
-                padding=True,
-                return_tensors="pt",
-            )
-        return encoded_texts
-    
-    def id_to_token(self, token_id: int):
-        # NOTE: This implementation is to ensure that the spaces are not removed from the tokens
-        token1 = self.tokenizer.decode(token_id)
-        token2 = self.tokenizer.convert_ids_to_tokens([token_id])[0]
-        return f" {token1}" if token1 != token2 and token2.endswith(token1) else token1
-
-    def _complete(
-        self, 
-        prompt: str = None, 
-        message: List[Dict[str, str]] = None,
-        ref_prompt: Optional[str] = None, 
-        suffix_prompt: Optional[str] = None, 
-        apply_chat_template: bool = True, 
-        add_special_tokens: bool = False,
-        mask_first_n_tokens: Optional[int] = None,
-        mask_last_n_tokens: Optional[int] = None,
-        mask_tokens: Optional[List[int]] = None,
-        invert_mask: bool = False,
-        special_tokenizer_kwargs: dict = {},
+        prompt: str = None,
+        messages: List[Dict[str, str]] = None,
+        # prompt: str = None,
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
-        # Tokenize the prompt
-        self.tokenizer.padding_side = "left"
-        encoded_texts = self.tokenize(
-            texts=[prompt] if prompt else None, 
-            messages=[message] if message else None,
-            suffix_prompt=suffix_prompt, 
-            apply_chat_template=apply_chat_template, 
-            add_special_tokens=add_special_tokens,
-            special_tokenizer_kwargs=special_tokenizer_kwargs,
-        )
-        if mask_first_n_tokens:
-            encoded_texts["attention_mask"][:, :mask_first_n_tokens] = 0
-        if mask_last_n_tokens:
-            encoded_texts["attention_mask"][:, -mask_last_n_tokens:] = 0
-        if mask_tokens:
-            encoded_texts["attention_mask"] = torch.tensor([[float(input_id not in mask_tokens) for input_id, attention_mask in zip(input_ids, attention_masks)] for input_ids, attention_masks in zip(encoded_texts["input_ids"], encoded_texts["attention_mask"])], dtype=torch.float32, device=encoded_texts["input_ids"].device)
-        if invert_mask:
-            encoded_texts["attention_mask"] = 1 - encoded_texts["attention_mask"]
-        # Ensure that the last token is not masked
-        encoded_texts["attention_mask"][:, -1] = 1
         # Generate the response
-        self.llm.eval()
-        completed_ids, logprobs, logits = self._generate(
-            input_ids=encoded_texts["input_ids"],
-            attention_mask=encoded_texts["attention_mask"],
-            max_new_tokens=self.max_new_tokens,
-            temperature=self.temperature,
-            return_logprobs=self.logprobs,
-            top_k=self.top_logprobs,
-            **kwargs,
+        if messages is not None:
+            model_input = self.tokenizer.apply_chat_template(
+                messages, 
+                tokenize=True, 
+                add_generation_prompt=True, 
+                return_dict=True, 
+                return_tensors="pt"
+            )
+        else:
+            model_input = self.tokenizer(
+                prompt, 
+                tokenize=True, 
+                add_generation_prompt=True, 
+                return_dict=True, 
+                return_tensors="pt"
+            )
+        result = self.model.generate(
+            **model_input, 
+            max_new_tokens=self.max_new_tokens
         )
-        pred_ids = completed_ids[0]
-        logprobs = logprobs[0]
-        logits = logits[0]
-        sorted_logprobs, sorted_indices = torch.sort(logprobs, descending=True)
-        sorted_logits = logits[torch.arange(logits.size(0)).unsqueeze(1), sorted_indices]
-        sorted_logprobs = sorted_logprobs[:, :self.top_logprobs]
-        sorted_logits = sorted_logits[:, :self.top_logprobs]
-        sorted_indices = sorted_indices[:, :self.top_logprobs]
-        # Decode the response
-        answer = self.tokenizer.decode(pred_ids, skip_special_tokens=True)
-        logprobs = [[(self.id_to_token(token_id), logprob.item(), logit.item()) for token_id, logprob, logit in zip(top_indices, top_logprobs, top_logits)] for top_indices, top_logprobs, top_logits in zip(sorted_indices, sorted_logprobs, sorted_logits)]
-        return answer, logprobs
+        print(result)
+        answer = self.tokenizer.decode(result[0][len(model_input['input_ids'][0]):], skip_special_tokens=True)
+        print(answer)
+        # return answer, logprobs
+
+# class HuggfaceGenerativeLLM(GenerativeLLM):
+#     def __init__(
+#         self, 
+#         model_name_or_path: str,  
+#         adapter_name_or_path: str = None,
+#         checkpoint_path: str = None,
+#         modules_to_cache: List[str] = None,
+#         disable_logitlens: bool = False,
+#         enable_logitlens_cache: bool = True,
+#         max_logitlens_cache_size: int = 10,
+#         **kwargs,
+#     ):
+#         """
+#         params:
+#             disable_logitlens: 
+#                 If True, the LogitLens will not be used.
+#                 Setting this to False will disable both fetch_intermediate_logits() and fetch_cache()
+#             enable_logitlens_cache:
+#                 If True, the LogitLens will cache the activations and logits. 
+#                 Setting this to False will disable the fetch_cache(). But fetch_intermediate_logits() still works.
+#             max_logitlens_cache_size: 
+#                 The maximum number of activations and logits to cache.
+#         """
+#         # Load model
+#         if adapter_name_or_path:
+#             self.llm = self.load_adapter_model(model_name_or_path, adapter_name_or_path)
+#         elif checkpoint_path:
+#             self.llm = self.load_finetuned_model(model_name_or_path, checkpoint_path)
+#         else:
+#             self.llm = self.load_pretrained_model(model_name_or_path)
+            
+#         # Load tokenizer
+#         try:
+#             self.tokenizer = AutoTokenizer.from_pretrained(
+#                 model_name_or_path,
+#                 cache_dir="./data/models",
+#                 local_files_only=True,
+#             )
+#         except:
+#             self.tokenizer = AutoTokenizer.from_pretrained(
+#                 model_name_or_path,
+#                 cache_dir="./data/models",
+#                 local_files_only=False,
+#             )
+#         self.tokenizer.pad_token = self.tokenizer.eos_token
+
+#         # Add hooks to cache activations
+#         modules_to_cache = model_name_or_path if modules_to_cache is None else modules_to_cache
+#         self.logitlens = LogitLens(
+#             lm_head=self.llm.lm_head, 
+#             tokenizer=self.tokenizer,
+#             module_names=modules_to_cache,
+#             enable_cache=enable_logitlens_cache,
+#             max_cache_size=max_logitlens_cache_size,
+#         )
+#         self.disable_logitlens = disable_logitlens
+#         if not self.disable_logitlens:
+#             self.logitlens.register_hooks(self.llm)
+#         self.model_name = model_name_or_path
+#         super().__init__(**kwargs)
+
+#     def load_pretrained_model(self, model_name_or_path: str) -> AutoModelForCausalLM:
+#         try:
+#             model = AutoModelForCausalLM.from_pretrained(
+#                 model_name_or_path,
+#                 cache_dir="./data/models",
+#                 # device_map="auto",
+#                 tp_plan="auto",
+#                 local_files_only=True,
+#             )
+#         except:
+#             try:
+#                 model = AutoModelForCausalLM.from_pretrained(
+#                     model_name_or_path,
+#                     cache_dir="./data/models",
+#                     # device_map="auto",
+#                     tp_plan="auto",
+#                     local_files_only=False,
+#                 )
+#             except:
+#                 model = AutoModelForCausalLM.from_pretrained(
+#                     model_name_or_path,
+#                     cache_dir="./data/models",
+#                     device_map="auto",
+#                     local_files_only=False,
+#                 )
+#         return model
+
+#     def load_adapter_model(self, model_name: str, adapter_name: str) -> AutoModelForCausalLM:
+#         from adapters import AutoAdapterModel # Lazy import
+
+#         model = AutoAdapterModel.from_pretrained(model_name)
+#         adapter = model.load_adapter(adapter_name)
+#         model.adapter = adapter
+#         return model
+
+#     def load_finetuned_model(self, model_name, checkpoint_path: str) -> AutoModelForCausalLM:
+#         if os.path.exists(os.path.join(checkpoint_path, "adapter_model.safetensors")):
+#             from peft import PeftModel # Lazy import
+#             # Load base model
+#             model = self.load_pretrained_model(model_name)
+#             # Load PEFT model (finetuned)
+#             peft_model = PeftModel.from_pretrained(model, checkpoint_path)
+#             # Merge and unload the PEFT model
+#             model = peft_model.merge_and_unload()
+#             print(f"Loaded model from PEFT checkpoint: {checkpoint_path} successfully.")
+#         elif os.path.exists(os.path.join(checkpoint_path, "model.safetensors")):
+#             model = AutoModelForCausalLM.from_pretrained(
+#                 checkpoint_path,
+#                 # device_map="auto",
+#                 tp_plan="auto",
+#                 local_files_only=True,
+#             )
+#             print(f"Loaded model from full checkpoint: {checkpoint_path} successfully.")
+#         else:
+#             raise ValueError(f"Full and LoRA models not found at {checkpoint_path}")
+#         return model
+
+#     def get_model_name(self) -> str:
+#         # TODO: Add a better way to get the model name. the current way is not reliable as the model_name_or_path can be a path
+#         return self.model_name
+    
+#     def _generate(
+#         self, 
+#         input_ids: Int[Tensor, "batch pos"], 
+#         attention_mask: Int[Tensor, "batch pos"],
+#         max_new_tokens: int = 10,
+#         stop_at_eos: bool = True,
+#         eos_token_id: Optional[int] = None,
+#         do_sample: bool = True,
+#         top_k: Optional[int] = None,
+#         top_p: Optional[float] = None,
+#         temperature: float = 1.0,
+#         freq_penalty: float = 0.0,
+#         return_logprobs: bool = False,
+#         verbose: bool = False,
+#     ):
+#         with torch.no_grad():
+#             tokens = input_ids
+#             assert isinstance(tokens, torch.Tensor)
+#             batch_size, ctx_length = tokens.shape
+#             tokens = tokens.to(self.llm.device)
+#             attention_mask = attention_mask.to(self.llm.device)
+
+#             stop_tokens: List[int] = []
+#             eos_token_for_padding = 0
+#             assert self.tokenizer is not None
+#             if stop_at_eos:
+#                 tokenizer_has_eos_token = (
+#                     self.tokenizer is not None and self.tokenizer.eos_token_id is not None
+#                 )
+#                 if eos_token_id is None:
+#                     assert (
+#                         tokenizer_has_eos_token
+#                     ), "Must pass a eos_token_id if stop_at_eos is True and tokenizer is None or has no eos_token_id"
+
+#                     eos_token_id = self.tokenizer.eos_token_id
+
+#                 if isinstance(eos_token_id, int):
+#                     stop_tokens = [eos_token_id]
+#                     eos_token_for_padding = eos_token_id
+#                 else:
+#                     # eos_token_id is a Sequence (e.g. list or tuple)
+#                     stop_tokens = eos_token_id
+#                     eos_token_for_padding = (
+#                         self.tokenizer.eos_token_id if tokenizer_has_eos_token else eos_token_id[0]
+#                     )
+
+#             # An array to track which sequences in the batch have finished.
+#             finished_sequences = torch.zeros(batch_size, dtype=torch.bool, device=self.llm.device)
+
+#             pred_logits = []
+#             pred_tokens = []
+#             for index in tqdm(range(max_new_tokens), disable=not verbose):
+#                 # Forward pass
+#                 outputs = self.llm(
+#                     tokens, 
+#                     attention_mask,
+#                     output_attentions=True, 
+#                     output_hidden_states=True,
+#                 )
+#                 final_logits = outputs.logits[:, -1, :]
+#                 if not self.disable_logitlens:
+#                     self.logitlens.cache_logits(final_logits, "final_predictions")
+#                     self.logitlens.cache_attentions(outputs.attentions, tokens)
+
+#                 if do_sample:
+#                     sampled_tokens = utils.sample_logits(
+#                         final_logits,
+#                         top_k=top_k,
+#                         top_p=top_p,
+#                         temperature=temperature,
+#                         freq_penalty=freq_penalty,
+#                         tokens=tokens,
+#                     ).to(self.llm.device)
+#                 else:
+#                     sampled_tokens = final_logits.argmax(-1).to(
+#                         self.llm.device
+#                     )
+
+#                 if stop_at_eos:
+#                     # For all unfinished sequences, add on the next token. If a sequence was
+#                     # finished, throw away the generated token and add eos_token_for_padding
+#                     # instead.
+#                     sampled_tokens[finished_sequences] = eos_token_for_padding
+#                     finished_sequences.logical_or_(
+#                         torch.isin(
+#                             sampled_tokens.to(self.llm.device),
+#                             torch.tensor(stop_tokens).to(self.llm.device),
+#                         )
+#                     )
+
+#                 # Update the prediction logits
+#                 pred_logits.append(final_logits)
+#                 pred_tokens.append(sampled_tokens)
+
+#                 # Update the tokens and attention mask
+#                 tokens = torch.cat([tokens, sampled_tokens.unsqueeze(-1)], dim=-1)
+#                 attention_mask = torch.cat([attention_mask, torch.ones(batch_size, 1, device=self.llm.device)], dim=-1)
+#                 if stop_at_eos and finished_sequences.all():
+#                     break
+#             pred_logits = torch.stack(pred_logits, dim=1)
+#             pred_tokens = torch.stack(pred_tokens, dim=1)
+#             pred_logprobs = torch.log_softmax(pred_logits, dim=-1)
+
+#             if return_logprobs:
+#                 return pred_tokens, pred_logprobs, pred_logits
+#             else:
+#                 return pred_tokens, None, None
+
+#     def tokenize(
+#         self, 
+#         texts: List[str] = None,
+#         messages: List[List[Dict[str, str]]] = None,
+#         suffix_prompt: Optional[str] = None,
+#         apply_chat_template: bool = True,
+#         add_special_tokens: bool = False,
+#         special_tokenizer_kwargs: dict = {},
+#     ) -> Int[Tensor, "batch pos"]:
+#         if apply_chat_template:
+#             if suffix_prompt:
+#                 print("[WARNING] suffix_prompt is not supported with apply_chat_template=True. Ignoring the suffix_prompt.")
+#             messages = [
+#                 [
+#                     {"role": "system", "content": self.system_prompt}, 
+#                     {"role": "user", "content": text}
+#                 ] if self.system_prompt else [{"role": "user", "content": text}] 
+#                 for text in texts
+#             ] if messages is None else messages
+#             # Tokenize the messages
+#             encoded_texts = self.tokenizer.apply_chat_template(
+#                 messages,
+#                 max_length=self.max_tokens,
+#                 truncation=True,
+#                 add_generation_prompt=True,
+#                 return_dict=True,
+#                 padding=True,
+#                 return_tensors="pt",
+#                 **special_tokenizer_kwargs,
+#             )
+#         else:
+#             texts = [f"{self.system_prompt}\n\n{text}" if self.system_prompt else text for text in texts]
+#             texts = [f"{text}{suffix_prompt}" if suffix_prompt else text for text in texts]
+#             # Tokenize the prompt
+#             encoded_texts = self.tokenizer(
+#                 texts,
+#                 max_length=self.max_tokens,
+#                 truncation=True,
+#                 add_special_tokens=add_special_tokens,
+#                 padding=True,
+#                 return_tensors="pt",
+#             )
+#         return encoded_texts
+    
+#     def id_to_token(self, token_id: int):
+#         # NOTE: This implementation is to ensure that the spaces are not removed from the tokens
+#         token1 = self.tokenizer.decode(token_id)
+#         token2 = self.tokenizer.convert_ids_to_tokens([token_id])[0]
+#         return f" {token1}" if token1 != token2 and token2.endswith(token1) else token1
+
+#     def _complete(
+#         self, 
+#         prompt: str = None, 
+#         message: List[Dict[str, str]] = None,
+#         ref_prompt: Optional[str] = None, 
+#         suffix_prompt: Optional[str] = None, 
+#         apply_chat_template: bool = True, 
+#         add_special_tokens: bool = False,
+#         mask_first_n_tokens: Optional[int] = None,
+#         mask_last_n_tokens: Optional[int] = None,
+#         mask_tokens: Optional[List[int]] = None,
+#         invert_mask: bool = False,
+#         special_tokenizer_kwargs: dict = {},
+#         **kwargs
+#     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
+#         # Tokenize the prompt
+#         self.tokenizer.padding_side = "left"
+#         encoded_texts = self.tokenize(
+#             texts=[prompt] if prompt else None, 
+#             messages=[message] if message else None,
+#             suffix_prompt=suffix_prompt, 
+#             apply_chat_template=apply_chat_template, 
+#             add_special_tokens=add_special_tokens,
+#             special_tokenizer_kwargs=special_tokenizer_kwargs,
+#         )
+#         if mask_first_n_tokens:
+#             encoded_texts["attention_mask"][:, :mask_first_n_tokens] = 0
+#         if mask_last_n_tokens:
+#             encoded_texts["attention_mask"][:, -mask_last_n_tokens:] = 0
+#         if mask_tokens:
+#             encoded_texts["attention_mask"] = torch.tensor([[float(input_id not in mask_tokens) for input_id, attention_mask in zip(input_ids, attention_masks)] for input_ids, attention_masks in zip(encoded_texts["input_ids"], encoded_texts["attention_mask"])], dtype=torch.float32, device=encoded_texts["input_ids"].device)
+#         if invert_mask:
+#             encoded_texts["attention_mask"] = 1 - encoded_texts["attention_mask"]
+#         # Ensure that the last token is not masked
+#         encoded_texts["attention_mask"][:, -1] = 1
+#         # Generate the response
+#         self.llm.eval()
+#         completed_ids, logprobs, logits = self._generate(
+#             input_ids=encoded_texts["input_ids"],
+#             attention_mask=encoded_texts["attention_mask"],
+#             max_new_tokens=self.max_new_tokens,
+#             temperature=self.temperature,
+#             return_logprobs=self.logprobs,
+#             top_k=self.top_logprobs,
+#             **kwargs,
+#         )
+#         pred_ids = completed_ids[0]
+#         logprobs = logprobs[0]
+#         logits = logits[0]
+#         sorted_logprobs, sorted_indices = torch.sort(logprobs, descending=True)
+#         sorted_logits = logits[torch.arange(logits.size(0)).unsqueeze(1), sorted_indices]
+#         sorted_logprobs = sorted_logprobs[:, :self.top_logprobs]
+#         sorted_logits = sorted_logits[:, :self.top_logprobs]
+#         sorted_indices = sorted_indices[:, :self.top_logprobs]
+#         # Decode the response
+#         answer = self.tokenizer.decode(pred_ids, skip_special_tokens=True)
+#         logprobs = [[(self.id_to_token(token_id), logprob.item(), logit.item()) for token_id, logprob, logit in zip(top_indices, top_logprobs, top_logits)] for top_indices, top_logprobs, top_logits in zip(sorted_indices, sorted_logprobs, sorted_logits)]
+#         return answer, logprobs
     
     # def train_sft(
     #     self,
@@ -998,7 +1086,15 @@ if __name__ == "__main__":
 
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-    model = HuggfaceGenerativeLLM(model_name_or_path="./data/model_checkpoints/sealion_guard_llama/checkpoint-5500")
+    model = HuggfaceGenerativeLLM("ToxicityPrompts/PolyGuard-Qwen-Smol", max_new_tokens=1)
+
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "What is the capital of France?"},
+    ]
+    model.complete(messages=messages)
+
+    # model = HuggfaceGenerativeLLM(model_name_or_path="./data/model_checkpoints/sealion_guard_llama/checkpoint-5500")
 
     # model = HuggfaceGenerativeLLM(
     #     model_name_or_path="Qwen/Qwen2-0.5B-Instruct",
