@@ -546,7 +546,7 @@ class HuggfaceGenerativeLLM:
             return_dict_in_generate=True,
             output_logits=True,
         )
-        logits = result.logits
+        logits = result.logits[0]
         print(logits.shape)
         answer = self.tokenizer.decode(result.sequences[0][len(model_input['input_ids'][0]):], skip_special_tokens=True)
         print(answer)
