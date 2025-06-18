@@ -63,13 +63,13 @@ class GuardLLM(LLM):
             "response": response,
         }
     
-    def _prompt_classify(self, prompt: str, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
+    def _prompt_classify(self, prompt: str, output_prefix: str = None, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
         instruction: str = self._apply_safeguard_template(prompt=prompt)
-        return self.complete(instruction, **kwargs)
+        return self.complete(instruction, output_prefix=output_prefix, **kwargs)
     
-    def _response_classify(self, prompt: str, response: str, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
+    def _response_classify(self, prompt: str, response: str, output_prefix: str = None, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
         instruction: str = self._apply_safeguard_template(prompt=prompt, response=response)
-        return self.complete(instruction, **kwargs)
+        return self.complete(instruction, output_prefix=output_prefix, **kwargs)
     
     def predict(
         self,

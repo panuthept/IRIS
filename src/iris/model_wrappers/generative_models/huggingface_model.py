@@ -517,28 +517,31 @@ class HuggfaceGenerativeLLM:
         self, 
         prompt: str = None,
         messages: List[Dict[str, str]] = None,
+        output_prefix: str = None,
         # prompt: str = None,
         **kwargs
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Generate the response
-        if messages is not None:
+        if prompt is None and messages is not None:
             prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, return_dict=False)
-            print(prompt)
-            model_input = self.tokenizer.apply_chat_template(
-                messages, 
-                tokenize=True, 
-                add_generation_prompt=True, 
-                return_dict=True, 
-                return_tensors="pt"
-            )
-        else:
-            model_input = self.tokenizer(
-                prompt, 
-                tokenize=True, 
-                add_generation_prompt=True, 
-                return_dict=True, 
-                return_tensors="pt"
-            )
+        if output_prefix is not None:
+            prompt += output_prefix
+        print(prompt)
+            # model_input = self.tokenizer.apply_chat_template(
+            #     messages, 
+            #     tokenize=True, 
+            #     add_generation_prompt=True, 
+            #     return_dict=True, 
+            #     return_tensors="pt"
+            # )
+        # else:
+        model_input = self.tokenizer(
+            prompt, 
+            tokenize=True, 
+            add_generation_prompt=True, 
+            return_dict=True, 
+            return_tensors="pt"
+        )
         # Move input tensors to the same device as the model
         for key in model_input.keys():
             if isinstance(model_input[key], Tensor):
