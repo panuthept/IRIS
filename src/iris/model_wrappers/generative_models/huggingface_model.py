@@ -522,6 +522,8 @@ class HuggfaceGenerativeLLM:
     ) -> Tuple[str, Optional[List[List[Tuple[str, float]]]]]:
         # Generate the response
         if messages is not None:
+            prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, return_dict=False)
+            print(prompt)
             model_input = self.tokenizer.apply_chat_template(
                 messages, 
                 tokenize=True, 
