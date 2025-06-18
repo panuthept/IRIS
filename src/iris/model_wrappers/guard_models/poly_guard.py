@@ -2,7 +2,7 @@ from iris.cache import CacheMode
 from typing import Optional, List, Dict, Tuple
 from iris.model_wrappers.guard_models import GuardLLM
 from iris.data_types import SafeGuardInput, SafeGuardResponse
-from iris.model_wrappers.generative_models import APIGenerativeLLM, vLLM
+from iris.model_wrappers.generative_models import APIGenerativeLLM, HuggfaceGenerativeLLM, vLLM
 
 
 class PolyGuard(GuardLLM):
@@ -72,6 +72,13 @@ class PolyGuard(GuardLLM):
                 cache_mode=cache_mode,
             )
             self.response_template_ids = None
+        else:
+            self.model = HuggfaceGenerativeLLM(
+                model_name_or_path=model_name_or_path,
+                max_new_tokens=1,
+                top_logprobs=top_logprobs,
+            )
+            self.device = self.model.model.device
         # elif checkpoint_path:
         #     self.model = HuggfaceGenerativeLLM(
         #         model_name_or_path,
@@ -89,14 +96,14 @@ class PolyGuard(GuardLLM):
         #         max_logitlens_cache_size=max_logitlens_cache_size,
         #     )
         #     self.device = self.model.llm.device
-        else:
-            self.model = vLLM(
-                model_name_or_path,
-                max_tokens=max_tokens,
-                max_new_tokens=1,
-                temperature=temperature,
-                top_logprobs=top_logprobs,
-            )
+        # else:
+        #     self.model = vLLM(
+        #         model_name_or_path,
+        #         max_tokens=max_tokens,
+        #         max_new_tokens=1,
+        #         temperature=temperature,
+        #         top_logprobs=top_logprobs,
+        #     )
 
     def get_model_name(self) -> str:
         return self.model_name
@@ -111,7 +118,7 @@ class PolyGuard(GuardLLM):
         return message
 
     def _complete(self, messages: list, **kwargs) -> str:
-        response, outputs = self.model._complete(
+        response, outputs = self.model.complete(
             messages=messages, 
             **kwargs
         )
@@ -163,9 +170,9 @@ class PolyGuard(GuardLLM):
 
 if __name__ == "__main__":
     model = PolyGuard(
-        model_name_or_path="ToxicityPrompts/PolyGuard-Qwen",
-        api_key="EMPTY",
-        api_base="http://localhost:8000/v1",
+        model_name_or_path="ToxicityPrompts/PolyGuard-Qwen-Smol",
+        # api_key="EMPTY",
+        # api_base="http://localhost:8000/v1",
     )
     prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
     response = model.predict(prompt=prompt)

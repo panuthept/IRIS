@@ -549,19 +549,15 @@ class HuggfaceGenerativeLLM:
             output_logits=True,
         )
         # Convert logits to logprobs
-        print(result)
-        lst_logprobs = []
+        logprobs = []
         for logits in result.logits:
-            logprobs = torch.nn.functional.log_softmax(logits, dim=-1)
-            top_token_ids = torch.argsort(logprobs, dim=-1, descending=True)[:, :self.top_logprobs]
-            top_logprobs = logprobs.gather(dim=-1, index=top_token_ids)
+            _logprobs = torch.nn.functional.log_softmax(logits, dim=-1)
+            top_token_ids = torch.argsort(_logprobs, dim=-1, descending=True)[:, :self.top_logprobs]
+            top_logprobs = _logprobs.gather(dim=-1, index=top_token_ids)
             top_tokens = self.tokenizer.convert_ids_to_tokens(top_token_ids[0].tolist())
-            lst_logprobs.append([(token, logprob, None) for token, logprob in zip(top_tokens, top_logprobs[0].tolist())])
-            print(lst_logprobs[-1])  
-
+            logprobs.append([(token, logprob, None) for token, logprob in zip(top_tokens, top_logprobs[0].tolist())])
         answer = self.tokenizer.decode(result.sequences[0][len(model_input['input_ids'][0]):], skip_special_tokens=True)
-        print(answer)
-        # return answer, logprobs
+        return answer, logprobs
 
 # class HuggfaceGenerativeLLM(GenerativeLLM):
 #     def __init__(
