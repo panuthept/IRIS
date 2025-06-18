@@ -75,7 +75,7 @@ class PolyGuard(GuardLLM):
         else:
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path=model_name_or_path,
-                max_new_tokens=1,
+                max_new_tokens=10,
                 top_logprobs=top_logprobs,
             )
             self.device = self.model.model.device
