@@ -539,9 +539,12 @@ class HuggfaceGenerativeLLM:
         for key in model_input.keys():
             if isinstance(model_input[key], Tensor):
                 model_input[key] = model_input[key].to(self.model.device)
+        # Generate the response (return logprobs)
         result = self.model.generate(
             **model_input, 
-            max_new_tokens=self.max_new_tokens
+            max_new_tokens=self.max_new_tokens,
+            return_dict_in_generate=True,
+            output_scores=True,
         )
         print(result)
         answer = self.tokenizer.decode(result[0][len(model_input['input_ids'][0]):], skip_special_tokens=True)
