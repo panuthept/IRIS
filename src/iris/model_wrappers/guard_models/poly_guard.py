@@ -43,6 +43,7 @@ class PolyGuard(GuardLLM):
     def __init__(
             self, 
             model_name_or_path: str = "ToxicityPrompts/PolyGuard-Qwen-Smol", 
+            checkpoint_path: str = None,
             api_key: str = None,
             api_base: str = None,
             top_logprobs: int = 2,
