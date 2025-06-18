@@ -170,7 +170,7 @@ class PolyGuard(GuardLLM):
 
 if __name__ == "__main__":
     model = PolyGuard(
-        model_name_or_path="ToxicityPrompts/PolyGuard-Qwen-Smol",
+        model_name_or_path="ToxicityPrompts/PolyGuard-Qwen",
         # api_key="EMPTY",
         # api_base="http://localhost:8000/v1",
     )
