@@ -546,6 +546,7 @@ class HuggfaceGenerativeLLM:
             return_dict_in_generate=True,
             output_logits=True,
         )
+        logits = result.logits[0]
         print(result)
         answer = self.tokenizer.decode(result.sequences[0][len(model_input['input_ids'][0]):], skip_special_tokens=True)
         print(answer)
@@ -1094,7 +1095,7 @@ if __name__ == "__main__":
 
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-    model = HuggfaceGenerativeLLM("ToxicityPrompts/PolyGuard-Qwen-Smol", max_new_tokens=1)
+    model = HuggfaceGenerativeLLM("ToxicityPrompts/PolyGuard-Qwen-Smol", max_new_tokens=10)
 
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
