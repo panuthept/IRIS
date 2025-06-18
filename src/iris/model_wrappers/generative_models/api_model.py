@@ -4,7 +4,7 @@ from typing import Tuple, List, Dict, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 
 
-class APIGenerativeLLM(GenerativeLLM):
+class APIGenerativeLLM:
     def __init__(
         self, 
         model_name_or_path: str,  
@@ -46,7 +46,7 @@ class APIGenerativeLLM(GenerativeLLM):
     def get_model_name(self) -> str:
         return self.model_name
     
-    def _complete(
+    def complete(
         self, 
         prompt: str = None,
         messages: List[Dict[str, str]] = None,
