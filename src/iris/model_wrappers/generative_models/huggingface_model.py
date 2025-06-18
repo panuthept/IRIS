@@ -14,7 +14,7 @@ from iris.logitlens import LogitLens
 from typing import List, Callable, Union, Tuple, Optional
 from iris.model_wrappers.generative_models.base import GenerativeLLM
 # from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 from iris.data_types import IRISConfig, IRISL2Config, IRISDiffTripletConfig, IRISCLConfig
 
 
@@ -460,10 +460,12 @@ class HuggfaceGenerativeLLM:
         self, 
         model_name_or_path: str,
         max_new_tokens: int = 8192, 
+        top_logprobs: int = 10,
         **kwargs
     ):
         self.model_name = model_name_or_path
         self.max_new_tokens = max_new_tokens
+        self.top_logprobs = top_logprobs
         self.tokenizer = self.load_tokenizer(self.model_name)
         self.model = self.load_model(self.model_name)
 
@@ -548,10 +550,12 @@ class HuggfaceGenerativeLLM:
         )
         # Convert logits to logprobs
         print(result)
-        logprobs = []
+        lst_logprobs = []
         for logits in result.logits:
-            _logprobs = torch.nn.functional.log_softmax(logits, dim=-1)
-            print(_logprobs)        
+            logprobs = torch.nn.functional.log_softmax(logits, dim=-1)
+            top_logprobs = torch.argsort(logprobs, dim=-1, descending=True)[:, :self.top_logprobs]
+            print(logprobs)     
+            print(top_logprobs)   
 
         answer = self.tokenizer.decode(result.sequences[0][len(model_input['input_ids'][0]):], skip_special_tokens=True)
         print(answer)
