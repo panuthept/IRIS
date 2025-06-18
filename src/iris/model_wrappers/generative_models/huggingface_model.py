@@ -536,9 +536,7 @@ class HuggfaceGenerativeLLM:
             # )
         # else:
         model_input = self.tokenizer(
-            prompt, 
-            tokenize=True, 
-            add_generation_prompt=True, 
+            prompt,  
             return_dict=True, 
             return_tensors="pt"
         )
