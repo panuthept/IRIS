@@ -543,7 +543,6 @@ class HuggfaceGenerativeLLM:
         result = self.model.generate(
             **model_input, 
             max_new_tokens=self.max_new_tokens,
-            return_dict_in_generate=True,
             output_logits=True,
         )
         print(result)
