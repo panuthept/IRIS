@@ -43,7 +43,6 @@ class PolyGuard(GuardLLM):
     def __init__(
             self, 
             model_name_or_path: str = "ToxicityPrompts/PolyGuard-Qwen-Smol", 
-            checkpoint_path: str = None,
             api_key: str = None,
             api_base: str = None,
             top_logprobs: int = 2,
@@ -52,6 +51,7 @@ class PolyGuard(GuardLLM):
             use_cache: bool = False,
             cache_path: str = "./cache",
             cache_mode: CacheMode = CacheMode.ALLOW_DUPLICATE,
+            **kwargs,
     ):
         self.model_name = model_name_or_path
         self.device = None
