@@ -543,10 +543,11 @@ class HuggfaceGenerativeLLM:
         result = self.model.generate(
             **model_input, 
             max_new_tokens=self.max_new_tokens,
+            return_dict_in_generate=True,
             output_logits=True,
         )
         print(result)
-        answer = self.tokenizer.decode(result[0][len(model_input['input_ids'][0]):], skip_special_tokens=True)
+        answer = self.tokenizer.decode(result.sequences[0][len(model_input['input_ids'][0]):], skip_special_tokens=True)
         print(answer)
         # return answer, logprobs
 
