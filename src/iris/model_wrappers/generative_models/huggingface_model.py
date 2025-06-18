@@ -537,9 +537,9 @@ class HuggfaceGenerativeLLM:
         # else:
         model_input = self.tokenizer(
             prompt,  
-            return_dict=True, 
             return_tensors="pt"
         )
+        print(model_input)
         # Move input tensors to the same device as the model
         for key in model_input.keys():
             if isinstance(model_input[key], Tensor):
