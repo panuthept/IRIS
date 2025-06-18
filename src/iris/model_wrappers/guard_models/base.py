@@ -20,8 +20,8 @@ class GuardLLM(LLM):
     def _complete(self, instruction: str, **kwargs) -> str:
         raise NotImplementedError
     
-    def complete(self, instruction: str, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
-        outputs, response = self._complete(instruction, **kwargs)
+    def complete(self, instruction: str, output_prefix: str = None, **kwargs) -> Dict[str, List[Tuple[str, float, float]]]:
+        outputs, response = self._complete(instruction, output_prefix=output_prefix, **kwargs)
         if outputs is None:
             outputs = [[(valid_token, 0.0, 0.0) for valid_token in self.valid_tokens.keys()]]
         # outputs = [outputs[0]]
