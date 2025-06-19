@@ -129,7 +129,7 @@ class LlamaGuard4(GuardLLM):
         ).to(self.model.device)
         # Generate the response
         with torch.no_grad():
-            outputs = model.generate(
+            outputs = self.model.generate(
                 **inputs,
                 max_new_tokens=10,
                 return_dict_in_generate=True,
