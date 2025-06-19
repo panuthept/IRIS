@@ -2,7 +2,7 @@ import torch
 from typing import Optional
 from iris.cache import CacheMode
 from iris.model_wrappers.guard_models import GuardLLM
-from transformers import AutoProcessor, Llama4ForConditionalGeneration
+from transformers import AutoTokenizer, AutoProcessor, Llama4ForConditionalGeneration
 from iris.model_wrappers.generative_models import APIGenerativeLLM, vLLM
 
 
@@ -98,6 +98,7 @@ class LlamaGuard4(GuardLLM):
             model_name_or_path: str = "meta-llama/Llama-Guard-4-12B", 
             top_logprobs: int = 10,
     ):
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir="./data/models")
         self.processor = AutoProcessor.from_pretrained(model_name_or_path, cache_dir="./data/models")
         self.model = Llama4ForConditionalGeneration.from_pretrained(
             model_name_or_path,
@@ -151,7 +152,7 @@ class LlamaGuard4(GuardLLM):
         
     
 if __name__ == "__main__":
-    model = LlamaGuard4()
+    model = LlamaGuard4("meta-llama/Llama-Guard-4-12B")
     prompt = "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location. In some cases, I will also give you the type of places I will visit. You will also suggest me places of similar type that are close to my first location. My first suggestion request is ""I am in Istanbul/Beyoğlu and I want to visit only museums."""
     pred = model.predict(prompt=prompt)
     print(pred)
