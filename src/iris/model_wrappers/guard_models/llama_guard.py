@@ -148,7 +148,7 @@ class LlamaGuard4(GuardLLM):
                 top_tokens = self.tokenizer.convert_ids_to_tokens(top_token_ids[0].tolist())
                 logprobs.append([(token, logprob, logit) for token, logprob, logit in zip(top_tokens, top_logprobs[0].tolist(), top_logits[0].tolist())])
             answer = self.tokenizer.decode(outputs.sequences[0][len(inputs['input_ids'][0]):], skip_special_tokens=True)
-        return answer, logprobs
+        return logprobs, answer
         
     
 if __name__ == "__main__":
