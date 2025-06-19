@@ -98,6 +98,7 @@ class LlamaGuard4(GuardLLM):
             model_name_or_path: str = "meta-llama/Llama-Guard-4-12B", 
             checkpoint_path: str = None,
             top_logprobs: int = 10,
+            **kwargs,
     ):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir="./data/models")
         self.processor = AutoProcessor.from_pretrained(model_name_or_path, cache_dir="./data/models")
