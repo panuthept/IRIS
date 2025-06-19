@@ -81,7 +81,7 @@ class LlamaGuard(GuardLLM):
         return messages
     
     def _complete(self, messages: list, **kwargs) -> str:
-        response, outputs = self.model._complete(
+        response, outputs = self.model.complete(
             messages=messages, 
             **kwargs
         )
