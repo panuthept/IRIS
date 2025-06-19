@@ -96,6 +96,7 @@ class LlamaGuard4(GuardLLM):
     def __init__(
             self, 
             model_name_or_path: str = "meta-llama/Llama-Guard-4-12B", 
+            top_logprobs: int = 10,
     ):
         self.processor = AutoProcessor.from_pretrained(model_name_or_path, cache_dir="./data/models")
         self.model = Llama4ForConditionalGeneration.from_pretrained(
@@ -106,6 +107,7 @@ class LlamaGuard4(GuardLLM):
         )
         self.model.eval()
         self.model_name = model_name_or_path
+        self.top_logprobs = top_logprobs
 
     def get_model_name(self) -> str:
         return self.model_name
