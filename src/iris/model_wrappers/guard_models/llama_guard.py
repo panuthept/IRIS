@@ -35,7 +35,7 @@ class LlamaGuard(GuardLLM):
                 model_name_or_path=model_name_or_path,
                 api_key=api_key,
                 api_base=api_base,
-                max_new_tokens=1,
+                max_new_tokens=100,
                 temperature=temperature,
                 logprobs=True,
                 top_logprobs=top_logprobs,
@@ -64,7 +64,7 @@ class LlamaGuard(GuardLLM):
             self.model = vLLM(
                 model_name_or_path,
                 max_tokens=max_tokens,
-                max_new_tokens=1,
+                max_new_tokens=100,
                 temperature=temperature,
                 top_logprobs=top_logprobs,
             )
