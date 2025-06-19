@@ -523,31 +523,32 @@ class HuggfaceGenerativeLLM:
         # Generate the response
         if prompt is None and messages is not None:
             prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, return_dict=False)
-        model_input = self.tokenizer(
+        inputs = self.tokenizer(
             prompt,  
             return_tensors="pt"
         )
         # Move input tensors to the same device as the model
-        for key in model_input.keys():
-            if isinstance(model_input[key], Tensor):
-                model_input[key] = model_input[key].to(self.model.device)
+        for key in inputs.keys():
+            if isinstance(inputs[key], Tensor):
+                inputs[key] = inputs[key].to(self.model.device)
         # Generate the response (return logprobs)
-        result = self.model.generate(
-            **model_input, 
-            max_new_tokens=self.max_new_tokens,
-            return_dict_in_generate=True,
-            output_logits=True,
-        )
-        # Convert logits to logprobs
-        logprobs = []
-        for logits in result.logits:
-            _logprobs = torch.nn.functional.log_softmax(logits, dim=-1)
-            top_token_ids = torch.argsort(_logprobs, dim=-1, descending=True)[:, :self.top_logprobs]
-            top_logprobs = _logprobs.gather(dim=-1, index=top_token_ids)
-            top_logits = logits.gather(dim=-1, index=top_token_ids)
-            top_tokens = self.tokenizer.convert_ids_to_tokens(top_token_ids[0].tolist())
-            logprobs.append([(token, logprob, logit) for token, logprob, logit in zip(top_tokens, top_logprobs[0].tolist(), top_logits[0].tolist())])
-        answer = self.tokenizer.decode(result.sequences[0][len(model_input['input_ids'][0]):], skip_special_tokens=True)
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs, 
+                max_new_tokens=self.max_new_tokens,
+                return_dict_in_generate=True,
+                output_logits=True,
+            )
+            # Convert logits to logprobs
+            logprobs = []
+            for logits in outputs.logits:
+                _logprobs = torch.nn.functional.log_softmax(logits, dim=-1)
+                top_token_ids = torch.argsort(_logprobs, dim=-1, descending=True)[:, :self.top_logprobs]
+                top_logprobs = _logprobs.gather(dim=-1, index=top_token_ids)
+                top_logits = logits.gather(dim=-1, index=top_token_ids)
+                top_tokens = self.tokenizer.convert_ids_to_tokens(top_token_ids[0].tolist())
+                logprobs.append([(token, logprob, logit) for token, logprob, logit in zip(top_tokens, top_logprobs[0].tolist(), top_logits[0].tolist())])
+            answer = self.tokenizer.decode(outputs.sequences[0][len(inputs['input_ids'][0]):], skip_special_tokens=True)
         return answer, logprobs
 
 # class HuggfaceGenerativeLLM(GenerativeLLM):
