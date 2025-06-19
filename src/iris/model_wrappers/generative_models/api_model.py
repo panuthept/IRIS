@@ -41,8 +41,6 @@ class APIGenerativeLLM:
         self.temperature = temperature
         self.top_logprobs = top_logprobs
 
-        super().__init__(**kwargs)
-
     def get_model_name(self) -> str:
         return self.model_name
     
