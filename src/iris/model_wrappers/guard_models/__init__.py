@@ -13,7 +13,7 @@ AVAILABLE_GUARDS = {
     # "NemoGuard": NemoGuard,
     # "WildGuard": WildGuard,
     "LlamaGuard": LlamaGuard,
-    # "LlamaGuard4": LlamaGuard4,
+    "LlamaGuard4": LlamaGuard4,
     "ShieldGemma": ShieldGemma,
     "SealionGuardAPI": SealionGuardAPI,
     "SealionGuard": SealionGuard,
