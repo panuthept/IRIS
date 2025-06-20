@@ -1,5 +1,6 @@
-from typing import Optional
+from typing import Optional, Union
 from iris.model_wrappers.guard_models.base import GuardLLM, PromptGuard
+from iris.model_wrappers.guard_models.llm_guard import LLMGuard
 from iris.model_wrappers.guard_models.poly_guard import PolyGuard
 # from iris.model_wrappers.guard_models.nemo_guard import NemoGuard
 # from iris.model_wrappers.guard_models.wild_guard import WildGuard
@@ -12,6 +13,7 @@ from iris.model_wrappers.guard_models.llama_guard import LlamaGuard, LlamaGuard4
 AVAILABLE_GUARDS = {
     # "NemoGuard": NemoGuard,
     # "WildGuard": WildGuard,
+    "LLMGuard": LLMGuard,
     "LlamaGuard": LlamaGuard,
     "LlamaGuard4": LlamaGuard4,
     "ShieldGemma": ShieldGemma,
@@ -31,7 +33,7 @@ def load_safeguard(
     disable_logitlens: bool = False,
     top_logprobs: int = 2,
     max_tokens: int = 3000,
-) -> GuardLLM:
+) -> Union[GuardLLM, PromptGuard]:
     assert safeguard_name in AVAILABLE_GUARDS, f"Invalid guard model: {safeguard_name}"
     return AVAILABLE_GUARDS[safeguard_name](
         model_name_or_path=model_name,

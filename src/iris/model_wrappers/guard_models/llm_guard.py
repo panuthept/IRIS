@@ -1,8 +1,7 @@
+from typing import Optional
 from iris.cache import CacheMode
-from typing import Optional, List, Dict, Tuple
 from iris.model_wrappers.guard_models import GuardLLM
-from iris.data_types import SafeGuardInput, SafeGuardResponse
-from iris.model_wrappers.generative_models import APIGenerativeLLM, HuggfaceGenerativeLLM, vLLM
+from iris.model_wrappers.generative_models import APIGenerativeLLM, HuggfaceGenerativeLLM
 
 
 class LLMGuard(GuardLLM):
@@ -125,52 +124,7 @@ class LLMGuard(GuardLLM):
             messages=messages, 
             **kwargs
         )
-        print(response)
-        print(outputs)
         return outputs, response
-    
-    # def predict(
-    #     self,
-    #     input: Optional[SafeGuardInput] = None,
-    #     prompt: Optional[str] = None,
-    #     response: Optional[str] = None,
-    #     **kwargs,
-    # ) -> SafeGuardResponse:
-    #     prompt_gold_label = None
-    #     response_gold_label = None
-    #     if input is not None:
-    #         prompt = input.prompt
-    #         response = input.response
-    #         prompt_gold_label = input.prompt_gold_label
-    #         response_gold_label = input.response_gold_label
-    #     assert prompt is not None, "Prompt cannot be None"
-    #     # Initial metadata
-    #     metadata = {}
-    #     # Prompt classification
-    #     prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, **kwargs)
-    #     prompt_labels = prompt_clf["pred_labels"][0] if len(prompt_clf["pred_labels"]) > 0 else []
-    #     metadata["prompt_tokens"] = prompt_clf["pred_tokens"][0] if len(prompt_clf["pred_tokens"]) > 0 else []
-    #     metadata["prompt_instruction"] = prompt_clf["instruction"]
-    #     metadata["prompt_response"] = prompt_clf["response"]
-    #     # Response classification
-    #     response_labels = None
-    #     if response is not None:
-    #         response_clf: Dict[str, List[Tuple[str, float, float]]] = self._response_classify(prompt, response, **kwargs)
-    #         response_labels = response_clf["pred_labels"][0] if len(response_clf["pred_labels"]) > 0 else []
-    #         metadata["response_tokens"] = response_clf["pred_tokens"][0] if len(response_clf["pred_tokens"]) > 2 else []
-    #         metadata["response_instruction"] = response_clf["instruction"]
-    #         metadata["response_response"] = response_clf["response"]
-    #     # Output formatting
-    #     output = SafeGuardResponse(
-    #         prompt=prompt, 
-    #         response=response,
-    #         prompt_gold_label=prompt_gold_label,
-    #         response_gold_label=response_gold_label,
-    #         prompt_labels=prompt_labels,
-    #         response_labels=response_labels,
-    #         metadata=metadata,
-    #     )
-    #     return output
     
 
 if __name__ == "__main__":
