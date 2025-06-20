@@ -156,7 +156,7 @@ class LLMGuard(GuardLLM):
         response_labels = None
         if response is not None:
             response_clf: Dict[str, List[Tuple[str, float, float]]] = self._response_classify(prompt, response, **kwargs)
-            response_labels = response_clf["pred_labels"][0] if len(response_clf["pred_labels"]) > 2 else []
+            response_labels = response_clf["pred_labels"][0] if len(response_clf["pred_labels"]) > 0 else []
             metadata["response_tokens"] = response_clf["pred_tokens"][0] if len(response_clf["pred_tokens"]) > 2 else []
             metadata["response_instruction"] = response_clf["instruction"]
             metadata["response_response"] = response_clf["response"]
