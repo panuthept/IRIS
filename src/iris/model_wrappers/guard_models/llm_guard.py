@@ -72,7 +72,7 @@ class LLMGuard(GuardLLM):
             model_name_or_path: str, 
             api_key: str = None,
             api_base: str = None,
-            top_logprobs: int = 100,
+            top_logprobs: int = 20,
             max_tokens: int = 3000,
             temperature: float = 0,
             use_cache: bool = False,
