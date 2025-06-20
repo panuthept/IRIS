@@ -132,6 +132,21 @@ class GPT4o(LLMGuard):
         "Safe": "Safe",
         "H": "Harmful",
     }
+
+
+class Llama31(LLMGuard):
+    valid_tokens = {
+        "Safe": "Safe",
+        "H": "Harmful",
+    }
+
+    def _complete(self, messages: list, **kwargs) -> str:
+        response, outputs = self.model.complete(
+            messages=messages, 
+            **kwargs
+        )
+        print(outputs)
+        return outputs, response
     
 
 if __name__ == "__main__":

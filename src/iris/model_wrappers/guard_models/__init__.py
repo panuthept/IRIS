@@ -1,6 +1,6 @@
 from typing import Optional, Union
 from iris.model_wrappers.guard_models.base import GuardLLM, PromptGuard
-from iris.model_wrappers.guard_models.llm_guard import LLMGuard, GPT4o
+from iris.model_wrappers.guard_models.llm_guard import LLMGuard, GPT4o, Llama31
 from iris.model_wrappers.guard_models.poly_guard import PolyGuard
 # from iris.model_wrappers.guard_models.nemo_guard import NemoGuard
 # from iris.model_wrappers.guard_models.wild_guard import WildGuard
@@ -14,6 +14,7 @@ AVAILABLE_GUARDS = {
     # "NemoGuard": NemoGuard,
     # "WildGuard": WildGuard,
     "GPT4o": GPT4o,
+    "Llama31": Llama31,
     "LLMGuard": LLMGuard,
     "LlamaGuard": LlamaGuard,
     "LlamaGuard4": LlamaGuard4,
