@@ -127,6 +127,13 @@ class LLMGuard(GuardLLM):
         return outputs, response
     
 
+class GPT4o(LLMGuard):
+    valid_tokens = {
+        "Safe": "Safe",
+        "H": "Harmful",
+    }
+    
+
 if __name__ == "__main__":
     model = LLMGuard(
         model_name_or_path="google/gemma-3-27b-it",
