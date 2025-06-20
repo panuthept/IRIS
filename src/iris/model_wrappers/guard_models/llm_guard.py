@@ -63,8 +63,8 @@ class LLMGuard(GuardLLM):
     )
 
     valid_tokens = {
-        "Ġno": "Safe",
-        "Ġyes": "Harmful",
+        "Safe": "Safe",
+        "Harm": "Harmful",
     }
 
     def __init__(
@@ -72,7 +72,7 @@ class LLMGuard(GuardLLM):
             model_name_or_path: str, 
             api_key: str = None,
             api_base: str = None,
-            top_logprobs: int = 2,
+            top_logprobs: int = 100,
             max_tokens: int = 3000,
             temperature: float = 0,
             use_cache: bool = False,
