@@ -90,7 +90,7 @@ class GuardLLM(LLM):
         metadata = {}
         # Prompt classification
         prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, **kwargs)
-        prompt_labels = prompt_clf["pred_labels"][0]
+        prompt_labels = prompt_clf["pred_labels"][0] if len(prompt_clf["pred_labels"]) > 0 else []
         metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
         metadata["prompt_instruction"] = prompt_clf["instruction"]
         metadata["prompt_response"] = prompt_clf["response"]
@@ -98,7 +98,7 @@ class GuardLLM(LLM):
         response_labels = None
         if response is not None:
             response_clf: Dict[str, List[Tuple[str, float, float]]] = self._response_classify(prompt, response, **kwargs)
-            response_labels = response_clf["pred_labels"][0]
+            response_labels = response_clf["pred_labels"][0] if len(response_clf["pred_labels"]) > 0 else []
             metadata["response_tokens"] = response_clf["pred_tokens"]
             metadata["response_instruction"] = response_clf["instruction"]
             metadata["response_response"] = response_clf["response"]
