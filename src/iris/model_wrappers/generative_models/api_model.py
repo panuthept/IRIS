@@ -22,20 +22,20 @@ class APIGenerativeLLM:
             api_key=api_key,
             base_url=api_base,
         )
-        # Load tokenizer
-        try:
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                model_name_or_path,
-                cache_dir="./data/models",
-                local_files_only=True,
-            )
-        except:
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                model_name_or_path,
-                cache_dir="./data/models",
-                local_files_only=False,
-            )
-        self.tokenizer.pad_token = self.tokenizer.eos_token
+        # # Load tokenizer
+        # try:
+        #     self.tokenizer = AutoTokenizer.from_pretrained(
+        #         model_name_or_path,
+        #         cache_dir="./data/models",
+        #         local_files_only=True,
+        #     )
+        # except:
+        #     self.tokenizer = AutoTokenizer.from_pretrained(
+        #         model_name_or_path,
+        #         cache_dir="./data/models",
+        #         local_files_only=False,
+        #     )
+        # self.tokenizer.pad_token = self.tokenizer.eos_token
 
         self.max_new_tokens = max_new_tokens
         self.temperature = temperature
