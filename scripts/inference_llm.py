@@ -137,7 +137,7 @@ if __name__ == "__main__":
         llm = APIModel(
             model_name=args.model_name,
             api_key=args.api_key,
-            base_url=args.api_base,
+            api_base=args.api_base,
         )
     else:
         # Use Hugging Face API
