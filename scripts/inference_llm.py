@@ -37,9 +37,9 @@ class APIModel:
         return response
     
 class HFModel:
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, tokenizer_name: str = None):
         self.model_name = model_name
-        self.tokenizer = self.load_tokenizer(model_name)
+        self.tokenizer = self.load_tokenizer(model_name) if tokenizer_name is None else self.load_tokenizer(tokenizer_name)
         self.model = self.load_model(model_name)
 
     def load_tokenizer(self, model_name_or_path: str):
@@ -113,6 +113,7 @@ class HFModel:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="google/gemma-3-27b-it")
+    parser.add_argument("--tokenizer_name", type=str, default="google/gemma-3-27b-it")
     parser.add_argument("--api_key", type=str, default=None)
     parser.add_argument("--api_base", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="SEASafeguardDataset", choices=list(AVAILABLE_DATASETS.keys()))
@@ -131,7 +132,7 @@ if __name__ == "__main__":
     random.seed(args.seed)
 
     # Initial model
-    if args.api_key is not None and args.api_base is None:
+    if args.api_key is not None and args.api_base is not None:
         # Use OpenAI API
         llm = APIModel(
             model_name=args.model_name,
@@ -142,6 +143,7 @@ if __name__ == "__main__":
         # Use Hugging Face API
         llm = HFModel(
             model_name=args.model_name,
+            tokenizer_name=args.tokenizer_name,
         )
 
     # Initial dataset
