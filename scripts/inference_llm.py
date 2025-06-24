@@ -123,7 +123,7 @@ if __name__ == "__main__":
     parser.add_argument("--cultural", type=str, default="th")
     parser.add_argument("--subset", type=str, default="general")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--n", type=int, default=10)
+    parser.add_argument("--n", type=int, default=5)
     parser.add_argument("--max_samples", type=int, default=None)
     parser.add_argument("--prompt_intention", type=str, default=None)
     parser.add_argument("--attack_engine", type=str, default=None)
