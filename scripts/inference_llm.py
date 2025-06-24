@@ -26,14 +26,14 @@ class APIModel:
             outputs = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=messages,
-                max_tokens=100000,
+                max_tokens=4096,
             )
             response = outputs.choices[0].message.content
         else:
             outputs = self.client.completions.create(
                 model=self.model_name,
                 prompt=prompt,
-                max_tokens=100000,
+                max_tokens=4096,
             )
             response = outputs.choices[0].text
         return response
