@@ -1,12 +1,13 @@
 from typing import Optional, Union
-from iris.model_wrappers.guard_models.base import GuardLLM, PromptGuard
-from iris.model_wrappers.guard_models.llm_guard import LLMGuard, GPT4o, Llama31
 from iris.model_wrappers.guard_models.poly_guard import PolyGuard
+from iris.model_wrappers.guard_models.lakera_guard import LakeraGuard
+from iris.model_wrappers.guard_models.base import GuardLLM, PromptGuard
 # from iris.model_wrappers.guard_models.nemo_guard import NemoGuard
 # from iris.model_wrappers.guard_models.wild_guard import WildGuard
 from iris.model_wrappers.guard_models.shield_gemma import ShieldGemma
-from iris.model_wrappers.guard_models.sealion_guard import SealionGuardAPI, SealionGuard, GemmaSealionGuard
+from iris.model_wrappers.guard_models.llm_guard import LLMGuard, GPT4o, Llama31
 from iris.model_wrappers.guard_models.llama_guard import LlamaGuard, LlamaGuard4
+from iris.model_wrappers.guard_models.sealion_guard import SealionGuardAPI, SealionGuard, GemmaSealionGuard
 # from iris.model_wrappers.guard_models.cfi_guard import CFIGuard, DummyBiasModel
 
 
@@ -17,6 +18,7 @@ AVAILABLE_GUARDS = {
     "Llama31": Llama31,
     "LLMGuard": LLMGuard,
     "LlamaGuard": LlamaGuard,
+    "LakeraGuard": LakeraGuard,
     "LlamaGuard4": LlamaGuard4,
     "ShieldGemma": ShieldGemma,
     "SealionGuardAPI": SealionGuardAPI,
