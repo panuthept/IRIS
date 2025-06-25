@@ -1,7 +1,7 @@
 from typing import Optional, Union
+from iris.model_wrappers.guard_models.base import GuardLLM, PromptGuard
 from iris.model_wrappers.guard_models.poly_guard import PolyGuard
 from iris.model_wrappers.guard_models.lakera_guard import LakeraGuard
-from iris.model_wrappers.guard_models.base import GuardLLM, PromptGuard
 # from iris.model_wrappers.guard_models.nemo_guard import NemoGuard
 # from iris.model_wrappers.guard_models.wild_guard import WildGuard
 from iris.model_wrappers.guard_models.shield_gemma import ShieldGemma
