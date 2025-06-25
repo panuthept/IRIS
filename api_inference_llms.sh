@@ -11,4 +11,39 @@ export VLLM_CACHE_ROOT="/shared/panuthep/cache/vllm"
 
 
 vllm serve Meta-Llama-3.1-70B-Instruct --port 8000 --tensor_parallel_size 8
-sh api_inference_llm.sh Meta-Llama-3.1-70B-Instruct Meta-Llama-3.1-70B-Instruct EMPTY http://localhost:8000/v1
+# 1024 Running [3]
+sh api_inference_llm_en.sh Meta-Llama-3.1-70B-Instruct Meta-Llama-3.1-70B-Instruct EMPTY http://localhost:8000/v1
+# 1024 Running [4]
+sh api_inference_llm_in.sh Meta-Llama-3.1-70B-Instruct Meta-Llama-3.1-70B-Instruct EMPTY http://localhost:8000/v1
+# 1024 Running [5]
+sh api_inference_llm_ms.sh Meta-Llama-3.1-70B-Instruct Meta-Llama-3.1-70B-Instruct EMPTY http://localhost:8000/v1
+# 1024 Running [6]
+sh api_inference_llm_my.sh Meta-Llama-3.1-70B-Instruct Meta-Llama-3.1-70B-Instruct EMPTY http://localhost:8000/v1
+# 1024 Running [7]
+sh api_inference_llm_ta.sh Meta-Llama-3.1-70B-Instruct Meta-Llama-3.1-70B-Instruct EMPTY http://localhost:8000/v1
+# 1024 Running [8]
+sh api_inference_llm_th.sh Meta-Llama-3.1-70B-Instruct Meta-Llama-3.1-70B-Instruct EMPTY http://localhost:8000/v1
+# 1024 Running [9]
+sh api_inference_llm_tl.sh Meta-Llama-3.1-70B-Instruct Meta-Llama-3.1-70B-Instruct EMPTY http://localhost:8000/v1
+# 1024 Running [10]
+sh api_inference_llm_vi.sh Meta-Llama-3.1-70B-Instruct Meta-Llama-3.1-70B-Instruct EMPTY http://localhost:8000/v1
+
+
+
+vllm serve Llama-3.3-70B-Instruct --port 8000 --tensor_parallel_size 8
+# 1023 Running [3]
+sh api_inference_llm_en.sh Llama-3.3-70B-Instruct Llama-3.3-70B-Instruct EMPTY http://localhost:8000/v1
+# 1023 Running [4]
+sh api_inference_llm_in.sh Llama-3.3-70B-Instruct Llama-3.3-70B-Instruct EMPTY http://localhost:8000/v1
+# 1023 Running [5]
+sh api_inference_llm_ms.sh Llama-3.3-70B-Instruct Llama-3.3-70B-Instruct EMPTY http://localhost:8000/v1
+# 1023 Running [6]
+sh api_inference_llm_my.sh Llama-3.3-70B-Instruct Llama-3.3-70B-Instruct EMPTY http://localhost:8000/v1
+# 1023 Running [7]
+sh api_inference_llm_ta.sh Llama-3.3-70B-Instruct Llama-3.3-70B-Instruct EMPTY http://localhost:8000/v1
+# 1023 Running [8]
+sh api_inference_llm_th.sh Llama-3.3-70B-Instruct Llama-3.3-70B-Instruct EMPTY http://localhost:8000/v1
+# 1023 Running [9]
+sh api_inference_llm_tl.sh Llama-3.3-70B-Instruct Llama-3.3-70B-Instruct EMPTY http://localhost:8000/v1
+# 1023 Running [10]
+sh api_inference_llm_vi.sh Llama-3.3-70B-Instruct Llama-3.3-70B-Instruct EMPTY http://localhost:8000/v1
