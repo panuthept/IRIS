@@ -4,6 +4,7 @@ import torch
 import random
 import argparse
 from tqdm import tqdm
+from google import genai
 from openai import OpenAI
 from typing import List, Dict
 from iris.data_types import SafeGuardInput
@@ -37,6 +38,21 @@ class APIModel:
             )
             response = outputs.choices[0].text
         return response
+    
+class GeminiAPIModel:
+    def __init__(self, model_name: str, project: str, location: str):
+        self.model_name = model_name
+        self.client = genai.Client(
+            vertexai=True, project=project, location=location,
+        )
+
+    def complete(self, prompt: str = None, messages: List[Dict] = None):
+        assert messages is None, "Gemini API does not support messages format. Please use prompt format instead."
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=[prompt]
+        )
+        return response.text
     
 class HFModel:
     def __init__(self, model_name: str, tokenizer_name: str = None):
@@ -118,6 +134,8 @@ if __name__ == "__main__":
     parser.add_argument("--tokenizer_name", type=str, default="google/gemma-3-27b-it")
     parser.add_argument("--api_key", type=str, default=None)
     parser.add_argument("--api_base", type=str, default=None)
+    parser.add_argument("--project", type=str, default=None)
+    parser.add_argument("--location", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="SEASafeguardDataset", choices=list(AVAILABLE_DATASETS.keys()))
     parser.add_argument("--language", type=str, default="en")
     parser.add_argument("--cultural", type=str, default="th")
@@ -141,6 +159,13 @@ if __name__ == "__main__":
             api_key=args.api_key,
             api_base=args.api_base,
         )
+    elif args.project is not None and args.location is not None:
+        # Use Gemini API
+            llm = GeminiAPIModel(
+                model_name=args.model_name,
+                project=args.project,
+                location=args.location,
+            )
     else:
         # Use Hugging Face API
         llm = HFModel(
