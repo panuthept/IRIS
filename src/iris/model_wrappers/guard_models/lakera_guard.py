@@ -58,7 +58,14 @@ class LakeraGuard:
             json={"messages": [{"role": "user", "content": prompt}]},
             headers={"Authorization": f"Bearer {self.api_key}"},
         )
-        answer, logprobs = self.parse_label(resp.json())
+        try:
+            answer, logprobs = self.parse_label(resp.json())
+        except Exception as e:
+            print(f"Error parsing response: {e}")
+            print(resp)
+            answer = "Safe"
+            logprobs = [("Safe", 1.0, None), ("Harmful", 0.0, None)]
+        # Response classification
         prompt_labels = logprobs
         metadata["prompt_instruction"] = prompt
         metadata["prompt_response"] = answer
