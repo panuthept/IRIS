@@ -2,6 +2,7 @@ import os
 import json
 import torch
 import random
+import hashlib
 import argparse
 from tqdm import tqdm
 from google import genai
@@ -10,6 +11,11 @@ from typing import List, Dict
 from iris.data_types import SafeGuardInput
 from iris.datasets import load_dataset, AVAILABLE_DATASETS
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
+
+def hash_prompt(prompt: str) -> str:
+    """Generate a sha256 hash for the prompt."""
+    return hashlib.sha256(prompt.encode('utf-8')).hexdigest()
 
 
 class APIModel:
@@ -191,11 +197,21 @@ if __name__ == "__main__":
     # Create save directory
     os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
 
+    existing_samples = {}
+    if os.path.exists(args.output_path):
+        with open(args.output_path, "r") as f:
+            for line in f:
+                sample = json.loads(line.strip())
+                existing_samples[hash_prompt(sample["prompt"])] = sample
+
     with open(args.output_path, "w") as f:
         for sample in tqdm(samples):
-            # Get responses
             responses = []
-            for _ in range(args.n):
+            if hash_prompt(sample.prompt) in existing_samples:
+                # Get existing responses
+                responses = existing_samples[hash_prompt(sample.prompt)]["responses"]
+            # Get responses
+            for _ in range(args.n - len(responses)):
                 response = llm.complete(sample.prompt)
                 responses.append(response)
             # Save results
