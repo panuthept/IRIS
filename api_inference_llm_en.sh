@@ -24,17 +24,17 @@ do
 done
 
 
-# echo "Evaluating General Safety..."
-# for lang in en
-# do
-#     echo "Language: $lang"
-#     python scripts/inference_llm.py \
-#     --model_name $model_name \
-#     --api_key $api_key \
-#     --api_base $api_base \
-#     --dataset_name SEASafeguardDataset \
-#     --dataset_split test \
-#     --language $lang \
-#     --subset general \
-#     --output_path ./outputs/${output_name}/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
-# done
+echo "Evaluating General Safety..."
+for lang in en
+do
+    echo "Language: $lang"
+    python scripts/inference_llm.py \
+    --model_name $model_name \
+    --api_key $api_key \
+    --api_base $api_base \
+    --dataset_name SEASafeguardDataset \
+    --dataset_split test \
+    --language $lang \
+    --subset general \
+    --output_path ./outputs/${output_name}/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
+done
