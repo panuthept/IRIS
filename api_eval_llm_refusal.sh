@@ -1,9 +1,9 @@
 #!/bin/bash
 
-model_name=$1
-api_key=$2
-api_base=$3
-load_path=$4
+load_path=$1
+model_name=$2
+api_key=$3
+api_base=$4
 
 # Start VLLM server before running this script
 
