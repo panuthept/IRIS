@@ -164,6 +164,7 @@ data/datasets/
 data/models/
 cache/
 outputs/
+inputs/
 dependencies/
 .DS_Store
 finetuned_models/
