@@ -1,7 +1,7 @@
 #!/bin/bash
 
-load_path=$1
-model_name=$2
+judge_name=$1
+load_path=$2
 api_key=$3
 api_base=$4
 
@@ -14,7 +14,7 @@ do
     python scripts/eval_llm_refusal.py \
     --load_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/all_prompts.jsonl \
     --save_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/eval_refusal.jsonl \
-    --model_name $model_name \
+    --model_name $judge_name \
     --api_key $api_key \
     --api_base $api_base 
 
@@ -22,7 +22,7 @@ do
     python scripts/eval_llm_refusal.py \
     --load_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/all_prompts.jsonl \
     --save_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/eval_refusal.jsonl \
-    --model_name $model_name \
+    --model_name $judge_name \
     --api_key $api_key \
     --api_base $api_base
 done
@@ -35,7 +35,7 @@ do
     python scripts/eval_llm_refusal.py \
     --load_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl \
     --save_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural/en/test/eval_refusal.jsonl \
-    --model_name $model_name \
+    --model_name $judge_name \
     --api_key $api_key \
     --api_base $api_base \
 
@@ -43,7 +43,7 @@ do
     python scripts/eval_llm_refusal.py \
     --load_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl \
     --save_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural/$lang/test/eval_refusal.jsonl \
-    --model_name $model_name \
+    --model_name $judge_name \
     --api_key $api_key \
     --api_base $api_base \
 
@@ -55,7 +55,7 @@ do
     python scripts/eval_llm_refusal.py \
     --load_path ./outputs/${load_path}/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl \
     --save_path ./outputs/${load_path}/SEASafeguardDataset/general/$lang/test/eval_refusal.jsonl \
-    --model_name $model_name \
+    --model_name $judge_name \
     --api_key $api_key \
     --api_base $api_base \
 done
