@@ -2,10 +2,10 @@
 
 load_path=$1
 
-# Start VLLM server before running this script
-CUDA_VISIBLE_DEVICES=0,1,2,3 vllm serve google/gemma-3-27b-it --port 8000 --download_dir ./data/models --tensor_parallel_size 4
-CUDA_VISIBLE_DEVICES=4,5 vllm serve ToxicityPrompts/PolyGuard-Ministral --port 8001 --download_dir ./data/models --tensor_parallel_size 2
-CUDA_VISIBLE_DEVICES=6,7 vllm serve meta-llama/Llama-Guard-3-8B --port 8002 --download_dir ./data/models --tensor_parallel_size 2
+# # Start VLLM server before running this script
+# CUDA_VISIBLE_DEVICES=0,1,2,3 vllm serve google/gemma-3-27b-it --port 8000 --download_dir ./data/models --tensor_parallel_size 4
+# CUDA_VISIBLE_DEVICES=4,5 vllm serve ToxicityPrompts/PolyGuard-Ministral --port 8001 --download_dir ./data/models --tensor_parallel_size 2
+# CUDA_VISIBLE_DEVICES=6,7 vllm serve meta-llama/Llama-Guard-3-8B --port 8002 --download_dir ./data/models --tensor_parallel_size 2
 
 echo "Evaluating Cultural Safety (Handwritten)..."
 for lang in ta th tl ms in my vi
