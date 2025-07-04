@@ -145,8 +145,6 @@ if __name__ == "__main__":
     parser.add_argument("--n", type=int, default=3)
     args = parser.parse_args()
 
-    random.seed(args.seed)
-
     # Initial model
     if args.api_key is not None and args.api_base is not None:
         # Use OpenAI API
