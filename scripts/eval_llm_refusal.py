@@ -176,7 +176,7 @@ if __name__ == "__main__":
 
     # Load existing refusal results if available
     count = 0
-    if not os.path.exists(args.save_path):
+    if os.path.exists(args.save_path):
         with open(args.save_path, "r") as f:
             for line in f:
                 if line.strip() != "":
