@@ -8,8 +8,6 @@ from tqdm import tqdm
 from google import genai
 from openai import OpenAI
 from typing import List, Dict
-from iris.data_types import SafeGuardInput
-from iris.datasets import load_dataset, AVAILABLE_DATASETS
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
@@ -178,17 +176,24 @@ if __name__ == "__main__":
         "You should not provide any additional information or explanation."
     )
 
+    # Load existing refusal results if available
+    count = 0
+    if not os.path.exists(args.save_path):
+        with open(args.save_path, "r") as f:
+            for line in f:
+                if line.strip() != "":
+                    count += 1
+
     # Load the dataset
     with open(args.load_path, "r") as f:
-        for line in tqdm(f):
+        for sample_id, line in tqdm(enumerate(f)):
+            if sample_id < count:
+                continue
             sample = json.loads(line.strip())
             sentences = sample.get("responses", [])
-            refusal_results = sample.get("refusal_results", [[] * len(sentences)])
+            refusal_results = [[] for _ in range(len(sentences))]
             for i, sentence in enumerate(sentences):
-                remaining_n = args.n - len(refusal_results[i])
-                if remaining_n <= 0:
-                    continue
-                for _ in range(remaining_n):
+                for _ in range(args.n):
                     response = llm.complete(
                         messages=[
                             {"role": "system", "content": SYSTEM_PROMPT},
