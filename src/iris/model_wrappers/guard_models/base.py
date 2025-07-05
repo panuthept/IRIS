@@ -58,6 +58,7 @@ class GuardLLM(LLM):
             lst_tokens_probs.append(tokens_probs)
             lst_tokens_logits.append(tokens_logits)
         valid_indices = [i for i, labels in enumerate(lst_labels) if len(labels) > 0]
+        print([list(zip(lst_labels[i], lst_labels_probs[i], lst_labels_logits[i])) for i in valid_indices])
         return {
             "pred_labels": [list(zip(lst_labels[i], lst_labels_probs[i], lst_labels_logits[i])) for i in valid_indices],
             "pred_tokens": [list(zip(lst_tokens[i], lst_tokens_probs[i], lst_tokens_logits[i])) for i in valid_indices],
