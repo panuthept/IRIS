@@ -41,20 +41,20 @@ if __name__ == "__main__":
     #                 count += 1
 
     # Load the dataset
-    with open(args.load_path, "r") as f:
-        for sample_id, line in tqdm(enumerate(f)):
-            if sample_id < count:
-                continue
-            sample = json.loads(line.strip())
-            prompt = sample.get("prompt", "")
-            responses = sample.get("responses", [])
+    with open(args.save_path, "w") as out_f:
+        with open(args.load_path, "r") as f:
+            for sample_id, line in tqdm(enumerate(f)):
+                if sample_id < count:
+                    continue
+                sample = json.loads(line.strip())
+                prompt = sample.get("prompt", "")
+                responses = sample.get("responses", [])
 
-            safe_responses = []
-            for response in responses:
-                safeguard_response: SafeGuardResponse = safeguard.predict(prompt=prompt, response=response)
-                # print(safeguard_response)
-                safe_responses.append(safeguard_response.response_labels)
-            sample["safe_response_results"] = safe_responses
-            # Save the updated sample
-            with open(args.save_path, "a") as out_f:
+                safe_responses = []
+                for response in responses:
+                    safeguard_response: SafeGuardResponse = safeguard.predict(prompt=prompt, response=response)
+                    # print(safeguard_response)
+                    safe_responses.append(safeguard_response.response_labels)
+                sample["safe_response_results"] = safe_responses
+                # Save the updated sample
                 out_f.write(json.dumps(sample, ensure_ascii=False) + "\n")
