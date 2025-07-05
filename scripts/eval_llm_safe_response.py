@@ -52,7 +52,7 @@ if __name__ == "__main__":
             safe_responses = []
             for response in responses:
                 safeguard_response: SafeGuardResponse = safeguard.predict(prompt=prompt, response=response)
-                print(safeguard_response)
+                # print(safeguard_response)
                 safe_responses.append(safeguard_response.response_labels)
             sample["safe_response_results"] = safe_responses
             # Save the updated sample
