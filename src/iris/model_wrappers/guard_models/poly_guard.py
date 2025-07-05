@@ -121,7 +121,11 @@ class PolyGuard(GuardLLM):
         metadata["prompt_response"] = prompt_clf["response"]
         # Response classification
         response_labels = None
+        print()
+        print("มึงเห็น response มั้ยไอควาย")
+        print()
         print(f"Response: {response}")
+        print()
         if response is not None:
             response_clf: Dict[str, List[Tuple[str, float, float]]] = self._response_classify(prompt, response, **kwargs)
             print("Response Classifier Output:", response_clf)
