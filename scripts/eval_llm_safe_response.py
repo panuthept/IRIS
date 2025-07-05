@@ -51,6 +51,7 @@ if __name__ == "__main__":
 
             safe_responses = []
             for response in responses:
+                print(f"Input Response: {response}")
                 safeguard_response: SafeGuardResponse = safeguard.predict(prompt=prompt, response=response)
                 # print(safeguard_response)
                 safe_responses.append(safeguard_response.response_labels)
