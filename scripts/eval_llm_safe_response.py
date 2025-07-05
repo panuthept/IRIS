@@ -32,13 +32,13 @@ if __name__ == "__main__":
         max_tokens=args.max_tokens,
     )
 
-    # Load existing refusal results if available
+    # # Load existing refusal results if available
     count = 0
-    if os.path.exists(args.save_path):
-        with open(args.save_path, "r") as f:
-            for line in f:
-                if line.strip() != "":
-                    count += 1
+    # if os.path.exists(args.save_path):
+    #     with open(args.save_path, "r") as f:
+    #         for line in f:
+    #             if line.strip() != "":
+    #                 count += 1
 
     # Load the dataset
     with open(args.load_path, "r") as f:
