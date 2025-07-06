@@ -46,7 +46,7 @@ for lang in en
 do
     echo "Cultural: $lang - Language: $lang"
     python scripts/inference_llm_with_safeguard.py \
-    --safeguard_mode advance_inform \
+    --safeguard_model advance_inform \
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
@@ -59,7 +59,7 @@ for lang in en
 do
     echo "Language: $lang"
     python scripts/inference_llm_with_safeguard.py \
-    --safeguard_mode advance_inform \
+    --safeguard_model advance_inform \
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
@@ -74,7 +74,7 @@ for lang in en
 do
     echo "Cultural: $lang - Language: $lang"
     python scripts/inference_llm_with_safeguard.py \
-    --safeguard_mode advance_inform \
+    --safeguard_model advance_inform \
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
@@ -87,7 +87,7 @@ for lang in en
 do
     echo "Language: $lang"
     python scripts/inference_llm_with_safeguard.py \
-    --safeguard_mode advance_inform \
+    --safeguard_model advance_inform \
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \

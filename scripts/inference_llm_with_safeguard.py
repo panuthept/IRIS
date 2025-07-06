@@ -145,7 +145,7 @@ class HFModel:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--safeguard_mode", type=str, default="fixed_answer", choices=["fixed_answer", "advance_inform"])
+    parser.add_argument("--safeguard_model", type=str, default="fixed_answer", choices=["fixed_answer", "advance_inform"])
     parser.add_argument("--model_name", type=str, default="google/gemma-3-27b-it")
     parser.add_argument("--tokenizer_name", type=str, default="google/gemma-3-27b-it")
     parser.add_argument("--api_key", type=str, default=None)
