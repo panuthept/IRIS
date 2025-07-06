@@ -184,7 +184,7 @@ if __name__ == "__main__":
 
     with open(args.output_path, "w") as out_file:
         with open(args.input_path, "r") as f:
-            for line in f:
+            for line in tqdm(f):
                 if line.strip() == "":
                     continue
                 example = json.loads(line.strip())
