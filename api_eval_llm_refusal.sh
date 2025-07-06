@@ -7,25 +7,25 @@ api_base=$4
 
 # Start VLLM server before running this script
 
-# echo "Evaluating Cultural Safety (Handwritten)..."
-# for lang in ta th tl ms in my vi
-# do
-#     echo "Cultural: $lang - Language: en"
-#     python scripts/eval_llm_refusal.py \
-#     --load_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/all_prompts.jsonl \
-#     --save_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/eval_refusal.jsonl \
-#     --model_name $judge_name \
-#     --api_key $api_key \
-#     --api_base $api_base 
+echo "Evaluating Cultural Safety (Handwritten)..."
+for lang in ta th tl ms in my vi
+do
+    echo "Cultural: $lang - Language: en"
+    python scripts/eval_llm_refusal.py \
+    --load_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/all_prompts.jsonl \
+    --save_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/eval_refusal.jsonl \
+    --model_name $judge_name \
+    --api_key $api_key \
+    --api_base $api_base 
 
-#     echo "Cultural: $lang - Language: $lang"
-#     python scripts/eval_llm_refusal.py \
-#     --load_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/all_prompts.jsonl \
-#     --save_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/eval_refusal.jsonl \
-#     --model_name $judge_name \
-#     --api_key $api_key \
-#     --api_base $api_base
-# done
+    echo "Cultural: $lang - Language: $lang"
+    python scripts/eval_llm_refusal.py \
+    --load_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/all_prompts.jsonl \
+    --save_path ./outputs/${load_path}/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/eval_refusal.jsonl \
+    --model_name $judge_name \
+    --api_key $api_key \
+    --api_base $api_base
+done
 
 
 echo "Evaluating Cultural Safety..."
