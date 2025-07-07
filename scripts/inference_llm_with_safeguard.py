@@ -182,10 +182,20 @@ if __name__ == "__main__":
     # Create save directory
     os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
 
-    with open(args.output_path, "w") as out_file:
+    # # Load existing results if available
+    count = 0
+    if os.path.exists(args.output_path):
+        with open(args.output_path, "r") as f:
+            for line in f:
+                if line.strip() != "":
+                    count += 1
+
+    with open(args.output_path, "a") as out_file:
         with open(args.input_path, "r") as f:
-            for line in tqdm(f):
+            for sample_id, line in tqdm(enumerate(f)):
                 if line.strip() == "":
+                    continue
+                if sample_id < count:
                     continue
                 example = json.loads(line.strip())
                 prompt = example["prompt"]
