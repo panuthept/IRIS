@@ -181,7 +181,7 @@ do
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
-    --input_path ./outputs/LlamaGLLMGuard-Llama3.3-70Buard/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl \
+    --input_path ./outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl \
     --output_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
 done
 
