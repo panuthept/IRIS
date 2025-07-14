@@ -40,57 +40,113 @@ api_base=$4
 # done
 
 
-# Safeguard-advance-inform (LlamaGuard)
+# # Safeguard-advance-inform (LlamaGuard)
+# echo "Evaluating Cultural Safety..."
+# for lang in en
+# do
+#     echo "Cultural: $lang - Language: $lang"
+#     python scripts/inference_llm_with_safeguard.py \
+#     --safeguard_model advance_inform \
+#     --model_name $model_name \
+#     --api_key $api_key \
+#     --api_base $api_base \
+#     --input_path ./outputs/LlamaGuard/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl \
+#     --output_path ./outputs/${output_name}-LlamaGuard/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
+# done
+
+# echo "Evaluating General Safety..."
+# for lang in en
+# do
+#     echo "Language: $lang"
+#     python scripts/inference_llm_with_safeguard.py \
+#     --safeguard_model advance_inform \
+#     --model_name $model_name \
+#     --api_key $api_key \
+#     --api_base $api_base \
+#     --input_path ./outputs/LlamaGuard/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl \
+#     --output_path ./outputs/${output_name}-LlamaGuard/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
+# done
+
+
+# # Safeguard-advance-inform (LLMGuard-Llama3.3-70B)
+# echo "Evaluating Cultural Safety..."
+# for lang in en
+# do
+#     echo "Cultural: $lang - Language: $lang"
+#     python scripts/inference_llm_with_safeguard.py \
+#     --safeguard_model advance_inform \
+#     --model_name $model_name \
+#     --api_key $api_key \
+#     --api_base $api_base \
+#     --input_path ./outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl \
+#     --output_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
+# done
+
+# echo "Evaluating General Safety..."
+# for lang in en
+# do
+#     echo "Language: $lang"
+#     python scripts/inference_llm_with_safeguard.py \
+#     --safeguard_model advance_inform \
+#     --model_name $model_name \
+#     --api_key $api_key \
+#     --api_base $api_base \
+#     --input_path ./outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl \
+#     --output_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
+# done
+
+
+
+
+
+
+# Safeguard-advance-inform (LlamaGuard) - Refine Response
 echo "Evaluating Cultural Safety..."
 for lang in en
 do
     echo "Cultural: $lang - Language: $lang"
-    python scripts/inference_llm_with_safeguard.py \
-    --safeguard_model advance_inform \
+    python scripts/refine_llm_response_with_safeguard.py \
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
-    --input_path ./outputs/LlamaGuard/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl \
-    --output_path ./outputs/${output_name}-LlamaGuard/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
+    --input_path ./outputs/${output_name}-LlamaGuard/SEASafeguardDataset/${lang}_cultural/$lang/test/eval_safe_response.jsonl \
+    --output_path ./outputs/${output_name}-LlamaGuard-RefinedResponse/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
 done
 
 echo "Evaluating General Safety..."
 for lang in en
 do
     echo "Language: $lang"
-    python scripts/inference_llm_with_safeguard.py \
-    --safeguard_model advance_inform \
+    python scripts/refine_llm_response_with_safeguard.py \
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
-    --input_path ./outputs/LlamaGuard/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl \
-    --output_path ./outputs/${output_name}-LlamaGuard/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
+    --input_path ./outputs/${output_name}-LlamaGuard/SEASafeguardDataset/general/$lang/test/eval_safe_response.jsonl \
+    --output_path ./outputs/${output_name}-LlamaGuard-RefinedResponse/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
 done
 
 
-# Safeguard-advance-inform (LLMGuard-Llama3.3-70B)
+# Safeguard-advance-inform (LLMGuard-Llama3.3-70B) - Refine Response
 echo "Evaluating Cultural Safety..."
 for lang in en
 do
     echo "Cultural: $lang - Language: $lang"
-    python scripts/inference_llm_with_safeguard.py \
-    --safeguard_model advance_inform \
+    python scripts/refine_llm_response_with_safeguard.py \
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
-    --input_path ./outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl \
-    --output_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
+    --input_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural/$lang/test/eval_safe_response.jsonl \
+    --output_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B-RefinedResponse/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
 done
 
 echo "Evaluating General Safety..."
 for lang in en
 do
     echo "Language: $lang"
-    python scripts/inference_llm_with_safeguard.py \
-    --safeguard_model advance_inform \
+    python scripts/refine_llm_response_with_safeguard.py \
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
-    --input_path ./outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl \
-    --output_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
+    --input_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B/SEASafeguardDataset/general/$lang/test/eval_safe_response.jsonl \
+    --output_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B-RefinedResponse/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
 done
