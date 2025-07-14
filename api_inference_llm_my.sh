@@ -210,6 +210,7 @@ do
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
+    --safeguard_path ./outputs/LlamaGuard/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/all_prompts.jsonl \
     --input_path ./outputs/${output_name}-LlamaGuard/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/eval_safe_response.jsonl \
     --output_path ./outputs/${output_name}-LlamaGuard-RefinedResponse/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/all_prompts.jsonl
 
@@ -218,6 +219,7 @@ do
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
+    --safeguard_path ./outputs/LlamaGuard/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/all_prompts.jsonl \
     --input_path ./outputs/${output_name}-LlamaGuard/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/eval_safe_response.jsonl \
     --output_path ./outputs/${output_name}-LlamaGuard-RefinedResponse/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/all_prompts.jsonl
 done
@@ -230,6 +232,7 @@ do
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
+    --safeguard_path ./outputs/LlamaGuard/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl \
     --input_path ./outputs/${output_name}-LlamaGuard/SEASafeguardDataset/${lang}_cultural/en/test/eval_safe_response.jsonl \
     --output_path ./outputs/${output_name}-LlamaGuard-RefinedResponse/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
 
@@ -238,6 +241,7 @@ do
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
+    --safeguard_path ./outputs/LlamaGuard/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl \
     --input_path ./outputs/${output_name}-LlamaGuard/SEASafeguardDataset/${lang}_cultural/$lang/test/eval_safe_response.jsonl \
     --output_path ./outputs/${output_name}-LlamaGuard-RefinedResponse/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
 done
@@ -250,6 +254,7 @@ do
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
+    --safeguard_path ./outputs/LlamaGuard/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl \
     --input_path ./outputs/${output_name}-LlamaGuard/SEASafeguardDataset/general/$lang/test/eval_safe_response.jsonl \
     --output_path ./outputs/${output_name}-LlamaGuard-RefinedResponse/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
 done
@@ -264,6 +269,7 @@ do
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
+    --safeguard_path ./outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/all_prompts.jsonl \
     --input_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/eval_safe_response.jsonl \
     --output_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B-RefinedResponse/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/all_prompts.jsonl
 
@@ -272,6 +278,7 @@ do
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
+    --safeguard_path ./outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/all_prompts.jsonl \
     --input_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/eval_safe_response.jsonl \
     --output_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B-RefinedResponse/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/all_prompts.jsonl
 done
@@ -284,6 +291,7 @@ do
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
+    --safeguard_path ./outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl \
     --input_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural/en/test/eval_safe_response.jsonl \
     --output_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B-RefinedResponse/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
 
@@ -292,6 +300,7 @@ do
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
+    --safeguard_path ./outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl \
     --input_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B/SEASafeguardDataset/${lang}_cultural/$lang/test/eval_safe_response.jsonl \
     --output_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B-RefinedResponse/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
 done
@@ -304,6 +313,7 @@ do
     --model_name $model_name \
     --api_key $api_key \
     --api_base $api_base \
+    --safeguard_path ./outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl \
     --input_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B/SEASafeguardDataset/general/$lang/test/eval_safe_response.jsonl \
     --output_path ./outputs/${output_name}-LLMGuard-Llama3.3-70B-RefinedResponse/SEASafeguardDataset/general/$lang/test/all_prompts.jsonl
 done
