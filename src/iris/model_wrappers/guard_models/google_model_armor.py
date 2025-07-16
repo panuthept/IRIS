@@ -18,7 +18,7 @@ class GoogleModelArmor:
             **kwargs,
     ):
         from google.cloud import modelarmor_v1
-        
+
         self.project = project
         self.location = location
         self.template = template
@@ -46,6 +46,8 @@ class GoogleModelArmor:
         response: Optional[str] = None,
         **kwargs,
     ) -> SafeGuardResponse:
+        from google.cloud import modelarmor_v1
+        
         prompt_gold_label = None
         response_gold_label = None
         if input is not None:
