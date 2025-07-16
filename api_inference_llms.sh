@@ -53,6 +53,16 @@ sh api_inference_llm_vi.sh google/gemma-3-27b-it gemma-3-27b-it EMPTY http://loc
 sh api_eval_llm_refusal.sh google/gemma-3-27b-it gemma-3-27b-it EMPTY http://localhost:8000/v1
 sh api_eval_llm_safe_response.sh gemma-3-27b-it
 
+sh api_eval_llm_refusal.sh google/gemma-3-27b-it gemma-3-27b-it-LlamaGuard EMPTY http://localhost:8000/v1
+sh api_eval_llm_refusal.sh google/gemma-3-27b-it gemma-3-27b-it-LLMGuard-Llama3.3-70B EMPTY http://localhost:8000/v1
+sh api_eval_llm_safe_response.sh gemma-3-27b-it-LlamaGuard
+sh api_eval_llm_safe_response.sh gemma-3-27b-it-LLMGuard-Llama3.3-70B
+
+sh api_eval_llm_refusal.sh google/gemma-3-27b-it gemma-3-27b-it-LlamaGuard-RefinedResponse EMPTY http://localhost:8000/v1
+sh api_eval_llm_refusal.sh google/gemma-3-27b-it gemma-3-27b-it-LLMGuard-Llama3.3-70B-RefinedResponse EMPTY http://localhost:8000/v1
+sh api_eval_llm_safe_response.sh gemma-3-27b-it-LlamaGuard-RefinedResponse
+sh api_eval_llm_safe_response.sh gemma-3-27b-it-LLMGuard-Llama3.3-70B-RefinedResponse
+
 # 1024 (DONE)
 vllm serve Meta-Llama-3.1-70B-Instruct --port 8000 --tensor_parallel_size 8
 # 1024 Running [3]
@@ -74,6 +84,16 @@ sh api_inference_llm_vi.sh Meta-Llama-3.1-70B-Instruct Meta-Llama-3.1-70B-Instru
 # 1024
 sh api_eval_llm_refusal.sh google/gemma-3-27b-it Meta-Llama-3.1-70B-Instruct EMPTY http://localhost:8000/v1
 sh api_eval_llm_safe_response.sh Meta-Llama-3.1-70B-Instruct
+
+sh api_eval_llm_refusal.sh google/gemma-3-27b-it Meta-Llama-3.1-70B-Instruct-LlamaGuard EMPTY http://localhost:8000/v1
+sh api_eval_llm_refusal.sh google/gemma-3-27b-it Meta-Llama-3.1-70B-Instruct-LLMGuard-Llama3.3-70B EMPTY http://localhost:8000/v1
+sh api_eval_llm_safe_response.sh Meta-Llama-3.1-70B-Instruct-LlamaGuard
+sh api_eval_llm_safe_response.sh Meta-Llama-3.1-70B-Instruct-LLMGuard-Llama3.3-70B
+
+sh api_eval_llm_refusal.sh google/gemma-3-27b-it Meta-Llama-3.1-70B-Instruct-LlamaGuard-RefinedResponse EMPTY http://localhost:8000/v1
+sh api_eval_llm_refusal.sh google/gemma-3-27b-it Meta-Llama-3.1-70B-Instruct-LLMGuard-Llama3.3-70B-RefinedResponse EMPTY http://localhost:8000/v1
+sh api_eval_llm_safe_response.sh Meta-Llama-3.1-70B-Instruct-LlamaGuard-RefinedResponse
+sh api_eval_llm_safe_response.sh Meta-Llama-3.1-70B-Instruct-LLMGuard-Llama3.3-70B-RefinedResponse
 
 # 1024 (DONE)
 vllm serve Llama-3.3-70B-Instruct --port 8000 --tensor_parallel_size 8
@@ -140,3 +160,13 @@ sh api_inference_llm_vi.sh aisingapore/Llama-SEA-LION-v3-70B-IT Llama-SEA-LION-v
 # 1024
 sh api_eval_llm_refusal.sh google/gemma-3-27b-it Llama-SEA-LION-v3-70B-IT EMPTY http://localhost:8000/v1
 sh api_eval_llm_safe_response.sh Llama-SEA-LION-v3-70B-IT
+
+
+
+sh api_eval_llm_refusal.sh google/gemma-3-27b-it gemini-2.0-flash EMPTY http://localhost:8000/v1
+sh api_eval_llm_safe_response.sh gemini-2.0-flash
+
+
+
+sh api_eval_llm_refusal.sh google/gemma-3-27b-it gemini-2.5-flash EMPTY http://localhost:8000/v1
+sh api_eval_llm_safe_response.sh gemini-2.5-flash
