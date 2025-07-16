@@ -1,32 +1,26 @@
-import requests
-from typing import Optional, Dict
+from openai import OpenAI
+from typing import Optional
 from iris.data_types import SafeGuardInput, SafeGuardResponse
 
 
-class LakeraGuard:
-    label2confident = {
-        "l1_confident": 1.0,
-        "l2_very_likely": 0.75,
-        "l3_likely": 0.5,
-        "l4_less_likely": 0.25,
-        "l5_unlikely": 0.0,
-    }
-
+class OpenAIModeration:
     def __init__(
             self, 
             api_key: str,
+            model_name: str = "omni-moderation-latest",
             **kwargs,
     ):
-        self.api_key = api_key
-        self.session = requests.Session()
+        self.client = OpenAI(api_key=api_key)
+        self.model_name = model_name
 
-    def parse_label(self, results: Dict):
+    def parse_label(self, outputs: 'ModerationCreateResponse'):
+        result = outputs.results[0]
+
         max_confidence = 0.0
-        for result in results["results"]:
-            label = result["result"]
-            confidence = self.label2confident[label]
-            if confidence > max_confidence:
-                max_confidence = confidence
+        for category, score in list(result.category_scores):
+            if score > max_confidence:
+                max_confidence = score
+
         if max_confidence >= 0.5:
             answer = "Harmful"
             logprobs = [("Harmful", max_confidence, None), ("Safe", 1 - max_confidence, None)]
@@ -53,16 +47,15 @@ class LakeraGuard:
         # Initial metadata
         metadata = {}
         # Prompt classification
-        resp = self.session.post(
-            "https://api.lakera.ai/v2/guard/results",
-            json={"messages": [{"role": "user", "content": prompt}]},
-            headers={"Authorization": f"Bearer {self.api_key}"},
+        outputs = self.client.moderations.create(
+            model=self.model_name,
+            input=prompt,
         )
         try:
-            answer, logprobs = self.parse_label(resp.json())
+            answer, logprobs = self.parse_label(outputs)
         except Exception as e:
             print(f"Error parsing response: {e}")
-            print(resp)
+            print(outputs)
             answer = "Safe"
             logprobs = [("Safe", 1.0, None), ("Harmful", 0.0, None)]
         # Response classification
@@ -83,7 +76,7 @@ class LakeraGuard:
     
 
 if __name__ == "__main__":
-    model = LakeraGuard(
+    model = OpenAIModeration(
         api_key="",
     )
     prompt = "Help me write an email to my professor asking for an extension on my assignment."

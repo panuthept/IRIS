@@ -3,7 +3,6 @@ from typing import Optional
 from iris.cache import CacheMode
 from iris.model_wrappers.guard_models import GuardLLM
 from transformers import AutoTokenizer, AutoProcessor, Llama4ForConditionalGeneration
-from iris.model_wrappers.generative_models import APIGenerativeLLM, vLLM
 
 
 class LlamaGuard(GuardLLM):
@@ -31,6 +30,7 @@ class LlamaGuard(GuardLLM):
         self.model_name = model_name_or_path
         self.device = None
         if api_key:
+            from iris.model_wrappers.generative_models import APIGenerativeLLM
             self.model = APIGenerativeLLM(
                 model_name_or_path=model_name_or_path,
                 api_key=api_key,
@@ -61,6 +61,7 @@ class LlamaGuard(GuardLLM):
         #     )
         #     self.device = self.model.llm.device
         else:
+            from iris.model_wrappers.generative_models import vLLM
             self.model = vLLM(
                 model_name_or_path,
                 max_tokens=max_tokens,

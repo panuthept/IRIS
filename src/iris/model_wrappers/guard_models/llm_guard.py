@@ -1,7 +1,6 @@
 from typing import Optional
 from iris.cache import CacheMode
 from iris.model_wrappers.guard_models import GuardLLM
-from iris.model_wrappers.generative_models import APIGenerativeLLM, HuggfaceGenerativeLLM
 
 
 class LLMGuard(GuardLLM):
@@ -82,6 +81,7 @@ class LLMGuard(GuardLLM):
         self.model_name = model_name_or_path
         self.device = None
         if api_key:
+            from iris.model_wrappers.generative_models import APIGenerativeLLM
             self.model = APIGenerativeLLM(
                 model_name_or_path=model_name_or_path,
                 api_key=api_key,
@@ -96,6 +96,7 @@ class LLMGuard(GuardLLM):
             )
             self.response_template_ids = None
         else:
+            from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path=model_name_or_path,
                 max_new_tokens=100,

@@ -2,6 +2,9 @@ from typing import Optional, Union
 from iris.model_wrappers.guard_models.base import GuardLLM, PromptGuard
 from iris.model_wrappers.guard_models.poly_guard import PolyGuard
 from iris.model_wrappers.guard_models.lakera_guard import LakeraGuard
+from iris.model_wrappers.guard_models.azure_ai_content_safety import AzureAIContentSafety
+from iris.model_wrappers.guard_models.google_model_armor import GoogleModelArmor
+from iris.model_wrappers.guard_models.openai_moderation import OpenAIModeration
 # from iris.model_wrappers.guard_models.nemo_guard import NemoGuard
 # from iris.model_wrappers.guard_models.wild_guard import WildGuard
 from iris.model_wrappers.guard_models.shield_gemma import ShieldGemma
@@ -17,8 +20,11 @@ AVAILABLE_GUARDS = {
     "GPT4o": GPT4o,
     "Llama31": Llama31,
     "LLMGuard": LLMGuard,
+    "OpenAIModeration": OpenAIModeration,
     "LlamaGuard": LlamaGuard,
     "LakeraGuard": LakeraGuard,
+    "AzureAIContentSafety": AzureAIContentSafety,
+    "GoogleModelArmor": GoogleModelArmor,
     "LlamaGuard4": LlamaGuard4,
     "ShieldGemma": ShieldGemma,
     "SealionGuardAPI": SealionGuardAPI,
@@ -31,20 +37,10 @@ AVAILABLE_GUARDS = {
 def load_safeguard(
     safeguard_name: str, 
     model_name: str, 
-    checkpoint_path: Optional[str] = None, 
-    api_key: Optional[str] = None, 
-    api_base: Optional[str] = None,
-    disable_logitlens: bool = False,
-    top_logprobs: int = 2,
-    max_tokens: int = 3000,
+    **kwargs,
 ) -> Union[GuardLLM, PromptGuard]:
     assert safeguard_name in AVAILABLE_GUARDS, f"Invalid guard model: {safeguard_name}"
     return AVAILABLE_GUARDS[safeguard_name](
         model_name_or_path=model_name,
-        checkpoint_path=checkpoint_path,
-        api_key=api_key,
-        api_base=api_base,
-        disable_logitlens=disable_logitlens,
-        top_logprobs=top_logprobs,
-        max_tokens=max_tokens,
+        **kwargs,
     )

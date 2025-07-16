@@ -2,7 +2,6 @@ from iris.cache import CacheMode
 from typing import Optional, List, Dict, Tuple
 from iris.model_wrappers.guard_models import GuardLLM
 from iris.data_types import SafeGuardInput, SafeGuardResponse
-from iris.model_wrappers.generative_models import APIGenerativeLLM, HuggfaceGenerativeLLM, vLLM
 
 
 class PolyGuard(GuardLLM):
@@ -56,6 +55,7 @@ class PolyGuard(GuardLLM):
         self.model_name = model_name_or_path
         self.device = None
         if api_key:
+            from iris.model_wrappers.generative_models import APIGenerativeLLM
             self.model = APIGenerativeLLM(
                 model_name_or_path=model_name_or_path,
                 api_key=api_key,
@@ -70,6 +70,7 @@ class PolyGuard(GuardLLM):
             )
             self.response_template_ids = None
         else:
+            from iris.model_wrappers.generative_models import HuggfaceGenerativeLLM
             self.model = HuggfaceGenerativeLLM(
                 model_name_or_path=model_name_or_path,
                 max_new_tokens=100,

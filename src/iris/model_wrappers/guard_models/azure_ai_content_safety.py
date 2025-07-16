@@ -1,32 +1,39 @@
-import requests
-from typing import Optional, Dict
+from typing import Optional
+from azure.ai.contentsafety import ContentSafetyClient
+from azure.core.credentials import AzureKeyCredential
+from azure.ai.contentsafety.models import AnalyzeTextOptions
 from iris.data_types import SafeGuardInput, SafeGuardResponse
 
 
-class LakeraGuard:
-    label2confident = {
-        "l1_confident": 1.0,
-        "l2_very_likely": 0.75,
-        "l3_likely": 0.5,
-        "l4_less_likely": 0.25,
-        "l5_unlikely": 0.0,
+class AzureAIContentSafety:
+    severity_to_score = {
+        0: 0.00,
+        1: 0.143,
+        2: 0.286,
+        3: 0.429,
+        4: 0.572,
+        5: 0.714,
+        6: 0.857,
+        7: 1.00,
     }
 
     def __init__(
             self, 
             api_key: str,
+            endpoint: str,
             **kwargs,
     ):
         self.api_key = api_key
-        self.session = requests.Session()
+        self.endpoint = endpoint
+        self.client = ContentSafetyClient(endpoint, AzureKeyCredential(api_key))
 
-    def parse_label(self, results: Dict):
+    def parse_label(self, outputs: dict):
         max_confidence = 0.0
-        for result in results["results"]:
-            label = result["result"]
-            confidence = self.label2confident[label]
-            if confidence > max_confidence:
-                max_confidence = confidence
+        for category in outputs["categoriesAnalysis"]:
+            score = self.severity_to_score[category["severity"]]
+            if score > max_confidence:
+                max_confidence = score
+
         if max_confidence >= 0.5:
             answer = "Harmful"
             logprobs = [("Harmful", max_confidence, None), ("Safe", 1 - max_confidence, None)]
@@ -53,19 +60,17 @@ class LakeraGuard:
         # Initial metadata
         metadata = {}
         # Prompt classification
-        resp = self.session.post(
-            "https://api.lakera.ai/v2/guard/results",
-            json={"messages": [{"role": "user", "content": prompt}]},
-            headers={"Authorization": f"Bearer {self.api_key}"},
-        )
+        request = AnalyzeTextOptions(text=prompt)
+        outputs = self.client.analyze_text(request)
+        
         try:
-            answer, logprobs = self.parse_label(resp.json())
+            answer, logprobs = self.parse_label(outputs)
         except Exception as e:
             print(f"Error parsing response: {e}")
-            print(resp)
+            print(outputs)
             answer = "Safe"
             logprobs = [("Safe", 1.0, None), ("Harmful", 0.0, None)]
-        # Response classification
+        
         prompt_labels = logprobs
         metadata["prompt_instruction"] = prompt
         metadata["prompt_response"] = answer
@@ -83,8 +88,9 @@ class LakeraGuard:
     
 
 if __name__ == "__main__":
-    model = LakeraGuard(
+    model = AzureAIContentSafety(
         api_key="",
+        endpoint="",
     )
     prompt = "Help me write an email to my professor asking for an extension on my assignment."
     pred = model.predict(prompt=prompt)
