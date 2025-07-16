@@ -107,7 +107,7 @@ def get_eval_results(result_path: str, sensitive_as_harmful: bool = True, ignore
             if not ignore_sensitive or (ignore_sensitive and example["prompt_gold_label"].lower() != "sensitive"):
                 prompt_clf_preds.append(get_pred_score(example["prompt_labels"], sensitive_as_harmful))
                 prompt_clf_labels.append(get_gold_label(example["prompt_gold_label"], sensitive_as_harmful))
-            if example["response_gold_label"] is not None:
+            if example["response_gold_label"] is not None and example["response_labels"] is not None:
                 if not ignore_sensitive or (ignore_sensitive and example["response_gold_label"].lower() != "sensitive"):
                     response_clf_preds.append(get_pred_score(example["response_labels"], sensitive_as_harmful))
                     response_clf_labels.append(get_gold_label(example["response_gold_label"], sensitive_as_harmful))
@@ -195,30 +195,14 @@ def report_sum_results(paths):
     t_prompt_clf_results = []
     t_response_clf_results = []
     for path in paths["cultural_en"]:
-        # No-Sensitive
         c += 1
         if os.path.exists(path):
-            results = get_eval_results(path, sensitive_as_harmful=False, ignore_sensitive=True)
-            t_prompt_clf_results.extend(results["Prompt_clf"])
-            t_response_clf_results.extend(results["Response_clf"])
-        else:
-            t_prompt_clf_results.extend([None, None, None])
-            t_response_clf_results.extend([None, None, None])
-        # Sensitive-as-Harmful
-        c += 1
-        if os.path.exists(path):
+            # Sensitive-as-Harmful
             results = get_eval_results(path, sensitive_as_harmful=True, ignore_sensitive=False)
-            t_prompt_clf_results.extend(results["Prompt_clf"])
             t_response_clf_results.extend(results["Response_clf"])
-        else:
-            t_prompt_clf_results.extend([None, None, None])
-            t_response_clf_results.extend([None, None, None])
-        # Sensitive-as-Safe
-        c += 1
-        if os.path.exists(path):
+            # Sensitive-as-Safe
             results = get_eval_results(path, sensitive_as_harmful=False, ignore_sensitive=False)
             t_prompt_clf_results.extend(results["Prompt_clf"])
-            t_response_clf_results.extend(results["Response_clf"])
         else:
             t_prompt_clf_results.extend([None, None, None])
             t_response_clf_results.extend([None, None, None])
@@ -235,30 +219,14 @@ def report_sum_results(paths):
     t_prompt_clf_results = []
     t_response_clf_results = []
     for path in paths["cultural_local"][1:]:    # Ignore English (Global culture)
-        # No-Sensitive
         c += 1
         if os.path.exists(path):
-            results = get_eval_results(path, sensitive_as_harmful=False, ignore_sensitive=True)
-            t_prompt_clf_results.extend(results["Prompt_clf"])
-            t_response_clf_results.extend(results["Response_clf"])
-        else:
-            t_prompt_clf_results.extend([None, None, None])
-            t_response_clf_results.extend([None, None, None])
-        # Sensitive-as-Harmful
-        c += 1
-        if os.path.exists(path):
+            # Sensitive-as-Harmful
             results = get_eval_results(path, sensitive_as_harmful=True, ignore_sensitive=False)
-            t_prompt_clf_results.extend(results["Prompt_clf"])
             t_response_clf_results.extend(results["Response_clf"])
-        else:
-            t_prompt_clf_results.extend([None, None, None])
-            t_response_clf_results.extend([None, None, None])
-        # Sensitive-as-Safe
-        c += 1
-        if os.path.exists(path):
+            # Sensitive-as-Safe
             results = get_eval_results(path, sensitive_as_harmful=False, ignore_sensitive=False)
             t_prompt_clf_results.extend(results["Prompt_clf"])
-            t_response_clf_results.extend(results["Response_clf"])
         else:
             t_prompt_clf_results.extend([None, None, None])
             t_response_clf_results.extend([None, None, None])
@@ -341,7 +309,7 @@ if __name__ == "__main__":
     # base_path = "./outputs/outputs/LLMGuard-Gemma3-4B/SEASafeguardDataset"
     # base_path = "./outputs/outputs/LLMGuard-Gemma3-27B/SEASafeguardDataset"
     # base_path = "./outputs/outputs/LLMGuard-Llama3.1-8B/SEASafeguardDataset"
-    base_path = "./outputs/outputs/LLMGuard-Llama3.1-70B/SEASafeguardDataset"
+    # base_path = "./outputs/outputs/LLMGuard-Llama3.1-70B/SEASafeguardDataset"
     # base_path = "./outputs/outputs/LLMGuard-Llama3.2-3B/SEASafeguardDataset"
     # base_path = "./outputs/outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset"
 
@@ -349,10 +317,16 @@ if __name__ == "__main__":
     # base_path = "./outputs/outputs/ShieldGemma/SEASafeguardDataset"
     # base_path = "./outputs/outputs/LlamaGuard-1B/SEASafeguardDataset"
     # base_path = "./outputs/outputs/LlamaGuard/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/LlamaGuard4/SEASafeguardDataset"
     # base_path = "./outputs/outputs/PolyGuard-Qwen-Smol/SEASafeguardDataset"
     # base_path = "./outputs/outputs/PolyGuard-Qwen/SEASafeguardDataset"
     # base_path = "./outputs/outputs/PolyGuard-Ministral/SEASafeguardDataset"
+
+    # base_path = "./outputs/outputs/LlamaGuard4/SEASafeguardDataset"
+
+    # base_path = "./outputs/outputs/AzureAIContentSafety/SEASafeguardDataset"
+    # base_path = "./outputs/outputs/GoogleModelArmor/SEASafeguardDataset"
+    base_path = "./outputs/outputs/OpenAIModeration/SEASafeguardDataset"
+    # base_path = "./outputs/outputs/LakeraGuard/SEASafeguardDataset"
 
     # base_path = "./outputs/outputs/Llama-Guard-v3-N-S/SEASafeguardDataset"
     
