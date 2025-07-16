@@ -192,13 +192,16 @@ if __name__ == "__main__":
             refusal_results = [[] for _ in range(len(sentences))]
             for i, sentence in enumerate(sentences):
                 for _ in range(args.n):
-                    response = llm.complete(
-                        messages=[
-                            {"role": "system", "content": SYSTEM_PROMPT},
-                            {"role": "user", "content": sentence},
-                        ]
-                    )
-                    refusal_results[i].append(response.strip().lower() == "yes")
+                    if sentence is None:
+                        refusal_results[i].append(True)
+                    else:
+                        response = llm.complete(
+                            messages=[
+                                {"role": "system", "content": SYSTEM_PROMPT},
+                                {"role": "user", "content": sentence},
+                            ]
+                        )
+                        refusal_results[i].append(response.strip().lower() == "yes")
             sample["refusal_results"] = refusal_results
             # Save the updated sample
             with open(args.save_path, "a") as out_f:
