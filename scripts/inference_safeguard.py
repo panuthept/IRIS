@@ -33,6 +33,10 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint_path", type=str, default=None)
     parser.add_argument("--api_key", type=str, default=None)
     parser.add_argument("--api_base", type=str, default=None)
+    parser.add_argument("--project", type=str, default=None)
+    parser.add_argument("--location", type=str, default=None)
+    parser.add_argument("--template", type=str, default=None)
+    parser.add_argument("--endpoint", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="SEASafeguardDataset", choices=list(AVAILABLE_DATASETS.keys()))
     parser.add_argument("--mixed_tasks_sample", action="store_true")
     parser.add_argument("--language", type=str, default="en")
@@ -97,6 +101,10 @@ if __name__ == "__main__":
         checkpoint_path=args.checkpoint_path,
         api_key=args.api_key,
         api_base=args.api_base,
+        project=args.project,
+        location=args.location,
+        template=args.template,
+        endpoint=args.endpoint,
         disable_logitlens=args.disable_logitlens,
         top_logprobs=args.top_logprobs,
         max_tokens=args.max_tokens,
@@ -120,14 +128,25 @@ if __name__ == "__main__":
     # Create save directory
     os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
 
+    existing_count = 0
+    if os.path.exists(args.output_path):
+        with open(args.output_path, "r") as f:
+            for line in f:
+                if line.strip() == "":
+                    continue
+                existing_count += 1
+        print(f"Found {existing_count} existing examples.")
+
     # prompt_unknown = 0
     # prompt_harmful_scores = []
     # prompt_gold_labels = []
     # response_unknown = 0
     # response_harmful_scores = []
     # response_gold_labels = []
-    with open(args.output_path, "w") as f:
-        for sample in tqdm(samples):
+    with open(args.output_path, "a") as f:
+        for i, sample in tqdm(enumerate(samples)):
+            if i < existing_count:
+                continue
             safeguard_response: SafeGuardResponse = safeguard.predict(input=sample)
             # if sample.response is not None:
             #     # Get response classification results
