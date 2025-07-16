@@ -22,7 +22,6 @@ class AzureAIContentSafety:
     ):
         from azure.ai.contentsafety import ContentSafetyClient
         from azure.core.credentials import AzureKeyCredential
-        from azure.ai.contentsafety.models import AnalyzeTextOptions
         
         self.api_key = api_key
         self.endpoint = endpoint
@@ -61,6 +60,7 @@ class AzureAIContentSafety:
         # Initial metadata
         metadata = {}
         # Prompt classification
+        from azure.ai.contentsafety.models import AnalyzeTextOptions
         request = AnalyzeTextOptions(text=prompt)
         outputs = self.client.analyze_text(request)
         
