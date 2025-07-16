@@ -1,5 +1,4 @@
 from typing import Optional
-from google.cloud import modelarmor_v1
 from iris.data_types import SafeGuardInput, SafeGuardResponse
 
 
@@ -18,6 +17,8 @@ class GoogleModelArmor:
             template: str,
             **kwargs,
     ):
+        from google.cloud import modelarmor_v1
+        
         self.project = project
         self.location = location
         self.template = template

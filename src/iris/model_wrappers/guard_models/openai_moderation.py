@@ -1,4 +1,3 @@
-from openai import OpenAI
 from typing import Optional
 from iris.data_types import SafeGuardInput, SafeGuardResponse
 
@@ -10,6 +9,8 @@ class OpenAIModeration:
             model_name: str = "omni-moderation-latest",
             **kwargs,
     ):
+        from openai import OpenAI
+        
         self.client = OpenAI(api_key=api_key)
         self.model_name = model_name
 

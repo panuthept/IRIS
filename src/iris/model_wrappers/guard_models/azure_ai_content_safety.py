@@ -1,7 +1,4 @@
 from typing import Optional
-from azure.ai.contentsafety import ContentSafetyClient
-from azure.core.credentials import AzureKeyCredential
-from azure.ai.contentsafety.models import AnalyzeTextOptions
 from iris.data_types import SafeGuardInput, SafeGuardResponse
 
 
@@ -23,6 +20,10 @@ class AzureAIContentSafety:
             endpoint: str,
             **kwargs,
     ):
+        from azure.ai.contentsafety import ContentSafetyClient
+        from azure.core.credentials import AzureKeyCredential
+        from azure.ai.contentsafety.models import AnalyzeTextOptions
+        
         self.api_key = api_key
         self.endpoint = endpoint
         self.client = ContentSafetyClient(endpoint, AzureKeyCredential(api_key))
