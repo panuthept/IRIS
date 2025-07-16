@@ -208,8 +208,9 @@ if __name__ == "__main__":
         for sample in tqdm(samples):
             responses = []
             if hash_prompt(sample.prompt) in existing_samples:
-                # Get existing responses
-                responses = existing_samples[hash_prompt(sample.prompt)]["responses"]
+                # Get existing responses and filter out null/None responses
+                existing_responses = existing_samples[hash_prompt(sample.prompt)]["responses"]
+                responses = [r for r in existing_responses if r is not None]
             # Get responses
             for _ in range(args.n - len(responses)):
                 response = llm.complete(sample.prompt)
