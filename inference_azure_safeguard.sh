@@ -14,82 +14,83 @@ api_key=$3
 endpoint=$4
 
 
-echo "Evaluating Cultural Safety (Handwritten)..."
-for lang in ta th tl ms in my vi
-do
-    echo "Cultural: $lang - Language: en"
-    python scripts/inference_safeguard.py \
-    --safeguard_name $safeguard_name \
-    --dataset_name SEASafeguardDataset \
-    --dataset_split test \
-    --language en \
-    --cultural $lang \
-    --subset cultural_specific_handwritten \
-    --mixed_tasks_sample \
-    --max_tokens 8000 \
-    --disable_logitlens \
-    --sensitive_as_harmful \
-    --api_key $api_key \
-    --endpoint $endpoint \
-    --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/all_prompts.jsonl
+# echo "Evaluating Cultural Safety (Handwritten)..."
+# for lang in ta th tl ms in my vi
+# do
+#     echo "Cultural: $lang - Language: en"
+#     python scripts/inference_safeguard.py \
+#     --safeguard_name $safeguard_name \
+#     --dataset_name SEASafeguardDataset \
+#     --dataset_split test \
+#     --language en \
+#     --cultural $lang \
+#     --subset cultural_specific_handwritten \
+#     --mixed_tasks_sample \
+#     --max_tokens 8000 \
+#     --disable_logitlens \
+#     --sensitive_as_harmful \
+#     --api_key $api_key \
+#     --endpoint $endpoint \
+#     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/all_prompts.jsonl
 
-    echo "Cultural: $lang - Language: $lang"
-    python scripts/inference_safeguard.py \
-    --safeguard_name $safeguard_name \
-    --dataset_name SEASafeguardDataset \
-    --dataset_split test \
-    --language $lang \
-    --cultural $lang \
-    --subset cultural_specific_handwritten \
-    --mixed_tasks_sample \
-    --max_tokens 8000 \
-    --disable_logitlens \
-    --sensitive_as_harmful \
-    --api_key $api_key \
-    --endpoint $endpoint \
-    --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/all_prompts.jsonl
-done
+#     echo "Cultural: $lang - Language: $lang"
+#     python scripts/inference_safeguard.py \
+#     --safeguard_name $safeguard_name \
+#     --dataset_name SEASafeguardDataset \
+#     --dataset_split test \
+#     --language $lang \
+#     --cultural $lang \
+#     --subset cultural_specific_handwritten \
+#     --mixed_tasks_sample \
+#     --max_tokens 8000 \
+#     --disable_logitlens \
+#     --sensitive_as_harmful \
+#     --api_key $api_key \
+#     --endpoint $endpoint \
+#     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/all_prompts.jsonl
+# done
 
 
-echo "Evaluating Cultural Safety..."
-for lang in en ta th tl ms in my vi
-do
-    echo "Cultural: $lang - Language: en"
-    python scripts/inference_safeguard.py \
-    --safeguard_name $safeguard_name \
-    --dataset_name SEASafeguardDataset \
-    --dataset_split test \
-    --language en \
-    --cultural $lang \
-    --subset cultural_specific \
-    --mixed_tasks_sample \
-    --max_tokens 8000 \
-    --disable_logitlens \
-    --sensitive_as_harmful \
-    --api_key $api_key \
-    --endpoint $endpoint \
-    --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
+# echo "Evaluating Cultural Safety..."
+# for lang in en ta th tl ms in my vi
+# do
+#     echo "Cultural: $lang - Language: en"
+#     python scripts/inference_safeguard.py \
+#     --safeguard_name $safeguard_name \
+#     --dataset_name SEASafeguardDataset \
+#     --dataset_split test \
+#     --language en \
+#     --cultural $lang \
+#     --subset cultural_specific \
+#     --mixed_tasks_sample \
+#     --max_tokens 8000 \
+#     --disable_logitlens \
+#     --sensitive_as_harmful \
+#     --api_key $api_key \
+#     --endpoint $endpoint \
+#     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/en/test/all_prompts.jsonl
 
-    echo "Cultural: $lang - Language: $lang"
-    python scripts/inference_safeguard.py \
-    --safeguard_name $safeguard_name \
-    --dataset_name SEASafeguardDataset \
-    --dataset_split test \
-    --language $lang \
-    --cultural $lang \
-    --subset cultural_specific \
-    --mixed_tasks_sample \
-    --max_tokens 8000 \
-    --disable_logitlens \
-    --sensitive_as_harmful \
-    --api_key $api_key \
-    --endpoint $endpoint \
-    --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
-done
+#     echo "Cultural: $lang - Language: $lang"
+#     python scripts/inference_safeguard.py \
+#     --safeguard_name $safeguard_name \
+#     --dataset_name SEASafeguardDataset \
+#     --dataset_split test \
+#     --language $lang \
+#     --cultural $lang \
+#     --subset cultural_specific \
+#     --mixed_tasks_sample \
+#     --max_tokens 8000 \
+#     --disable_logitlens \
+#     --sensitive_as_harmful \
+#     --api_key $api_key \
+#     --endpoint $endpoint \
+#     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural/$lang/test/all_prompts.jsonl
+# done
 
 
 echo "Evaluating General Safety..."
-for lang in en ta th tl ms in my vi
+for lang in ta th tl ms in my vi
+# for lang in en ta th tl ms in my vi
 do
     echo "Language: $lang"
     python scripts/inference_safeguard.py \
