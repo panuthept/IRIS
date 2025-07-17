@@ -89,7 +89,7 @@ endpoint=$4
 
 
 echo "Evaluating General Safety..."
-for lang in ms in my vi
+for lang in in my vi
 # for lang in en ta th tl ms in my vi
 do
     echo "Language: $lang"
