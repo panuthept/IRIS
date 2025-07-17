@@ -153,6 +153,7 @@ if __name__ == "__main__":
     parser.add_argument("--project", type=str, default=None)
     parser.add_argument("--location", type=str, default=None)
     parser.add_argument("--n", type=int, default=3)
+    parser.add_argument("--oracle_safeguard", action="store_true")
     parser.add_argument("--input_path", type=str, default="./outputs/LlamaGuard/SEASafeguardDataset/general/en/test/all_prompts.jsonl")
     parser.add_argument("--output_path", type=str, default="./outputs/gemma-3-27b-it-safeguard-v1/SEASafeguardDataset/general/en/test/all_prompts.jsonl")
     args = parser.parse_args()
@@ -199,7 +200,7 @@ if __name__ == "__main__":
                     continue
                 example = json.loads(line.strip())
                 prompt = example["prompt"]
-                prompt_label = get_safeguard_label(example["prompt_labels"])
+                prompt_label = get_safeguard_label(example["prompt_labels"]) if not args.oracle_safeguard else example["prompt_gold_label"]
                 # Get responses
                 responses = []
                 for _ in range(args.n):
