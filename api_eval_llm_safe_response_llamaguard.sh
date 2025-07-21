@@ -15,7 +15,7 @@ do
     --safeguard_name LlamaGuard \
     --model_name meta-llama/Llama-Guard-3-8B \
     --api_key EMPTY \
-    --api_base http://localhost:8001/v1 
+    --api_base http://localhost:8002/v1 
 
     echo "Cultural: $lang - Language: $lang"
     python scripts/eval_llm_safe_response.py \
@@ -36,7 +36,7 @@ python scripts/eval_llm_safe_response.py \
 --safeguard_name LlamaGuard \
     --model_name meta-llama/Llama-Guard-3-8B \
 --api_key EMPTY \
---api_base http://localhost:8001/v1
+--api_base http://localhost:8002/v1
 
 for lang in ta th tl ms in my vi
 do
@@ -47,7 +47,7 @@ do
     --safeguard_name LlamaGuard \
     --model_name meta-llama/Llama-Guard-3-8B \
     --api_key EMPTY \
-    --api_base http://localhost:8001/v1
+    --api_base http://localhost:8002/v1
 
     echo "Cultural: $lang - Language: $lang"
     python scripts/eval_llm_safe_response.py \
@@ -56,7 +56,7 @@ do
     --safeguard_name LlamaGuard \
     --model_name meta-llama/Llama-Guard-3-8B \
     --api_key EMPTY \
-    --api_base http://localhost:8000/v1
+    --api_base http://localhost:8002/v1
 done
 
 
