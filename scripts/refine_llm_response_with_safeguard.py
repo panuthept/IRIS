@@ -148,8 +148,9 @@ if __name__ == "__main__":
     parser.add_argument("--api_base", type=str, default=None)
     parser.add_argument("--project", type=str, default=None)
     parser.add_argument("--location", type=str, default=None)
+    parser.add_argument("--oracle_safeguard", action="store_true")
     parser.add_argument("--safeguard_path", type=str, default="./outputs/LlamaGuard/SEASafeguardDataset/general/en/test/all_prompts.jsonl")
-    parser.add_argument("--input_path", type=str, default="./outputs/gemma-3-27b-it-LlamaGuard/SEASafeguardDataset/general/en/test/eval_safe_response.jsonl")
+    parser.add_argument("--input_path", type=str, default="./outputs/gemma-3-27b-it-LlamaGuard/SEASafeguardDataset/general/en/test/eval_safe_response_llamaguard.jsonl")
     parser.add_argument("--output_path", type=str, default="./outputs/gemma-3-27b-it-LlamaGuard-RefinedResponse/SEASafeguardDataset/general/en/test/all_prompts.jsonl")
     args = parser.parse_args()
 
@@ -197,7 +198,7 @@ if __name__ == "__main__":
                     example = json.loads(line.strip())
                     safeguard_example = json.loads(safeguard_line.strip())
                     prompt = example["prompt"]
-                    prompt_label = get_safeguard_label(safeguard_example["prompt_labels"])
+                    prompt_label = get_safeguard_label(safeguard_example["prompt_labels"]) if not args.oracle_safeguard else example["prompt_gold_label"]
                     # Get refined responses
                     responses = []
                     for response, safe_response_result in zip(example["responses"], example["safe_response_results"]):
