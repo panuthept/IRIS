@@ -24,7 +24,7 @@ do
     --safeguard_name LlamaGuard \
     --model_name meta-llama/Llama-Guard-3-8B \
     --api_key EMPTY \
-    --api_base http://localhost:8000/v1
+    --api_base http://localhost:8002/v1 
 done
 
 
