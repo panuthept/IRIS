@@ -26,6 +26,7 @@ class SEALGuard(GuardLLM):
             disable_logitlens: bool = False,
             enable_logitlens_cache: bool = True,
             max_logitlens_cache_size: int = 10,
+            **kwargs,
     ):
         self.model_name = model_name_or_path
         self.device = None
