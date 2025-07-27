@@ -2,6 +2,7 @@ from typing import Optional, Union
 from iris.model_wrappers.guard_models.base import GuardLLM, PromptGuard
 from iris.model_wrappers.guard_models.poly_guard import PolyGuard
 from iris.model_wrappers.guard_models.lakera_guard import LakeraGuard
+from iris.model_wrappers.guard_models.lion_guard import LionGuard2
 from iris.model_wrappers.guard_models.azure_ai_content_safety import AzureAIContentSafety
 from iris.model_wrappers.guard_models.google_model_armor import GoogleModelArmor
 from iris.model_wrappers.guard_models.openai_moderation import OpenAIModeration
@@ -20,6 +21,7 @@ AVAILABLE_GUARDS = {
     "GPT4o": GPT4o,
     "Llama31": Llama31,
     "LLMGuard": LLMGuard,
+    "LionGuard2": LionGuard2,
     "OpenAIModeration": OpenAIModeration,
     "LlamaGuard": LlamaGuard,
     "LakeraGuard": LakeraGuard,
