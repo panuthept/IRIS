@@ -78,7 +78,9 @@ class LionGuard2:
                 answer = "Safe"
                 logprobs = [("Safe", 1.0, None), ("Harmful", 0.0, None)]
             prompt_labels = logprobs
-        metadata["prompt_response"] = get_answer(prompt_labels)
+            metadata["prompt_response"] = answer
+        else:
+            metadata["prompt_response"] = get_answer(prompt_labels)
 
         # Response classification
         if response is not None and response_labels is None: 
@@ -98,7 +100,9 @@ class LionGuard2:
                 answer = "Safe"
                 logprobs = [("Safe", 1.0, None), ("Harmful", 0.0, None)]
             response_labels = logprobs
-        metadata["response_response"] = get_answer(response_labels)
+            metadata["response_response"] = answer
+        else:
+            metadata["response_response"] = get_answer(response_labels)
 
         # Output formatting
         output = SafeGuardResponse(
