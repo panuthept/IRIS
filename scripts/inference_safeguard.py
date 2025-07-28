@@ -128,14 +128,15 @@ if __name__ == "__main__":
     # Create save directory
     os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
 
-    existing_count = 0
+    existing_examples = []
     if os.path.exists(args.output_path):
         with open(args.output_path, "r") as f:
             for line in f:
                 if line.strip() == "":
                     continue
-                existing_count += 1
-        print(f"Found {existing_count} existing examples.")
+                existing_example = json.loads(line)
+                existing_examples.append(existing_example)
+        print(f"Found {len(existing_examples)} existing examples.")
 
     # prompt_unknown = 0
     # prompt_harmful_scores = []
@@ -143,10 +144,12 @@ if __name__ == "__main__":
     # response_unknown = 0
     # response_harmful_scores = []
     # response_gold_labels = []
-    with open(args.output_path, "a") as f:
+    with open(args.output_path, "w") as f:
         for i, sample in tqdm(enumerate(samples)):
-            if i < existing_count:
-                continue
+            if i < len(existing_examples):
+                existing_example = existing_examples[i]
+                sample.prompt_labels = existing_example["prompt_labels"]
+                sample.response_labels = existing_example["response_labels"]
             safeguard_response: SafeGuardResponse = safeguard.predict(input=sample)
             # if sample.response is not None:
             #     # Get response classification results
