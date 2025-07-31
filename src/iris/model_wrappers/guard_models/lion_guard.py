@@ -83,26 +83,27 @@ class LionGuard2:
             metadata["prompt_response"] = get_answer(prompt_labels)
 
         # Response classification
-        if response is not None and response_labels is None: 
-            try:
-                outputs = self.client.embeddings.create(
-                    input=response,
-                    model="text-embedding-3-large",
-                    dimensions=3072,
-                    )
-                embeddings = np.array([data.embedding for data in outputs.data])
+        if response is not None:
+            if response_labels is None: 
+                try:
+                    outputs = self.client.embeddings.create(
+                        input=response,
+                        model="text-embedding-3-large",
+                        dimensions=3072,
+                        )
+                    embeddings = np.array([data.embedding for data in outputs.data])
 
-                # Run LionGuard 2
-                results = self.model.predict(embeddings)
-                answer, logprobs = self.parse_label(results)
-            except Exception as e:
-                # print(f"Error parsing response: {e}")
-                answer = "Safe"
-                logprobs = [("Safe", 1.0, None), ("Harmful", 0.0, None)]
-            response_labels = logprobs
-            metadata["response_response"] = answer
-        else:
-            metadata["response_response"] = get_answer(response_labels)
+                    # Run LionGuard 2
+                    results = self.model.predict(embeddings)
+                    answer, logprobs = self.parse_label(results)
+                except Exception as e:
+                    # print(f"Error parsing response: {e}")
+                    answer = "Safe"
+                    logprobs = [("Safe", 1.0, None), ("Harmful", 0.0, None)]
+                response_labels = logprobs
+                metadata["response_response"] = answer
+            else:
+                metadata["response_response"] = get_answer(response_labels)
 
         # Output formatting
         output = SafeGuardResponse(

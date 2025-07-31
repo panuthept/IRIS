@@ -52,13 +52,14 @@ class SafeGuardInput:
     response: Optional[str] = None              # String of response
     prompt_gold_label: Optional[str] = None     # String of class_name
     response_gold_label: Optional[str] = None   # String of class_name
+    prompt_labels: Optional[List[Tuple[str, float, float]]] = None # List of (class_name, class_prob, class_logit)
+    response_labels: Optional[List[Tuple[str, float, float]]] = None            # List of (class_name, class_prob, class_logit)
+    metadata: Optional[Dict[str, Any]] = None                                   # Metadata for the outputs
 
 
 @dataclass
 class SafeGuardResponse(SafeGuardInput):
-    prompt_labels: List[Tuple[str, float, float]] = field(default_factory=list) # List of (class_name, class_prob, class_logit)
-    response_labels: Optional[List[Tuple[str, float, float]]] = None            # List of (class_name, class_prob, class_logit)
-    metadata: Optional[Dict[str, Any]] = None                                   # Metadata for the outputs
+    pass                               # Metadata for the outputs
 
 
 @dataclass
