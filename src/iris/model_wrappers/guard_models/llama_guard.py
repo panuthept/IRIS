@@ -88,6 +88,52 @@ class LlamaGuard(GuardLLM):
         )
         return outputs, response
 
+class CustomLlamaGuard(LlamaGuard):
+    def predict(
+        self,
+        input: Optional[SafeGuardInput] = None,
+        prompt: Optional[str] = None,
+        response: Optional[str] = None,
+        **kwargs,
+    ) -> SafeGuardResponse:
+        prompt_gold_label = None
+        response_gold_label = None
+        if input is not None:
+            prompt = input.prompt
+            response = input.response
+            prompt_gold_label = input.prompt_gold_label
+            response_gold_label = input.response_gold_label
+        assert prompt is not None, "Prompt cannot be None"
+        # Initial metadata
+        metadata = {}
+        # Prompt classification
+        prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, **kwargs)
+        prompt_labels = prompt_clf["pred_labels"][0] if len(prompt_clf["pred_labels"]) > 0 else []
+        metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
+        metadata["prompt_instruction"] = prompt_clf["instruction"]
+        metadata["prompt_response"] = prompt_clf["response"]
+        # Response classification
+        response_labels = None
+        if response is not None:
+            ######################### Ignore prompt when classifying response #########################
+            response_clf: Dict[str, List[Tuple[str, float, float]]] = self._response_classify("", response, **kwargs)
+            ###########################################################################################
+            response_labels = response_clf["pred_labels"][0] if len(response_clf["pred_labels"]) > 0 else []
+            metadata["response_tokens"] = response_clf["pred_tokens"]
+            metadata["response_instruction"] = response_clf["instruction"]
+            metadata["response_response"] = response_clf["response"]
+        # Output formatting
+        output = SafeGuardResponse(
+            prompt=prompt, 
+            response=response,
+            prompt_gold_label=prompt_gold_label,
+            response_gold_label=response_gold_label,
+            prompt_labels=prompt_labels,
+            response_labels=response_labels,
+            metadata=metadata,
+        )
+        return output
+
 class LlamaGuard4(GuardLLM):
     valid_tokens = {
         "safe": "Safe",
