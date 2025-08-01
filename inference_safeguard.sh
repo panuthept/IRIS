@@ -13,39 +13,39 @@ model_name=$2
 output_name=$3
 
 
-echo "Evaluating Cultural Safety (Handwritten)..."
-for lang in ta th tl ms in my vi
-do
-    echo "Cultural: $lang - Language: en"
-    python scripts/inference_safeguard.py \
-    --safeguard_name $safeguard_name \
-    --model_name $model_name \
-    --dataset_name SEASafeguardDataset \
-    --dataset_split test \
-    --language en \
-    --cultural $lang \
-    --subset cultural_specific_handwritten \
-    --mixed_tasks_sample \
-    --max_tokens 8000 \
-    --disable_logitlens \
-    --sensitive_as_harmful \
-    --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/all_prompts.jsonl
+# echo "Evaluating Cultural Safety (Handwritten)..."
+# for lang in ta th tl ms in my vi
+# do
+#     echo "Cultural: $lang - Language: en"
+#     python scripts/inference_safeguard.py \
+#     --safeguard_name $safeguard_name \
+#     --model_name $model_name \
+#     --dataset_name SEASafeguardDataset \
+#     --dataset_split test \
+#     --language en \
+#     --cultural $lang \
+#     --subset cultural_specific_handwritten \
+#     --mixed_tasks_sample \
+#     --max_tokens 8000 \
+#     --disable_logitlens \
+#     --sensitive_as_harmful \
+#     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural_handwritten/en/test/all_prompts.jsonl
 
-    echo "Cultural: $lang - Language: $lang"
-    python scripts/inference_safeguard.py \
-    --safeguard_name $safeguard_name \
-    --model_name $model_name \
-    --dataset_name SEASafeguardDataset \
-    --dataset_split test \
-    --language $lang \
-    --cultural $lang \
-    --subset cultural_specific_handwritten \
-    --mixed_tasks_sample \
-    --max_tokens 8000 \
-    --disable_logitlens \
-    --sensitive_as_harmful \
-    --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/all_prompts.jsonl
-done
+#     echo "Cultural: $lang - Language: $lang"
+#     python scripts/inference_safeguard.py \
+#     --safeguard_name $safeguard_name \
+#     --model_name $model_name \
+#     --dataset_name SEASafeguardDataset \
+#     --dataset_split test \
+#     --language $lang \
+#     --cultural $lang \
+#     --subset cultural_specific_handwritten \
+#     --mixed_tasks_sample \
+#     --max_tokens 8000 \
+#     --disable_logitlens \
+#     --sensitive_as_harmful \
+#     --output_path ./outputs/${output_name}/SEASafeguardDataset/${lang}_cultural_handwritten/$lang/test/all_prompts.jsonl
+# done
 
 
 echo "Evaluating Cultural Safety..."
