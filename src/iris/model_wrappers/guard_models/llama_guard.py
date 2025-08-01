@@ -1,8 +1,8 @@
 import torch
 from typing import Optional
 from iris.cache import CacheMode
-from iris.data_types import SafeGuardInput
 from iris.model_wrappers.guard_models import GuardLLM
+from iris.data_types import Sample, ModelResponse, SafeGuardInput, SafeGuardResponse
 from transformers import AutoTokenizer, AutoProcessor, Llama4ForConditionalGeneration
 
 
