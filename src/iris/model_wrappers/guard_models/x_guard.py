@@ -72,10 +72,10 @@ class XGuard:
                 top_token_ids = torch.argsort(probs, dim=-1, descending=True)[:, :top_logprobs]
                 top_probs = probs.gather(dim=-1, index=top_token_ids)
                 top_logits = logits.gather(dim=-1, index=top_token_ids)
-                top_tokens = self.tokenizer.convert_ids_to_tokens(top_token_ids[0].tolist())
+                top_tokens = self.guard_tokenizer.convert_ids_to_tokens(top_token_ids[0].tolist())
                 logprobs.append([(token, logprob, logit) for token, logprob, logit in zip(top_tokens, top_probs[0].tolist(), top_logits[0].tolist())])
             print(logprobs)
-            answer = self.tokenizer.decode(outputs.sequences[0][len(inputs['input_ids'][0]):], skip_special_tokens=True)
+            answer = self.guard_tokenizer.decode(outputs.sequences[0][len(model_inputs['input_ids'][0]):], skip_special_tokens=True)
 
         generated_ids = [
             output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
