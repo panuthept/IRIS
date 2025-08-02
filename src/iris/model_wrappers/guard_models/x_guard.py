@@ -45,7 +45,7 @@ class XGuard:
         translation = self.translation_tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)[0]
         return translation
 
-    def evaluate_guard(self, prompt, top_logprobs=10):
+    def evaluate_guard(self, prompt, top_logprobs=1):
         messages = [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": "<USER TEXT STARTS>\n" + prompt +"\n<USER TEXT ENDS>" },
