@@ -5,6 +5,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, MBart50TokenizerFa
 
 
 class XGuard:
+    valid_tokens = ["safe", "unsafe"]
+
     def __init__(
             self, 
             **kwargs,
@@ -45,7 +47,7 @@ class XGuard:
         translation = self.translation_tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)[0]
         return translation
 
-    def evaluate_guard(self, prompt, top_logprobs=1):
+    def evaluate_guard(self, prompt, top_logprobs=10):
         messages = [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": "<USER TEXT STARTS>\n" + prompt +"\n<USER TEXT ENDS>" },
@@ -74,6 +76,17 @@ class XGuard:
                 top_logits = logits.gather(dim=-1, index=top_token_ids)
                 top_tokens = self.guard_tokenizer.convert_ids_to_tokens(top_token_ids[0].tolist())
                 logprobs.append([(token, logprob, logit) for token, logprob, logit in zip(top_tokens, top_probs[0].tolist(), top_logits[0].tolist())])
+            
+            # Get index of the answer
+            answer_index = None
+            for i in range(len(logprobs)):
+                if logprobs[i][0][0] == "<label" and logprobs[i + 1][0][0] == ">":
+                    answer_index = i + 2
+                    break
+
+            # Get answer
+            logprobs = logprobs[answer_index]
+
             print(logprobs)
             answer = self.guard_tokenizer.decode(outputs.sequences[0][len(model_inputs['input_ids'][0]):], skip_special_tokens=True)
 
