@@ -4,6 +4,7 @@ from iris.model_wrappers.guard_models.poly_guard import PolyGuard
 from iris.model_wrappers.guard_models.lakera_guard import LakeraGuard
 from iris.model_wrappers.guard_models.seal_guard import SEALGuard
 from iris.model_wrappers.guard_models.lion_guard import LionGuard2
+from iris.model_wrappers.guard_models.x_guard import XGuard
 from iris.model_wrappers.guard_models.azure_ai_content_safety import AzureAIContentSafety
 from iris.model_wrappers.guard_models.google_model_armor import GoogleModelArmor
 from iris.model_wrappers.guard_models.openai_moderation import OpenAIModeration
@@ -20,6 +21,7 @@ AVAILABLE_GUARDS = {
     # "NemoGuard": NemoGuard,
     # "WildGuard": WildGuard,
     "GPT4o": GPT4o,
+    "XGuard": XGuard,
     "Llama31": Llama31,
     "LLMGuard": LLMGuard,
     "SEALGuard": SEALGuard,
