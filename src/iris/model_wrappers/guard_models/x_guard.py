@@ -1,5 +1,5 @@
 import torch
-from typing import Optional, Dict
+from typing import Optional
 from iris.data_types import SafeGuardInput, SafeGuardResponse
 from transformers import AutoTokenizer, AutoModelForCausalLM, MBart50TokenizerFast, MBartForConditionalGeneration
 
@@ -45,7 +45,7 @@ class XGuard:
         translation = self.translation_tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)[0]
         return translation
 
-    def evaluate_guard(self, prompt, temperature=0.0000001):
+    def evaluate_guard(self, prompt, top_logprobs=10):
         messages = [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": "<USER TEXT STARTS>\n" + prompt +"\n<USER TEXT ENDS>" },
@@ -58,12 +58,25 @@ class XGuard:
         )
         model_inputs = self.guard_tokenizer([text], return_tensors="pt").to(self.guard_model.device)
 
-        generated_ids = self.guard_model.generate(
-            **model_inputs,
-            max_new_tokens=8192,
-            temperature=temperature,
-            do_sample=True,
-        )
+        with torch.no_grad():
+            outputs = self.guard_model.generate(
+                **model_inputs,
+                max_new_tokens=8192,
+                return_dict_in_generate=True,
+                output_logits=True,
+            )
+            print(outputs)
+            # Convert logits to logprobs
+            logprobs = []
+            for logits in outputs.logits:
+                _logprobs = torch.nn.functional.log_softmax(logits, dim=-1)
+                top_token_ids = torch.argsort(_logprobs, dim=-1, descending=True)[:, :top_logprobs]
+                top_logprobs = _logprobs.gather(dim=-1, index=top_token_ids)
+                top_logits = logits.gather(dim=-1, index=top_token_ids)
+                top_tokens = self.tokenizer.convert_ids_to_tokens(top_token_ids[0].tolist())
+                logprobs.append([(token, logprob, logit) for token, logprob, logit in zip(top_tokens, top_logprobs[0].tolist(), top_logits[0].tolist())])
+            answer = self.tokenizer.decode(outputs.sequences[0][len(inputs['input_ids'][0]):], skip_special_tokens=True)
+
         generated_ids = [
             output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
         ]
