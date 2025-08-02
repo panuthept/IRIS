@@ -86,7 +86,7 @@ class XGuard:
 
     def multilingual_content_moderation(self, prompt):
         translated_prompt = self.get_translation(prompt)
-        response = self.evaluate_guard(prompt=translated_prompt, temperature=0.00001)
+        response = self.evaluate_guard(prompt=translated_prompt)
         
         # label = extract_label(response)
         # category = extract_categories(response)
