@@ -6,7 +6,10 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, MBart50TokenizerFa
 
 
 class XGuard:
-    valid_tokens = ["safe", "unsafe"]
+    valid_tokens = {
+        "safe": "Safe",
+        "unsafe": "Harmful",
+    }
 
     def __init__(
             self, 
@@ -86,12 +89,12 @@ class XGuard:
                     break
 
             # Get answer
-            valid_logprobs = [(token, logprob, logit) for token, logprob, logit in logprobs[answer_index] if token in self.valid_tokens]
-            tokens = [token for token, _, _ in valid_logprobs]
+            valid_logprobs = [(self.valid_tokens[token], logprob, logit) for token, logprob, logit in logprobs[answer_index] if token in self.valid_tokens]
+            labels = [label for label, _, _ in valid_logprobs]
             tokens_logprobs = [logprob for _, logprob, _ in valid_logprobs]
             tokens_logits = [logit for _, _, logit in valid_logprobs]
             tokens_probs = np.exp(tokens_logprobs) / np.sum(np.exp(tokens_logprobs))
-            logprobs = list(zip(tokens, tokens_probs, tokens_logits))
+            logprobs = list(zip(labels, tokens_probs, tokens_logits))
 
             answer = self.guard_tokenizer.decode(outputs.sequences[0][len(model_inputs['input_ids'][0]):], skip_special_tokens=True)
         return answer, logprobs
