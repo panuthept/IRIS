@@ -65,16 +65,16 @@ class XGuard:
                 return_dict_in_generate=True,
                 output_logits=True,
             )
-            print(outputs)
             # Convert logits to logprobs
             logprobs = []
             for logits in outputs.logits:
-                _logprobs = torch.nn.functional.log_softmax(logits, dim=-1)
-                top_token_ids = torch.argsort(_logprobs, dim=-1, descending=True)[:, :top_logprobs]
-                top_logprobs = _logprobs.gather(dim=-1, index=top_token_ids)
+                probs = torch.nn.functional.log_softmax(logits, dim=-1)
+                top_token_ids = torch.argsort(probs, dim=-1, descending=True)[:, :top_logprobs]
+                top_probs = probs.gather(dim=-1, index=top_token_ids)
                 top_logits = logits.gather(dim=-1, index=top_token_ids)
                 top_tokens = self.tokenizer.convert_ids_to_tokens(top_token_ids[0].tolist())
-                logprobs.append([(token, logprob, logit) for token, logprob, logit in zip(top_tokens, top_logprobs[0].tolist(), top_logits[0].tolist())])
+                logprobs.append([(token, logprob, logit) for token, logprob, logit in zip(top_tokens, top_probs[0].tolist(), top_logits[0].tolist())])
+            print(logprobs)
             answer = self.tokenizer.decode(outputs.sequences[0][len(inputs['input_ids'][0]):], skip_special_tokens=True)
 
         generated_ids = [
