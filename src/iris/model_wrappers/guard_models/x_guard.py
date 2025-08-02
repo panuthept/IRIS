@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from typing import Optional
 from iris.data_types import SafeGuardInput, SafeGuardResponse
 from transformers import AutoTokenizer, AutoModelForCausalLM, MBart50TokenizerFast, MBartForConditionalGeneration
@@ -85,52 +86,20 @@ class XGuard:
                     break
 
             # Get answer
-            logprobs = [(token, logprob, logit) for token, logprob, logit in logprobs[answer_index] if token in self.valid_tokens]
+            valid_logprobs = [(token, logprob, logit) for token, logprob, logit in logprobs[answer_index] if token in self.valid_tokens]
+            tokens = [token for token, _, _ in valid_logprobs]
+            tokens_logprobs = [logprob for _, logprob, _ in valid_logprobs]
+            tokens_logits = [logit for _, _, logit in valid_logprobs]
+            tokens_probs = np.exp(tokens_logprobs) / np.sum(np.exp(tokens_logprobs))
+            logprobs = list(zip(tokens, tokens_probs, tokens_logits))
 
-            print(logprobs)
             answer = self.guard_tokenizer.decode(outputs.sequences[0][len(model_inputs['input_ids'][0]):], skip_special_tokens=True)
-
-        generated_ids = [
-            output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
-        ]
-
-        response = self.guard_tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-        return response
+        return answer, logprobs
 
     def multilingual_content_moderation(self, prompt):
         translated_prompt = self.get_translation(prompt)
-        response = self.evaluate_guard(prompt=translated_prompt)
-        
-        # label = extract_label(response)
-        # category = extract_categories(response)
-        
-        print("\n---------***-----------\n")
-        print(f" User Text: {prompt}" )
-        print("\n---------***-----------\n")
-        print(f" English Translation: {translated_prompt}")
-        print("\n---------***-----------\n")
-        print(f" Safety Evaluation: \n\n {response} \n")
-        print("\n---------***-----------\n")
-        # print(f" Label: {label}")
-        # print(f" Category: {category}")
-        
-        # return eng_translation, response, label, category 
-        return response
-
-    # def parse_label(self, results: Dict):
-    #     max_confidence = 0.0
-    #     for result in results["results"]:
-    #         label = result["result"]
-    #         confidence = self.label2confident[label]
-    #         if confidence > max_confidence:
-    #             max_confidence = confidence
-    #     if max_confidence >= 0.5:
-    #         answer = "Harmful"
-    #         logprobs = [("Harmful", max_confidence, None), ("Safe", 1 - max_confidence, None)]
-    #     else:
-    #         answer = "Safe"
-    #         logprobs = [("Safe", 1 - max_confidence, None), ("Harmful", max_confidence, None)]
-    #     return answer, logprobs
+        response, logprobs = self.evaluate_guard(prompt=translated_prompt)
+        return response, logprobs
 
     def predict(
         self,
@@ -151,23 +120,22 @@ class XGuard:
         metadata = {}
 
         # Prompt classification
-        answer = self.multilingual_content_moderation(prompt)
-        return answer
+        answer, logprobs = self.multilingual_content_moderation(prompt)
         
-        # prompt_labels = logprobs
-        # metadata["prompt_instruction"] = prompt
-        # metadata["prompt_response"] = answer
-        # # Output formatting
-        # output = SafeGuardResponse(
-        #     prompt=prompt, 
-        #     response=response,
-        #     prompt_gold_label=prompt_gold_label,
-        #     response_gold_label=response_gold_label,
-        #     prompt_labels=prompt_labels,
-        #     response_labels=None,
-        #     metadata=metadata,
-        # )
-        # return output
+        prompt_labels = logprobs
+        metadata["prompt_instruction"] = prompt
+        metadata["prompt_response"] = answer
+        # Output formatting
+        output = SafeGuardResponse(
+            prompt=prompt, 
+            response=response,
+            prompt_gold_label=prompt_gold_label,
+            response_gold_label=response_gold_label,
+            prompt_labels=prompt_labels,
+            response_labels=None,
+            metadata=metadata,
+        )
+        return output
     
 
 if __name__ == "__main__":
