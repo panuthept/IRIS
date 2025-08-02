@@ -85,7 +85,7 @@ class XGuard:
                     break
 
             # Get answer
-            logprobs = logprobs[answer_index]
+            logprobs = [(token, logprob, logit) for token, logprob, logit in logprobs[answer_index] if token in self.valid_tokens]
 
             print(logprobs)
             answer = self.guard_tokenizer.decode(outputs.sequences[0][len(model_inputs['input_ids'][0]):], skip_special_tokens=True)
