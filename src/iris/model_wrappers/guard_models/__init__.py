@@ -11,7 +11,7 @@ from iris.model_wrappers.guard_models.openai_moderation import OpenAIModeration
 # from iris.model_wrappers.guard_models.nemo_guard import NemoGuard
 # from iris.model_wrappers.guard_models.wild_guard import WildGuard
 from iris.model_wrappers.guard_models.shield_gemma import ShieldGemma
-from iris.model_wrappers.guard_models.llm_guard import LLMGuard, GPT4o, Llama31
+from iris.model_wrappers.guard_models.llm_guard import LLMGuard, CustomLLMGuard, GPT4o, Llama31
 from iris.model_wrappers.guard_models.llama_guard import LlamaGuard, CustomLlamaGuard, LlamaGuard4
 from iris.model_wrappers.guard_models.sealion_guard import SealionGuardAPI, SealionGuard, GemmaSealionGuard
 # from iris.model_wrappers.guard_models.cfi_guard import CFIGuard, DummyBiasModel
@@ -24,6 +24,7 @@ AVAILABLE_GUARDS = {
     "XGuard": XGuard,
     "Llama31": Llama31,
     "LLMGuard": LLMGuard,
+    "CustomLLMGuard": CustomLLMGuard,
     "SEALGuard": SEALGuard,
     "LionGuard2": LionGuard2,
     "OpenAIModeration": OpenAIModeration,

@@ -126,6 +126,20 @@ class LLMGuard(GuardLLM):
             **kwargs
         )
         return outputs, response
+
+class CustomLLMGuard(LLMGuard):
+    def _apply_safeguard_template(self, prompt: str, response: Optional[str] = None) -> list:
+        if response is None:
+            message = [
+                {'role': 'system', 'content': self.prompt_clf_system_prompt},
+                {"role": "user", "content": self.prompt_clf_template.format(prompt=prompt)},
+            ]
+        else:
+            message = [
+                {'role': 'system', 'content': self.response_clf_system_prompt},
+                {"role": "user", "content": self.response_clf_template.format(prompt="", response=response)},
+            ]
+        return message
     
 
 class GPT4o(LLMGuard):
