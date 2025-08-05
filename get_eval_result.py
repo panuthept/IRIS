@@ -1,4 +1,5 @@
 import os
+import math
 import json
 import numpy as np
 import pandas as pd
@@ -114,23 +115,28 @@ def get_eval_results(result_path: str, sensitive_as_harmful: bool = True, ignore
     results = {}
     if len(prompt_clf_preds) == 0:
         print(result_path)
-        results["Prompt_clf"] = [None, None, None]
-        results["Response_clf"] = [None, None, None]
+        results["Prompt_clf"] = [None]
+        results["Response_clf"] = [None]
+        # results["Prompt_clf"] = [None, None, None]
+        # results["Response_clf"] = [None, None, None]
         return results
 
     # Get Prompt Classification Performance
     metrics = SafeGuardMetric()
     metrics.update(prompt_clf_labels, prompt_clf_preds)
-    results["Prompt_clf"] = [round(metrics.best_f1 * 100, 1), round(metrics.pr_auc * 100, 1), round(metrics.best_fpr * 100, 1)]
+    # results["Prompt_clf"] = [round(metrics.best_f1 * 100, 1), round(metrics.pr_auc * 100, 1), round(metrics.best_fpr * 100, 1)]
+    results["Prompt_clf"] = [round(metrics.pr_auc * 100, 1)]
     # metrics.plot(dataset_name=f"Prompt Classification ({result_path})")
 
     # Report Response Classification Performance
     if len(response_clf_labels) > 0 and len(response_clf_preds) > 0:
         metrics = SafeGuardMetric()
         metrics.update(response_clf_labels, response_clf_preds)
-        results["Response_clf"] = [round(metrics.best_f1 * 100, 1), round(metrics.pr_auc * 100, 1), round(metrics.best_fpr * 100, 1)]
+        results["Response_clf"] = [round(metrics.pr_auc * 100, 1)]
+        # results["Response_clf"] = [round(metrics.best_f1 * 100, 1), round(metrics.pr_auc * 100, 1), round(metrics.best_fpr * 100, 1)]
     else:
-        results["Response_clf"] = [None, None, None]
+        results["Response_clf"] = [None]
+        # results["Response_clf"] = [None, None, None]
     # metrics.plot(dataset_name=f"Response Classification ({result_path})")
     return results
 
@@ -143,14 +149,16 @@ def report_results(paths, ignore_sensitive: bool = True, sensitive_as_harmful: b
             prompt_clf_results.extend(results["Prompt_clf"])
             response_clf_results.extend(results["Response_clf"])
         else:
-            prompt_clf_results.extend([None, None, None])
-            response_clf_results.extend([None, None, None])
-    prompt_clf_results.append(round(np.mean([prompt_clf_results[i*3] for i in range(len(paths)) if prompt_clf_results[i*3] is not None]), 1))
-    prompt_clf_results.append(round(np.mean([prompt_clf_results[i*3+1] for i in range(len(paths)) if prompt_clf_results[i*3+1] is not None]), 1))
-    prompt_clf_results.append(round(np.mean([prompt_clf_results[i*3+2] for i in range(len(paths)) if prompt_clf_results[i*3+2] is not None]), 1))
-    response_clf_results.append(round(np.mean([response_clf_results[i*3] for i in range(len(paths)) if response_clf_results[i*3] is not None]), 1))
-    response_clf_results.append(round(np.mean([response_clf_results[i*3+1] for i in range(len(paths)) if response_clf_results[i*3+1] is not None]), 1))
-    response_clf_results.append(round(np.mean([response_clf_results[i*3+2] for i in range(len(paths)) if response_clf_results[i*3+2] is not None]), 1))
+            prompt_clf_results.extend([None])
+            response_clf_results.extend([None])
+            # prompt_clf_results.extend([None, None, None])
+            # response_clf_results.extend([None, None, None])
+    prompt_clf_results.append(np.mean([prompt_clf_results[i] for i in range(len(paths)) if prompt_clf_results[i] is not None]))
+    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*3+1] for i in range(len(paths)) if prompt_clf_results[i*3+1] is not None]), 1))
+    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*3+2] for i in range(len(paths)) if prompt_clf_results[i*3+2] is not None]), 1))
+    response_clf_results.append(np.mean([response_clf_results[i] for i in range(len(paths)) if response_clf_results[i] is not None]))
+    # response_clf_results.append(round(np.mean([response_clf_results[i*3+1] for i in range(len(paths)) if response_clf_results[i*3+1] is not None]), 1))
+    # response_clf_results.append(round(np.mean([response_clf_results[i*3+2] for i in range(len(paths)) if response_clf_results[i*3+2] is not None]), 1))
 
     print("Prompt CLF:")
     print(" & ".join([str(v) for v in prompt_clf_results]))
@@ -166,9 +174,9 @@ def report_sum_results(paths):
             results = get_eval_results(path)
             prompt_clf_results.extend(results["Prompt_clf"])
             response_clf_results.extend(results["Response_clf"])
-        else:
-            prompt_clf_results.extend([None, None, None])
-            response_clf_results.extend([None, None, None])
+        # else:
+        #     prompt_clf_results.extend([None])
+        #     response_clf_results.extend([None])
     # Get General Set Performance (SEA)
     c = 0
     t_prompt_clf_results = []
@@ -179,17 +187,20 @@ def report_sum_results(paths):
             results = get_eval_results(path)
             t_prompt_clf_results.extend(results["Prompt_clf"])
             t_response_clf_results.extend(results["Response_clf"])
-        else:
-            t_prompt_clf_results.extend([None, None, None])
-            t_response_clf_results.extend([None, None, None])
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
-    t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
-    t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
-    t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
-    prompt_clf_results.extend(t_prompt_clf_results[-3:])
-    response_clf_results.extend(t_response_clf_results[-3:])
+        # else:
+        #     t_prompt_clf_results.extend([None])
+        #     t_response_clf_results.extend([None])
+    t_prompt_clf_results.append(np.mean([t_prompt_clf_results[i] for i in range(c) if t_prompt_clf_results[i] is not None]))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
+    t_response_clf_results = [val for val in t_response_clf_results if val is not None]
+    t_response_clf_results.append(np.mean(t_response_clf_results) if len(t_response_clf_results) > 0 else None)
+    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
+    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
+    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
+    prompt_clf_results.extend(t_prompt_clf_results[-1:])
+    response_clf_results.extend(t_response_clf_results[-1:])
     # Get Synthetic Cultural Set Performance (English)
     c = 0
     t_prompt_clf_results = []
@@ -203,17 +214,20 @@ def report_sum_results(paths):
             # Sensitive-as-Safe
             results = get_eval_results(path, sensitive_as_harmful=False, ignore_sensitive=False)
             t_prompt_clf_results.extend(results["Prompt_clf"])
-        else:
-            t_prompt_clf_results.extend([None, None, None])
-            t_response_clf_results.extend([None, None, None])
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
-    t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
-    t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
-    t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
-    prompt_clf_results.extend(t_prompt_clf_results[-3:])
-    response_clf_results.extend(t_response_clf_results[-3:])
+        # else:
+        #     t_prompt_clf_results.extend([None])
+        #     t_response_clf_results.extend([None])
+    t_prompt_clf_results.append(np.mean([t_prompt_clf_results[i] for i in range(c) if t_prompt_clf_results[i] is not None]))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
+    t_response_clf_results = [val for val in t_response_clf_results if val is not None]
+    t_response_clf_results.append(np.mean(t_response_clf_results) if len(t_response_clf_results) > 0 else None)
+    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
+    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
+    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
+    prompt_clf_results.extend(t_prompt_clf_results[-1:])
+    response_clf_results.extend(t_response_clf_results[-1:])
     # Get Synthetic Cultural Set Performance (SEA)
     c = 0
     t_prompt_clf_results = []
@@ -227,17 +241,20 @@ def report_sum_results(paths):
             # Sensitive-as-Safe
             results = get_eval_results(path, sensitive_as_harmful=False, ignore_sensitive=False)
             t_prompt_clf_results.extend(results["Prompt_clf"])
-        else:
-            t_prompt_clf_results.extend([None, None, None])
-            t_response_clf_results.extend([None, None, None])
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
-    t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
-    t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
-    t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
-    prompt_clf_results.extend(t_prompt_clf_results[-3:])
-    response_clf_results.extend(t_response_clf_results[-3:])
+        # else:
+        #     t_prompt_clf_results.extend([None])
+        #     t_response_clf_results.extend([None])
+    t_prompt_clf_results.append(np.mean([t_prompt_clf_results[i] for i in range(c) if t_prompt_clf_results[i] is not None]))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
+    t_response_clf_results = [val for val in t_response_clf_results if val is not None]
+    t_response_clf_results.append(np.mean(t_response_clf_results) if len(t_response_clf_results) > 0 else None)
+    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
+    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
+    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
+    prompt_clf_results.extend(t_prompt_clf_results[-1:])
+    response_clf_results.extend(t_response_clf_results[-1:])
     # Get Hand-Written Cultural Set Performance (English)
     c = 0
     t_prompt_clf_results = []
@@ -248,16 +265,17 @@ def report_sum_results(paths):
             results = get_eval_results(path)
             t_prompt_clf_results.extend(results["Prompt_clf"])
             t_response_clf_results.extend(results["Response_clf"])
-        else:
-            t_prompt_clf_results.extend([None, None, None])
-            t_response_clf_results.extend([None, None, None])
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
+        # else:
+        #     t_prompt_clf_results.extend([None])
+        #     t_response_clf_results.extend([None])
+    t_prompt_clf_results.append(np.mean([t_prompt_clf_results[i] for i in range(c) if t_prompt_clf_results[i] is not None]))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
     # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
     # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
     # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
-    prompt_clf_results.extend(t_prompt_clf_results[-3:])
+    prompt_clf_results.extend(t_prompt_clf_results[-1:])
     # response_clf_results.extend(t_response_clf_results[-3:])
     # Get Hand-Written Cultural Set Performance (Native)
     c = 0
@@ -269,38 +287,47 @@ def report_sum_results(paths):
             results = get_eval_results(path)
             t_prompt_clf_results.extend(results["Prompt_clf"])
             t_response_clf_results.extend(results["Response_clf"])
-        else:
-            t_prompt_clf_results.extend([None, None, None])
-            t_response_clf_results.extend([None, None, None])
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
-    t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
+        # else:
+        #     t_prompt_clf_results.extend([None])
+        #     t_response_clf_results.extend([None])
+    t_prompt_clf_results.append(np.mean([t_prompt_clf_results[i] for i in range(c) if t_prompt_clf_results[i] is not None]))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
+    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
     # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
     # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
     # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
-    prompt_clf_results.extend(t_prompt_clf_results[-3:])
+    prompt_clf_results.extend(t_prompt_clf_results[-1:])
     # response_clf_results.extend(t_response_clf_results[-3:])
 
     # Final average (English)
-    c = 3
-    prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6] for i in range(c) if prompt_clf_results[i*6] is not None]), 1))
-    prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+1] for i in range(c) if prompt_clf_results[i*6+1] is not None]), 1))
-    prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+2] for i in range(c) if prompt_clf_results[i*6+2] is not None]), 1))
-    prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+3] for i in range(c) if prompt_clf_results[i*6+3] is not None]), 1))
-    prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+1+3] for i in range(c) if prompt_clf_results[i*6+1+3] is not None]), 1))
-    prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+2+3] for i in range(c) if prompt_clf_results[i*6+2+3] is not None]), 1))
-    c = 2
-    response_clf_results.append(round(np.mean([response_clf_results[i*6] for i in range(c) if response_clf_results[i*6] is not None]), 1))
-    response_clf_results.append(round(np.mean([response_clf_results[i*6+1] for i in range(c) if response_clf_results[i*6+1] is not None]), 1))
-    response_clf_results.append(round(np.mean([response_clf_results[i*6+2] for i in range(c) if response_clf_results[i*6+2] is not None]), 1))
-    response_clf_results.append(round(np.mean([response_clf_results[i*6+3] for i in range(c) if response_clf_results[i*6+3] is not None]), 1))
-    response_clf_results.append(round(np.mean([response_clf_results[i*6+1+3] for i in range(c) if response_clf_results[i*6+1+3] is not None]), 1))
-    response_clf_results.append(round(np.mean([response_clf_results[i*6+2+3] for i in range(c) if response_clf_results[i*6+2+3] is not None]), 1))
+    print(prompt_clf_results)
+    prompt_clf_results.append(np.mean(prompt_clf_results))
+    # c = 3
+    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6] for i in range(c) if prompt_clf_results[i*6] is not None]), 1))
+    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+1] for i in range(c) if prompt_clf_results[i*6+1] is not None]), 1))
+    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+2] for i in range(c) if prompt_clf_results[i*6+2] is not None]), 1))
+    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+3] for i in range(c) if prompt_clf_results[i*6+3] is not None]), 1))
+    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+1+3] for i in range(c) if prompt_clf_results[i*6+1+3] is not None]), 1))
+    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+2+3] for i in range(c) if prompt_clf_results[i*6+2+3] is not None]), 1))
+    print(response_clf_results)
+    # if 
+    response_clf_results = [val for val in response_clf_results if val if not None]
+    response_clf_results.append(np.mean(response_clf_results))
+    # c = 2
+    # response_clf_results.append(round(np.mean([response_clf_results[i*6] for i in range(c) if response_clf_results[i*6] is not None]), 1))
+    # response_clf_results.append(round(np.mean([response_clf_results[i*6+1] for i in range(c) if response_clf_results[i*6+1] is not None]), 1))
+    # response_clf_results.append(round(np.mean([response_clf_results[i*6+2] for i in range(c) if response_clf_results[i*6+2] is not None]), 1))
+    # response_clf_results.append(round(np.mean([response_clf_results[i*6+3] for i in range(c) if response_clf_results[i*6+3] is not None]), 1))
+    # response_clf_results.append(round(np.mean([response_clf_results[i*6+1+3] for i in range(c) if response_clf_results[i*6+1+3] is not None]), 1))
+    # response_clf_results.append(round(np.mean([response_clf_results[i*6+2+3] for i in range(c) if response_clf_results[i*6+2+3] is not None]), 1))
     
-    print("Prompt CLF:")
-    print(" & ".join([str(v) for v in prompt_clf_results]))
-    print("Response CLF:")
-    print(" & ".join([str(v) for v in response_clf_results]))
+    all_results = prompt_clf_results + response_clf_results
+    print(" & ".join([str(round(v, 1)) for v in all_results]))
+    # print("Prompt CLF:")
+    # print(" & ".join([str(v) for v in prompt_clf_results]))
+    # print("Response CLF:")
+    # print(" & ".join([str(v) for v in response_clf_results]))
 
 if __name__ == "__main__":
     ignore_sensitive = False
@@ -320,15 +347,18 @@ if __name__ == "__main__":
     # base_path = "./outputs/outputs/PolyGuard-Qwen-Smol/SEASafeguardDataset"
     # base_path = "./outputs/outputs/PolyGuard-Qwen/SEASafeguardDataset"
     # base_path = "./outputs/outputs/PolyGuard-Ministral/SEASafeguardDataset"
+    # base_path = "./outputs/outputs/LionGuard2/SEASafeguardDataset"
+    # base_path = "./outputs/outputs/XGuard/SEASafeguardDataset"
 
     # base_path = "./outputs/outputs/LlamaGuard4/SEASafeguardDataset"
 
     # base_path = "./outputs/outputs/AzureAIContentSafety/SEASafeguardDataset"
     # base_path = "./outputs/outputs/GoogleModelArmor/SEASafeguardDataset"
-    base_path = "./outputs/outputs/OpenAIModeration/SEASafeguardDataset"
+    # base_path = "./outputs/outputs/OpenAIModeration/SEASafeguardDataset"
     # base_path = "./outputs/outputs/LakeraGuard/SEASafeguardDataset"
 
-    # base_path = "./outputs/outputs/Llama-Guard-v3-N-S/SEASafeguardDataset"
+    # base_path = "./outputs/outputs/Llama-SealionGuard-EN-Cultural/SEASafeguardDataset"
+    base_path = "./outputs/outputs/Llama-SEA-LION-Guard-Cultural-ENv2/SEASafeguardDataset"
     
     general_results = {"Prompt_CLF": [], "Response_CLF": []}
     cultural_en_results = {"Prompt_CLF": [], "Response_CLF": []}
