@@ -190,7 +190,7 @@ class GPTOSS(LLMGuard):
     def _complete(self, messages: list, **kwargs):
         outputs = self.model(
             messages,
-            max_new_tokens=256,
+            max_new_tokens=1024,
             output_scores=True,
             return_dict_in_generate=True,
         )
@@ -207,9 +207,7 @@ class GPTOSS(LLMGuard):
         logprobs = []
         for token, logit in zip(top_tokens, top_logits):
             logprobs.append((token, logit, logit))
-        print(logprobs)
         response = self.tokenizer.decode(top_token_ids[0], skip_special_tokens=True)
-        print(response)
         return logprobs, response
         
     
