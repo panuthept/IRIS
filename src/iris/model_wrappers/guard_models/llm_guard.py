@@ -161,7 +161,7 @@ class Llama31(LLMGuard):
 class GPTOSS(LLMGuard):
     valid_tokens = {
         "Safe": "Safe",
-        "Harmful": "Harmful",
+        "H": "Harmful",
     }
 
     def __init__(
@@ -195,9 +195,10 @@ class GPTOSS(LLMGuard):
             return_dict_in_generate=True,
         )
         generated_text = outputs[0]["generated_text"]
-        print(generated_text)
-        # logits = outputs[0]["scores"][-2]
-        logits = outputs[0]["scores"][-4]
+        if generated_text[-1]["content"].endswith("Harmful"):
+            logits = outputs[0]["scores"][-4]
+        else:
+            logits = outputs[0]["scores"][-2]
 
         top_token_ids = np.argsort(logits, axis=-1)[::-1][:10]
         top_tokens = self.tokenizer.convert_ids_to_tokens(top_token_ids)
