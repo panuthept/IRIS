@@ -187,8 +187,7 @@ class GPTOSS(LLMGuard):
             output_scores=True,
             return_dict_in_generate=True,
         )
-        print(outputs.scores)
-        print(outputs.sequences[0])
+        print(outputs[0])
         
     
 if __name__ == "__main__":
