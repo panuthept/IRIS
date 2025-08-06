@@ -194,7 +194,8 @@ class GPTOSS(LLMGuard):
             output_scores=True,
             return_dict_in_generate=True,
         )
-        logits = outputs[0]["scores"][-2]
+        # logits = outputs[0]["scores"][-2]
+        logits = outputs[0]["scores"][-3]
 
         top_token_ids = np.argsort(logits, axis=-1)[::-1][:10]
         top_tokens = self.tokenizer.convert_ids_to_tokens(top_token_ids)
