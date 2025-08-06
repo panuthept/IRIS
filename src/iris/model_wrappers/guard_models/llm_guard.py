@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from typing import Optional
 from iris.cache import CacheMode
 from transformers import pipeline
@@ -193,7 +194,7 @@ class GPTOSS(LLMGuard):
         print(len(outputs[0]["scores"]))
         print(len(outputs[0]["scores"][-1]))
         print(outputs[0]["generated_text"])
-        print(torch.argsort(outputs[0]["scores"][-1], dim=-1))
+        print(np.argsort(outputs[0]["scores"][-1], axis=-1))
         
     
 if __name__ == "__main__":
