@@ -189,19 +189,14 @@ class GPTOSS(LLMGuard):
             output_scores=True,
             return_dict_in_generate=True,
         )
-        print(outputs[0].keys())
-        print(len(outputs))
-        print(len(outputs[0]["scores"]))
-        print(len(outputs[0]["scores"][-1]))
-        print(outputs[0]["generated_text"])
-        sorted_indices = np.argsort(outputs[0]["scores"][-2], axis=-1)[::-1]
-        print(sorted_indices)
-        top_scores = outputs[0]["scores"][-2][sorted_indices[0]]
-        print(top_scores)
-        top_scores = outputs[0]["scores"][-2][sorted_indices[1]]
-        print(top_scores)
-        print(self.tokenizer.decode(sorted_indices[0], skip_special_tokens=True))
-        print(self.tokenizer.decode(sorted_indices[1], skip_special_tokens=True))
+        scores = outputs[0]["scores"][-2]
+        top_token_ids = np.argsort(scores, axis=-1)[::-1][:10]
+        top_scores = scores[top_token_ids]
+
+
+        response = self.tokenizer.decode(top_token_ids[0], skip_special_tokens=True)
+        print(response)
+        return outputs, response
         
     
 if __name__ == "__main__":
