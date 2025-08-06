@@ -179,6 +179,7 @@ class GPTOSS(LLMGuard):
             torch_dtype="auto",
             device_map="auto",
         )
+        self.tokenizer = self.model.tokenizer
 
     def _complete(self, messages: list, **kwargs):
         outputs = self.model(
@@ -190,8 +191,9 @@ class GPTOSS(LLMGuard):
         print(outputs[0].keys())
         print(len(outputs))
         print(len(outputs[0]["scores"]))
-        print(len(outputs[0]["scores"][0]))
+        print(len(outputs[0]["scores"][-1]))
         print(outputs[0]["generated_text"])
+        print(torch.argsort(outputs[0]["scores"][-1], dim=-1))
         
     
 if __name__ == "__main__":
