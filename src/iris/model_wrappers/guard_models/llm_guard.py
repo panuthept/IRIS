@@ -194,7 +194,10 @@ class GPTOSS(LLMGuard):
         print(len(outputs[0]["scores"]))
         print(len(outputs[0]["scores"][-1]))
         print(outputs[0]["generated_text"])
-        print(np.argsort(outputs[0]["scores"][-1], axis=-1))
+        sorted_indices = np.argsort(outputs[0]["scores"][-1], axis=-1)
+        print(sorted_indices)
+        sorted_scores = outputs[0]["scores"][-1][sorted_indices]
+        print(sorted_scores)
         
     
 if __name__ == "__main__":
