@@ -189,14 +189,19 @@ class GPTOSS(LLMGuard):
             output_scores=True,
             return_dict_in_generate=True,
         )
-        scores = outputs[0]["scores"][-2]
-        top_token_ids = np.argsort(scores, axis=-1)[::-1][:10]
-        top_scores = scores[top_token_ids]
+        logits = outputs[0]["scores"][-2]
 
+        top_token_ids = np.argsort(logits, axis=-1)[::-1][:10]
+        top_logits = logits[top_token_ids]
+        top_probs = np.exp(top_logits) / np.sum(np.exp(top_logits))
 
+        logprobs = []
+        for token_id, prob, logit in zip(top_token_ids, top_probs, top_logits):
+            logprobs.append((self.tokenizer.convert_ids_to_tokens(token_id), prob, logit))
+        print(logprobs)
         response = self.tokenizer.decode(top_token_ids[0], skip_special_tokens=True)
         print(response)
-        return outputs, response
+        return logprobs, response
         
     
 if __name__ == "__main__":
