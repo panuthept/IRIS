@@ -186,6 +186,7 @@ class GPTOSS(LLMGuard):
             max_new_tokens=256,
             output_logits=True,
             output_scores=True,
+            return_dict_in_generate=True,
         )
         print(outputs)
         
