@@ -197,6 +197,8 @@ class GPTOSS(LLMGuard):
         logits = outputs[0]["scores"][-2]
 
         top_token_ids = np.argsort(logits, axis=-1)[::-1][:10]
+        top_tokens = self.tokenizer.convert_ids_to_tokens(top_token_ids)
+        print(top_tokens)
         top_logits = np.array([logits[i] for i in top_token_ids])
         top_probs = np.exp(top_logits) / np.sum(np.exp(top_logits))
 
