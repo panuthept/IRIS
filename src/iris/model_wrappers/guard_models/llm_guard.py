@@ -188,7 +188,8 @@ class GPTOSS(LLMGuard):
             return_dict_in_generate=True,
         )
         print(outputs[0].keys())
-        print(outputs[0]["scores"][0])
+        print(len(outputs))
+        print(len(outputs[0]["scores"][0]))
         print(outputs[0]["generated_text"])
         
     
