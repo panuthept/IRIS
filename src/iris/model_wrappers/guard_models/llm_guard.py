@@ -208,7 +208,7 @@ class GPTOSS(LLMGuard):
         for token, logit in zip(top_tokens, top_logits):
             logprobs.append((token, logit, logit))
         response = self.tokenizer.decode(top_token_ids[0], skip_special_tokens=True)
-        return logprobs, response
+        return [logprobs], response
         
     
 if __name__ == "__main__":
