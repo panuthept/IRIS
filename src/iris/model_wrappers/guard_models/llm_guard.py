@@ -184,11 +184,11 @@ class GPTOSS(LLMGuard):
         outputs = self.model(
             messages,
             max_new_tokens=256,
-            output_logits=True,
             output_scores=True,
             return_dict_in_generate=True,
         )
-        print(outputs)
+        print(outputs.scores)
+        print(outputs.sequences[0])
         
     
 if __name__ == "__main__":
