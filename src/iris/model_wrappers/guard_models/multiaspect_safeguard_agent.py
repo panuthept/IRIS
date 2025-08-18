@@ -64,13 +64,13 @@ class MultiAspectSafeguardAgent(GuardLLM):
     )
     def __init__(
         self, 
-        model: str = "google/gemma-3-27b-it",
+        model_name_or_path: str = "google/gemma-3-27b-it",
         port: int = 8000,
         country: str = "Thailand", 
         max_rounds: int = 3,
         max_tries: int = 5,
     ):
-        self.model = model
+        self.model = model_name_or_path
         self.port = port
         self.country = country
         self.max_rounds = max_rounds
