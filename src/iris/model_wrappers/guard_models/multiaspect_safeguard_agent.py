@@ -69,6 +69,7 @@ class MultiAspectSafeguardAgent(GuardLLM):
         country: str = "Thailand", 
         max_rounds: int = 3,
         max_tries: int = 5,
+        **kwargs,
     ):
         self.model = model_name_or_path
         self.port = port
