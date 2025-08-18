@@ -1,4 +1,5 @@
 import numpy as np
+from openai import OpenAI
 from typing import Optional, Dict, List, Tuple
 from iris.model_wrappers.guard_models import GuardLLM
 from iris.data_types import SafeGuardInput, SafeGuardResponse
@@ -129,7 +130,7 @@ class MultiAspectSafeguardAgent(GuardLLM):
     def _prompt_classify(self, prompt, **kwargs):
         outputs = self.__call__(prompt=prompt, response="")
         if outputs is None:
-            outputs = {"prompt_final_label": "Safe", "prompt_harmful_score": 0.0}
+            outputs = {"prompt_final_label": "Safe", "prompt_harmful_score": 0.5}
         answer = outputs["prompt_final_label"]
         return {
             "pred_labels": [[("Harmful", outputs["prompt_harmful_score"], None), ("Safe", 1 - outputs["prompt_harmful_score"], None)]],
@@ -141,7 +142,7 @@ class MultiAspectSafeguardAgent(GuardLLM):
     def _response_classify(self, prompt, response, **kwargs):
         outputs = self.__call__(prompt=prompt, response=response)
         if outputs is None:
-            outputs = {"response_final_label": "Safe", "response_harmful_score": 0.0}
+            outputs = {"response_final_label": "Safe", "response_harmful_score": 0.5}
         answer = outputs["response_final_label"]
         return {
             "pred_labels": [[("Harmful", outputs["response_harmful_score"], None), ("Safe", 1 - outputs["response_harmful_score"], None)]],
