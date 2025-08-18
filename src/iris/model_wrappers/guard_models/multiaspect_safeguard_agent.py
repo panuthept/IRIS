@@ -5,6 +5,27 @@ from iris.model_wrappers.guard_models import GuardLLM
 from iris.data_types import SafeGuardInput, SafeGuardResponse
 
 
+def list_json_parser(response: str) -> List[Dict[str, str]]:
+    # Remove prefix and suffix texts
+    response = response.split("```json")
+    if len(response) != 2:
+        return None
+
+    response = response[1].split("```")
+    if len(response) != 2:
+        return None
+
+    response = response[0].strip()
+    if not response.startswith("["):
+        response = "[" + response
+    if not response.endswith("]"):
+        response = response + "]"
+        
+    # Parse the JSON object
+    data = json.loads(response)
+    return data
+
+
 class MultiAspectSafeguardAgent(GuardLLM):
     harmful_scores = {
         "safe": 0.0, 
