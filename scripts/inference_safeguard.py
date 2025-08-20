@@ -149,7 +149,7 @@ if __name__ == "__main__":
             if i < len(existing_examples):
                 existing_example = existing_examples[i]
                 sample.prompt_labels = existing_example["prompt_labels"] if existing_example["prompt_labels"][0][1] != 0.5 else None
-                sample.response_labels = existing_example["response_labels"] if existing_example["response_labels"][0][1] != 0.5 else None
+                sample.response_labels = existing_example["response_labels"] if existing_example["response_labels"] is not None and existing_example["response_labels"][0][1] != 0.5 else None
             safeguard_response: SafeGuardResponse = safeguard.predict(input=sample)
             # if sample.response is not None:
             #     # Get response classification results
