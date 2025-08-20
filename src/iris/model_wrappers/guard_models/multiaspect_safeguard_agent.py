@@ -153,7 +153,7 @@ class MultiAspectSafeguardAgent(GuardLLM):
     def _prompt_classify(self, prompt, **kwargs):
         outputs = self.__call__(prompt=prompt, response="")
         if outputs is None:
-            outputs = {"prompt_final_label": "Safe", "prompt_harmful_score": 0.5}
+            outputs = {"prompt_final_label": "Error", "prompt_harmful_score": 0.5}
         answer = outputs["prompt_final_label"]
         return {
             "pred_labels": [[("Harmful", outputs["prompt_harmful_score"], None), ("Safe", 1 - outputs["prompt_harmful_score"], None)]],
@@ -165,7 +165,7 @@ class MultiAspectSafeguardAgent(GuardLLM):
     def _response_classify(self, prompt, response, **kwargs):
         outputs = self.__call__(prompt=prompt, response=response)
         if outputs is None:
-            outputs = {"response_final_label": "Safe", "response_harmful_score": 0.5}
+            outputs = {"response_final_label": "Error", "response_harmful_score": 0.5}
         answer = outputs["response_final_label"]
         return {
             "pred_labels": [[("Harmful", outputs["response_harmful_score"], None), ("Safe", 1 - outputs["response_harmful_score"], None)]],
@@ -181,30 +181,43 @@ class MultiAspectSafeguardAgent(GuardLLM):
         response: Optional[str] = None,
         **kwargs,
     ) -> SafeGuardResponse:
+        prompt_labels = None
+        response_labels = None
         prompt_gold_label = None
         response_gold_label = None
         if input is not None:
             prompt = input.prompt
             response = input.response
+            prompt_labels = input.prompt_labels
+            response_labels = input.response_labels
             prompt_gold_label = input.prompt_gold_label
             response_gold_label = input.response_gold_label
         assert prompt is not None, "Prompt cannot be None"
         # Initial metadata
         metadata = {}
         # Prompt classification
-        prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, **kwargs)
-        prompt_labels = prompt_clf["pred_labels"][0] if len(prompt_clf["pred_labels"]) > 0 else []
-        metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
-        metadata["prompt_instruction"] = prompt_clf["instruction"]
-        metadata["prompt_response"] = prompt_clf["response"]
+        if prompt_labels is None:
+            prompt_clf: Dict[str, List[Tuple[str, float, float]]] = self._prompt_classify(prompt, **kwargs)
+            prompt_labels = prompt_clf["pred_labels"][0] if len(prompt_clf["pred_labels"]) > 0 else []
+            metadata["prompt_tokens"] = prompt_clf["pred_tokens"]
+            metadata["prompt_instruction"] = prompt_clf["instruction"]
+            metadata["prompt_response"] = prompt_clf["response"]
+        else:
+            metadata["prompt_tokens"] = [prompt_labels]
+            metadata["prompt_instruction"] = prompt
+            metadata["prompt_response"] = prompt_labels[0][0] if prompt_labels[0][1] >= 0.5 else prompt_labels[1][0]
         # Response classification
-        response_labels = None
         if response is not None:
-            response_clf: Dict[str, List[Tuple[str, float, float]]] = self._response_classify(prompt, response, **kwargs)
-            response_labels = response_clf["pred_labels"][0] if len(response_clf["pred_labels"]) > 0 else []
-            metadata["response_tokens"] = response_clf["pred_tokens"]
-            metadata["response_instruction"] = response_clf["instruction"]
-            metadata["response_response"] = response_clf["response"]
+            if response_labels is None:
+                response_clf: Dict[str, List[Tuple[str, float, float]]] = self._response_classify(prompt, response, **kwargs)
+                response_labels = response_clf["pred_labels"][0] if len(response_clf["pred_labels"]) > 0 else []
+                metadata["response_tokens"] = response_clf["pred_tokens"]
+                metadata["response_instruction"] = response_clf["instruction"]
+                metadata["response_response"] = response_clf["response"]
+            else:
+                metadata["response_tokens"] = [response_labels]
+                metadata["response_instruction"] = response
+                metadata["response_response"] = response_labels[0][0] if response_labels[0][1] >= 0.5 else response_labels[1][0]
         # Output formatting
         output = SafeGuardResponse(
             prompt=prompt, 
