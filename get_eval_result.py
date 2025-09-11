@@ -174,9 +174,6 @@ def report_sum_results(paths):
             results = get_eval_results(path)
             prompt_clf_results.extend(results["Prompt_clf"])
             response_clf_results.extend(results["Response_clf"])
-        # else:
-        #     prompt_clf_results.extend([None])
-        #     response_clf_results.extend([None])
     # Get General Set Performance (SEA)
     c = 0
     t_prompt_clf_results = []
@@ -187,20 +184,35 @@ def report_sum_results(paths):
             results = get_eval_results(path)
             t_prompt_clf_results.extend(results["Prompt_clf"])
             t_response_clf_results.extend(results["Response_clf"])
-        # else:
-        #     t_prompt_clf_results.extend([None])
-        #     t_response_clf_results.extend([None])
     t_prompt_clf_results.append(np.mean([t_prompt_clf_results[i] for i in range(c) if t_prompt_clf_results[i] is not None]))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
     t_response_clf_results = [val for val in t_response_clf_results if val is not None]
     t_response_clf_results.append(np.mean(t_response_clf_results) if len(t_response_clf_results) > 0 else None)
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
     prompt_clf_results.extend(t_prompt_clf_results[-1:])
     response_clf_results.extend(t_response_clf_results[-1:])
+    # Get Hand-Written Cultural Set Performance (English)
+    c = 0
+    t_prompt_clf_results = []
+    t_response_clf_results = []
+    for path in paths["cultural_handwritten_en"]:
+        c += 1
+        if os.path.exists(path):
+            results = get_eval_results(path)
+            t_prompt_clf_results.extend(results["Prompt_clf"])
+            t_response_clf_results.extend(results["Response_clf"])
+    t_prompt_clf_results.append(np.mean([t_prompt_clf_results[i] for i in range(c) if t_prompt_clf_results[i] is not None]))
+    prompt_clf_results.extend(t_prompt_clf_results[-1:])
+    # Get Hand-Written Cultural Set Performance (Native)
+    c = 0
+    t_prompt_clf_results = []
+    t_response_clf_results = []
+    for path in paths["cultural_handwritten_local"]:
+        c += 1
+        if os.path.exists(path):
+            results = get_eval_results(path)
+            t_prompt_clf_results.extend(results["Prompt_clf"])
+            t_response_clf_results.extend(results["Response_clf"])
+    t_prompt_clf_results.append(np.mean([t_prompt_clf_results[i] for i in range(c) if t_prompt_clf_results[i] is not None]))
+    prompt_clf_results.extend(t_prompt_clf_results[-1:])
     # Get Synthetic Cultural Set Performance (English)
     c = 0
     t_prompt_clf_results = []
@@ -214,18 +226,9 @@ def report_sum_results(paths):
             # Sensitive-as-Safe
             results = get_eval_results(path, sensitive_as_harmful=False, ignore_sensitive=False)
             t_prompt_clf_results.extend(results["Prompt_clf"])
-        # else:
-        #     t_prompt_clf_results.extend([None])
-        #     t_response_clf_results.extend([None])
     t_prompt_clf_results.append(np.mean([t_prompt_clf_results[i] for i in range(c) if t_prompt_clf_results[i] is not None]))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
     t_response_clf_results = [val for val in t_response_clf_results if val is not None]
     t_response_clf_results.append(np.mean(t_response_clf_results) if len(t_response_clf_results) > 0 else None)
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
     prompt_clf_results.extend(t_prompt_clf_results[-1:])
     response_clf_results.extend(t_response_clf_results[-1:])
     # Get Synthetic Cultural Set Performance (SEA)
@@ -241,202 +244,128 @@ def report_sum_results(paths):
             # Sensitive-as-Safe
             results = get_eval_results(path, sensitive_as_harmful=False, ignore_sensitive=False)
             t_prompt_clf_results.extend(results["Prompt_clf"])
-        # else:
-        #     t_prompt_clf_results.extend([None])
-        #     t_response_clf_results.extend([None])
     t_prompt_clf_results.append(np.mean([t_prompt_clf_results[i] for i in range(c) if t_prompt_clf_results[i] is not None]))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
     t_response_clf_results = [val for val in t_response_clf_results if val is not None]
     t_response_clf_results.append(np.mean(t_response_clf_results) if len(t_response_clf_results) > 0 else None)
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
     prompt_clf_results.extend(t_prompt_clf_results[-1:])
     response_clf_results.extend(t_response_clf_results[-1:])
-    # Get Hand-Written Cultural Set Performance (English)
-    c = 0
-    t_prompt_clf_results = []
-    t_response_clf_results = []
-    for path in paths["cultural_handwritten_en"]:
-        c += 1
-        if os.path.exists(path):
-            results = get_eval_results(path)
-            t_prompt_clf_results.extend(results["Prompt_clf"])
-            t_response_clf_results.extend(results["Response_clf"])
-        # else:
-        #     t_prompt_clf_results.extend([None])
-        #     t_response_clf_results.extend([None])
-    t_prompt_clf_results.append(np.mean([t_prompt_clf_results[i] for i in range(c) if t_prompt_clf_results[i] is not None]))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
-    prompt_clf_results.extend(t_prompt_clf_results[-1:])
-    # response_clf_results.extend(t_response_clf_results[-3:])
-    # Get Hand-Written Cultural Set Performance (Native)
-    c = 0
-    t_prompt_clf_results = []
-    t_response_clf_results = []
-    for path in paths["cultural_handwritten_local"]:
-        c += 1
-        if os.path.exists(path):
-            results = get_eval_results(path)
-            t_prompt_clf_results.extend(results["Prompt_clf"])
-            t_response_clf_results.extend(results["Response_clf"])
-        # else:
-        #     t_prompt_clf_results.extend([None])
-        #     t_response_clf_results.extend([None])
-    t_prompt_clf_results.append(np.mean([t_prompt_clf_results[i] for i in range(c) if t_prompt_clf_results[i] is not None]))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3] for i in range(c) if t_prompt_clf_results[i*3] is not None]), 1))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+1] for i in range(c) if t_prompt_clf_results[i*3+1] is not None]), 1))
-    # t_prompt_clf_results.append(round(np.mean([t_prompt_clf_results[i*3+2] for i in range(c) if t_prompt_clf_results[i*3+2] is not None]), 1))
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3] for i in range(c) if t_response_clf_results[i*3] is not None]), 1))
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+1] for i in range(c) if t_response_clf_results[i*3+1] is not None]), 1))
-    # t_response_clf_results.append(round(np.mean([t_response_clf_results[i*3+2] for i in range(c) if t_response_clf_results[i*3+2] is not None]), 1))
-    prompt_clf_results.extend(t_prompt_clf_results[-1:])
-    # response_clf_results.extend(t_response_clf_results[-3:])
 
     # Final average (English)
-    print(prompt_clf_results)
     prompt_clf_results.append(np.mean(prompt_clf_results))
-    # c = 3
-    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6] for i in range(c) if prompt_clf_results[i*6] is not None]), 1))
-    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+1] for i in range(c) if prompt_clf_results[i*6+1] is not None]), 1))
-    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+2] for i in range(c) if prompt_clf_results[i*6+2] is not None]), 1))
-    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+3] for i in range(c) if prompt_clf_results[i*6+3] is not None]), 1))
-    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+1+3] for i in range(c) if prompt_clf_results[i*6+1+3] is not None]), 1))
-    # prompt_clf_results.append(round(np.mean([prompt_clf_results[i*6+2+3] for i in range(c) if prompt_clf_results[i*6+2+3] is not None]), 1))
-    print(response_clf_results)
-    # if 
     response_clf_results = [val for val in response_clf_results if val if not None]
     response_clf_results.append(np.mean(response_clf_results))
-    # c = 2
-    # response_clf_results.append(round(np.mean([response_clf_results[i*6] for i in range(c) if response_clf_results[i*6] is not None]), 1))
-    # response_clf_results.append(round(np.mean([response_clf_results[i*6+1] for i in range(c) if response_clf_results[i*6+1] is not None]), 1))
-    # response_clf_results.append(round(np.mean([response_clf_results[i*6+2] for i in range(c) if response_clf_results[i*6+2] is not None]), 1))
-    # response_clf_results.append(round(np.mean([response_clf_results[i*6+3] for i in range(c) if response_clf_results[i*6+3] is not None]), 1))
-    # response_clf_results.append(round(np.mean([response_clf_results[i*6+1+3] for i in range(c) if response_clf_results[i*6+1+3] is not None]), 1))
-    # response_clf_results.append(round(np.mean([response_clf_results[i*6+2+3] for i in range(c) if response_clf_results[i*6+2+3] is not None]), 1))
     
     all_results = prompt_clf_results + response_clf_results
-    print(" & ".join([str(round(v, 1)) for v in all_results]))
-    # print("Prompt CLF:")
-    # print(" & ".join([str(v) for v in prompt_clf_results]))
-    # print("Response CLF:")
-    # print(" & ".join([str(v) for v in response_clf_results]))
+    return " & ".join([str(round(v, 1)) for v in all_results])
 
 if __name__ == "__main__":
     ignore_sensitive = False
     sensitive_as_harmful = False
 
-    # base_path = "./outputs/outputs/LLMGuard-Gemma3-4B/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/LLMGuard-Gemma3-27B/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/LLMGuard-Llama3.1-8B/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/LLMGuard-Llama3.1-70B/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/LLMGuard-Llama3.2-3B/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset"
+    result_paths = {
+        # "Gemma-3-it 4B": "./outputs/LLMGuard-Gemma3-4B/SEASafeguardDataset",
+        # "Gemma-3-it 27B": "./outputs/LLMGuard-Gemma3-27B/SEASafeguardDataset",
+        # "LLMGuard-Gemma-SEA-LION-v4-27B": "./outputs/LLMGuard-Gemma-SEA-LION-v4-27B/SEASafeguardDataset",
+        # "Llama-3.1-it 8B": "./outputs/LLMGuard-Llama3.1-8B/SEASafeguardDataset",
+        # "Llama-3.1-it 70B": "./outputs/LLMGuard-Llama3.1-70B/SEASafeguardDataset",
+        # "Llama-3.2-it 3B": "./outputs/LLMGuard-Llama3.2-3B/SEASafeguardDataset",
+        # "Llama-3.3-it 70B": "./outputs/LLMGuard-Llama3.3-70B/SEASafeguardDataset",
+        # "GPT-OSS 20B": "./outputs/GPTOSS-20B/SEASafeguardDataset",
 
-    # base_path = "./outputs/outputs/ShieldGemma-2B/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/ShieldGemma/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/LlamaGuard-1B/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/LlamaGuard/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/PolyGuard-Qwen-Smol/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/PolyGuard-Qwen/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/PolyGuard-Ministral/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/LionGuard2/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/XGuard/SEASafeguardDataset"
+        # "ShieldGemma 2B": "./outputs/ShieldGemma-2B/SEASafeguardDataset",
+        # "ShieldGemma 9B": "./outputs/ShieldGemma/SEASafeguardDataset",
+        # "LlamaGuard-3 1B": "./outputs/LlamaGuard-1B/SEASafeguardDataset",
+        # "LlamaGuard-3 8B": "./outputs/LlamaGuard/SEASafeguardDataset",
+        # "LlamaGuard-4 12B": "./outputs/LlamaGuard4/SEASafeguardDataset",
+        # "PolyGuard-Qwen 0.5B": "./outputs/PolyGuard-Qwen-Smol/SEASafeguardDataset",
+        # "PolyGuard-Qwen 8B": "./outputs/PolyGuard-Qwen/SEASafeguardDataset",
+        # "PolyGuard-Ministral 8B": "./outputs/PolyGuard-Ministral/SEASafeguardDataset",
+        # "LionGuard-2": "./outputs/LionGuard2/SEASafeguardDataset",
+        # "XGuard": "./outputs/XGuard/SEASafeguardDataset",
 
-    # base_path = "./outputs/outputs/LlamaGuard4/SEASafeguardDataset"
-
-    # base_path = "./outputs/outputs/AzureAIContentSafety/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/GoogleModelArmor/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/OpenAIModeration/SEASafeguardDataset"
-    # base_path = "./outputs/outputs/LakeraGuard/SEASafeguardDataset"
-
-    # base_path = "./outputs/outputs/Llama-SealionGuard-EN-Cultural/SEASafeguardDataset"
-    base_path = "./outputs/outputs/Llama-SEA-LION-Guard-Cultural-ENv2/SEASafeguardDataset"
-    
-    general_results = {"Prompt_CLF": [], "Response_CLF": []}
-    cultural_en_results = {"Prompt_CLF": [], "Response_CLF": []}
-    cultural_local_results = {"Prompt_CLF": [], "Response_CLF": []}
-    cultural_handwritten_en_results = {"Prompt_CLF": [], "Response_CLF": []}
-    cultural_handwritten_local_results = {"Prompt_CLF": [], "Response_CLF": []}
-
-    paths = {
-        "general": [
-            os.path.join(base_path, "general", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "general", "ta", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "general", "th", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "general", "tl", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "general", "ms", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "general", "in", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "general", "my", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "general", "vi", "test", "all_prompts.jsonl"),
-        ],
-        "cultural_en": [
-            os.path.join(base_path, "en_cultural", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "ta_cultural", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "th_cultural", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "tl_cultural", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "ms_cultural", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "in_cultural", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "my_cultural", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "vi_cultural", "en", "test", "all_prompts.jsonl"),
-        ],
-        "cultural_local": [
-            os.path.join(base_path, "en_cultural", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "ta_cultural", "ta", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "th_cultural", "th", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "tl_cultural", "tl", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "ms_cultural", "ms", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "in_cultural", "in", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "my_cultural", "my", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "vi_cultural", "vi", "test", "all_prompts.jsonl"),
-        ],
-        "cultural_handwritten_en": [
-            os.path.join(base_path, "ta_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "th_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "tl_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "ms_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "in_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "my_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "vi_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
-        ],
-        "cultural_handwritten_local": [
-            os.path.join(base_path, "ta_cultural_handwritten", "ta", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "th_cultural_handwritten", "th", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "tl_cultural_handwritten", "tl", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "ms_cultural_handwritten", "ms", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "in_cultural_handwritten", "in", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "my_cultural_handwritten", "my", "test", "all_prompts.jsonl"),
-            os.path.join(base_path, "vi_cultural_handwritten", "vi", "test", "all_prompts.jsonl"),
-        ]
+        # "Google Model Armor": "./outputs/GoogleModelArmor/SEASafeguardDataset",
+        # "Azure AI Content Safety": "./outputs/AzureAIContentSafety/SEASafeguardDataset",
+        # "OpenAI Moderation": "./outputs/OpenAIModeration/SEASafeguardDataset",
+        "LakeraGuard": "./outputs/LakeraGuard/SEASafeguardDataset",
     }
+    
+    for model_name, base_path in result_paths.items():
+        general_results = {"Prompt_CLF": [], "Response_CLF": []}
+        cultural_en_results = {"Prompt_CLF": [], "Response_CLF": []}
+        cultural_local_results = {"Prompt_CLF": [], "Response_CLF": []}
+        cultural_handwritten_en_results = {"Prompt_CLF": [], "Response_CLF": []}
+        cultural_handwritten_local_results = {"Prompt_CLF": [], "Response_CLF": []}
 
-    # # Get General Set Performance
-    # print("General Results:")
-    # report_results(paths["general"], ignore_sensitive=ignore_sensitive, sensitive_as_harmful=sensitive_as_harmful)
+        paths = {
+            "general": [
+                os.path.join(base_path, "general", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "general", "ta", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "general", "th", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "general", "tl", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "general", "ms", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "general", "in", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "general", "my", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "general", "vi", "test", "all_prompts.jsonl"),
+            ],
+            "cultural_en": [
+                # os.path.join(base_path, "en_cultural", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "ta_cultural", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "th_cultural", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "tl_cultural", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "ms_cultural", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "in_cultural", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "my_cultural", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "vi_cultural", "en", "test", "all_prompts.jsonl"),
+            ],
+            "cultural_local": [
+                # os.path.join(base_path, "en_cultural", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "ta_cultural", "ta", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "th_cultural", "th", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "tl_cultural", "tl", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "ms_cultural", "ms", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "in_cultural", "in", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "my_cultural", "my", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "vi_cultural", "vi", "test", "all_prompts.jsonl"),
+            ],
+            "cultural_handwritten_en": [
+                os.path.join(base_path, "ta_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "th_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "tl_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "ms_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "in_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "my_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "vi_cultural_handwritten", "en", "test", "all_prompts.jsonl"),
+            ],
+            "cultural_handwritten_local": [
+                os.path.join(base_path, "ta_cultural_handwritten", "ta", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "th_cultural_handwritten", "th", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "tl_cultural_handwritten", "tl", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "ms_cultural_handwritten", "ms", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "in_cultural_handwritten", "in", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "my_cultural_handwritten", "my", "test", "all_prompts.jsonl"),
+                os.path.join(base_path, "vi_cultural_handwritten", "vi", "test", "all_prompts.jsonl"),
+            ]
+        }
 
-    # # Get Cultural Specific (English) Set Performance
-    # print("Synthetic Cultural Results (English):")
-    # report_results(paths["cultural_en"], ignore_sensitive=ignore_sensitive, sensitive_as_harmful=sensitive_as_harmful)
+        # # Get General Set Performance
+        # print("General Results:")
+        # report_results(paths["general"], ignore_sensitive=ignore_sensitive, sensitive_as_harmful=sensitive_as_harmful)
 
-    # # Get Cultural Specific (Native) Set Performance
-    # print("Synthetic Cultural Results (Native):")
-    # report_results(paths["cultural_local"][1:], ignore_sensitive=ignore_sensitive, sensitive_as_harmful=sensitive_as_harmful)
+        # # Get Cultural Specific (English) Set Performance
+        # print("Synthetic Cultural Results (English):")
+        # report_results(paths["cultural_en"], ignore_sensitive=ignore_sensitive, sensitive_as_harmful=sensitive_as_harmful)
 
-    # # Get Hand-Written Cultural Specific (English) Set Performance
-    # print("Hand-Written Cultural Results (English):")
-    # report_results(paths["cultural_handwritten_en"], ignore_sensitive=ignore_sensitive, sensitive_as_harmful=sensitive_as_harmful)
+        # # Get Cultural Specific (Native) Set Performance
+        # print("Synthetic Cultural Results (Native):")
+        # report_results(paths["cultural_local"][1:], ignore_sensitive=ignore_sensitive, sensitive_as_harmful=sensitive_as_harmful)
 
-    # # Get Hand-Written Cultural Specific (Native) Set Performance
-    # print("Hand-Written Cultural Results (Native):")
-    # report_results(paths["cultural_handwritten_local"], ignore_sensitive=ignore_sensitive, sensitive_as_harmful=sensitive_as_harmful)
+        # # Get Hand-Written Cultural Specific (English) Set Performance
+        # print("Hand-Written Cultural Results (English):")
+        # report_results(paths["cultural_handwritten_en"], ignore_sensitive=ignore_sensitive, sensitive_as_harmful=sensitive_as_harmful)
 
-    # Get Summary Results
-    print("Summary Results:")
-    report_sum_results(paths)
+        # # Get Hand-Written Cultural Specific (Native) Set Performance
+        # print("Hand-Written Cultural Results (Native):")
+        # report_results(paths["cultural_handwritten_local"], ignore_sensitive=ignore_sensitive, sensitive_as_harmful=sensitive_as_harmful)
+
+        # Get Summary Results
+        print(f"{model_name} & {report_sum_results(paths)}")
